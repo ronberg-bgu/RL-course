@@ -1,2 +1,6 @@
 numpy
 gymnasium
+minigrid
+pettingzoo
+unified-planning
+pyperplan
