@@ -18,7 +18,7 @@ def extract_target_pos(pddl_action):
     
     if action_name.startswith('win'):
         return {}
-    elif action_name == 'push-big' and len(params) >= 6:
+    elif action_name.startswith('push-big') and len(params) >= 6:
         a1, a2 = params[0], params[1]
         t1, t2 = params[4], params[5] # boxloc1, boxloc2 are the targets for the agents
         

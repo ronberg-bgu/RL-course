@@ -9,8 +9,8 @@ def solve_pddl(domain_path, problem_path):
     reader = PDDLReader()
     problem = reader.parse_problem(domain_path, problem_path)
     
-    # Let unified-planning auto-select an available internal engine
-    with OneshotPlanner(problem_kind=problem.kind) as planner:
+    # Use Fast-Downward engine which is much more scalable for grid logic
+    with OneshotPlanner(name="fast-downward") as planner:
         result = planner.solve(problem)
         if result.status in [
             up.engines.results.PlanGenerationResultStatus.SOLVED_SATISFICING,
