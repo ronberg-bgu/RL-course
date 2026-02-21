@@ -1,10 +1,11 @@
+import math
 import numpy as np
 from gymnasium import spaces
 from pettingzoo import ParallelEnv
 from minigrid.core.grid import Grid
 from minigrid.core.mission import MissionSpace
 from minigrid.core.world_object import Wall, Goal, WorldObj
-from minigrid.utils.rendering import fill_coords, point_in_circle
+from minigrid.utils.rendering import fill_coords, point_in_circle, point_in_triangle, rotate_fn
 from minigrid.core.constants import COLORS
 from minigrid.minigrid_env import MiniGridEnv
 from environment.objects import SmallBox, BigBox
@@ -21,9 +22,14 @@ class AgentObj(WorldObj):
         return False
 
     def render(self, img):
-        # Fallback if color is string
         c = COLORS.get(self.color, (255, 0, 0))
-        fill_coords(img, point_in_circle(0.5, 0.5, 0.3), c)
+        tri_fn = point_in_triangle(
+            (0.12, 0.19),
+            (0.87, 0.50),
+            (0.12, 0.81),
+        )
+        tri_fn = rotate_fn(tri_fn, cx=0.5, cy=0.5, theta=0.5 * math.pi * self.dir)
+        fill_coords(img, tri_fn, c)
 
 class MultiAgentBoxPushEnv(ParallelEnv):
     metadata = {
