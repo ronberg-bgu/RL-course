@@ -4,3 +4,4 @@ minigrid
 pettingzoo
 unified-planning
 pyperplan
+up-fast-downward

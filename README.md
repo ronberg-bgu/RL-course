@@ -8,7 +8,16 @@ This repository serves as the central hub for our multi-agent box-pushing RL env
 
 Before you can run the simulations, you need to install the required Python dependencies. The environment relies on `pygame` for graphics, `minigrid` / `pettingzoo` for RL interfaces, and `unified-planning` with `fast-downward` for solving logical PDDL puzzles.
 
+Since modern operating systems (like macOS) protect the system Python environment, you must create a Virtual Environment before installing the packages:
+
 ```bash
+# 1. Create a virtual environment named 'venv'
+python3 -m venv venv
+
+# 2. Activate the virtual environment
+source venv/bin/activate
+
+# 3. Install the required dependencies safely
 pip install -r requirements.txt
 ```
 
