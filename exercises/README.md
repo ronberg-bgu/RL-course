@@ -1,37 +1,37 @@
-# מטלת תכנות 1 — Box Pushing דטרמיניסטי
+# Assignment 1 — Deterministic Box Pushing with Classical Planning
 
-ברוכים הבאים למטלה הראשונה בקורס Reinforcement Learning & Planning!
+Welcome to the first programming assignment in the Reinforcement Learning & Planning course!
 
-## 🎯 תיאור המטלה
+## 🎯 Assignment Description
 
-עליך לייצר בעזרת LLM לבחירתך קובץ PDDL המתאר את בעיית Box Pushing.
+Your task is to use an **LLM of your choice** to generate a PDDL file that describes the Box Pushing problem.
 
-בבעיה יש **שני סוכנים** שנמצאים בעולם grid. הם יכולים לנוע בכל אחד מארבעת הכיוונים, בהנחה שהמשבצת שאליה הם נעים פנויה ממכשולים (אפשר לנוע למשבצת שבה יש סוכן אחר). הם גם יכולים לדחוף קופסה בכל אחד מהכיוונים כשהם עומדים בצד המתאים של הקופסה והמשבצת אליה הם רוצים לדחוף את הקופסה פנויה. בעקבות הדחיפה הקופסה והסוכן זזים. לדוגמה, אם הסוכן מימין לקופסה והמשבצת משמאל לקופסה פנויה, הסוכן יכול לדחוף שמאלה. אחרי הדחיפה, הסוכן יזוז משבצת שמאלה למקום שהקופסה היתה, והקופסה גם תזוז משבצת שמאלה.
+The world contains **two agents** moving on a 2D grid. Each agent can move in any of the four directions, as long as the target cell is not an obstacle (agents may share the same cell). Agents can also **push a box** in any direction when standing on the appropriate side of it, provided the destination cell is free. After a push, both the agent and the box move one cell in that direction.
 
-בבעיה יש **3 קופסאות**: שתי קופסאות רגילות ואחת כבדה.
-- כדי לדחוף **קופסה רגילה** — מספיק סוכן אחד.
-- כדי לדחוף **קופסה כבדה** — יש צורך בדחיפה משותפת של שני הסוכנים באותו כיוון.
+The problem contains **3 boxes**: two regular boxes and one heavy box.
+- To push a **regular box** — one agent is enough.
+- To push the **heavy box** — both agents must push simultaneously from the **same cell** in the **same direction**.
 
-**לסיכום:** עולם גריד שיכול להכיל מכשולים ובו 2 קופסאות רגילות וקופסה כבדה. הקופסאות תופסות משבצת כל אחת. בעולם יש פעולת תזוזה לכל כיוון שמקבלת כפרמטר את הסוכן. כמו כן, יש פעולת דחיפה רגילה בכל כיוון שמקבלת כפרמטר את הסוכן, ופעולת דחיפה משותפת לכל כיוון שמקבלת שני סוכנים שונים כפרמטר.
+**In summary:** A grid world (possibly with obstacles) containing 2 regular boxes and 1 heavy box. The world has a `move` action (per agent), a `push-small` action (single agent, per direction), and a `push-heavy` action (two agents, per direction). The goal condition refers **only to the final positions of the boxes**, not the agents.
 
-עליכם ליצור גם קובץ **Domain** וגם קובץ **Problem** על ידי זה שתסבירו למודל השפה את העולם. ניתן גם לתת לו ציור שמתאר את מצב ההתחלה או להסביר במילים. תנאי המטרה יתייחס **רק למיקום הקופסאות**.
+You must generate both a **Domain file** and a **Problem file** by describing the world to your LLM. You may provide a drawing of the initial state or a natural language description. The goal condition should refer **only to box locations**.
 
-עליכם להתקין ולהריץ את אלגוריתם התכנון ולראות שהתוכנית המתקבלת אכן פותרת את הבעיה על ידי זה שתספקו אותה לסימולטור ותראו שהוא איננו מחזיר שגיאה ומגיע למצב מטרה.
+You must install and run the classical planner and verify that the resulting plan actually solves the problem by supplying it to the simulator and confirming it reaches the goal state without errors.
 
 ---
 
-## 🚀 הגדרת סביבת העבודה
+## 🚀 Environment Setup
 
-### שלב 1: שכפול ה-Repository
+### Step 1: Clone the Repository
 
-פתחו טרמינל, צרו תיקייה לקורס, ואז הריצו:
+Open a terminal, navigate to your course folder, and run:
 
 ```bash
 git clone https://github.com/ronberg-bgu/RL-course.git
 cd RL-course
 ```
 
-### שלב 2: הקמת סביבה וירטואלית והתקנת תלויות
+### Step 2: Create a Virtual Environment and Install Dependencies
 
 ```bash
 python3 -m venv venv
@@ -40,53 +40,108 @@ source venv/bin/activate          # macOS / Linux
 pip install -r requirements.txt
 ```
 
-### שלב 3: בדיקת הסביבה — הרצת הסימולציה הויזואלית
+### Step 3: Verify the Environment — Run the Visual Simulation
 
-כדי לוודא שהכל עובד, הריצו:
+To make sure everything works, run:
 
 ```bash
 python3 visualize_plan.py
 ```
 
-הסקריפט טוען מפה מוגדרת מראש, מייצר קבצי PDDL, מפעיל את המתכנן (Fast Downward), ומציג את הפתרון ויזואלית בחלון pygame.
+This script loads a predefined map, generates PDDL files, invokes the Fast Downward planner, and displays the solution visually in a pygame window.
 
-### שלב 4: יצירת Branch למטלה זו
+### Step 4: Write a PDDL → ASCII Map Translator
 
-**חשוב:** יש ליצור branch בפורמט:
+As part of the assignment, you must write a **Python script** that reads the `domain.pddl` and `problem.pddl` files you generated (via the LLM) and translates them back into an ASCII map in the format the simulator accepts.
+
+Your code should produce a list of strings like:
+
+```python
+ascii_map = [
+    "WWWWWWWW",
+    "W  A   W",
+    "W  B   W",
+    ...
+]
+```
+
+Then pass that map to the visual simulator (`visualize_plan.py`) to watch the plan execute on your board.
+
+This is the step that bridges your generated PDDL with the graphical environment — it must run without errors.
+
+### Step 5: Create a Branch for This Assignment
+
+**Important:** You must create a branch in the following format:
 
 ```bash
 git checkout -b student-{firstname}-{lastname}-ex1
 ```
 
-לדוגמה: `student-yossi-cohen-ex1`, `student-sarah-levi-ex1`
+For example: `student-yossi-cohen-ex1`, `student-sarah-levi-ex1`
 
-שמות ה-branch ישמשו לצורך מעקב וציון.
+Branch names are used for tracking and grading.
 
-### שלב 5: הגשה
+### Step 6: Submit
 
-בסיום, דחפו את ה-branch ופתחו Pull Request ב:
+When finished, push your branch and open a Pull Request at:
 [https://github.com/ronberg-bgu/RL-course](https://github.com/ronberg-bgu/RL-course)
 
 ---
 
-## 📋 מפרט PDDL — שמות מדויקים לשימוש עם הסימולטור
+## 📬 Submission Requirements
 
-כדי שקובצי ה-PDDL שתייצרו יעבדו ישירות עם הסימולטור, יש להשתמש בדיוק בשמות ובפורמטים הבאים.
+Your submission consists of **two parts**:
 
-### טיפוסים (Types)
+### Part A — Pull Request on GitHub
+
+Your branch must include all of the following files:
+
+| File | Description |
+|------|-------------|
+| `llm_pipeline.py` (or similar name) | The pipeline code that queries the LLM, builds the PDDL files, and runs the planner |
+| `pddl/domain.pddl` | The generated PDDL domain file |
+| `pddl/problem.pddl` | The generated PDDL problem file |
+| `pddl_to_map.py` (or similar name) | Script that parses your PDDL files and translates them back into an ASCII map for the visualizer |
+| `planner_output.txt` | The **full terminal log** of the planner run (Fast Downward output) |
+
+> **How to save the terminal log:**
+> ```bash
+> python3 visualize_plan.py 2>&1 | tee planner_output.txt
+> ```
+> This command prints to the terminal **and** saves everything to `planner_output.txt` at the same time.
+
+### Part B — Live Demo (In-Person Presentation)
+
+In addition to the Pull Request, **you will present your work live in front of the course instructor.**
+
+During the demo you are expected to:
+1. Run your full pipeline end-to-end from the terminal.
+2. Show the planner finding a valid plan.
+3. Run the visual simulator and demonstrate the agents reaching the goal state on **your** map.
+4. Explain your prompting strategy — how you described the world to the LLM and what choices you made.
+
+> **No submission is considered complete without the live demo.**
+
+---
+
+## 📋 PDDL Specification — Exact Names for Simulator Compatibility
+
+For your PDDL files to work directly with the simulator, you must use **exactly** the following names and formats.
+
+### Types
 
 ```
-agent   location   box   bigbox
+agent   location   box   heavybox
 ```
 
-### הערה חשובה על `push-big`
+### Important Note on `push-heavy`
 
-הקופסה הכבדה תמיד מתוארת כשני מיקומים `?boxloc1` `?boxloc2`.
-הסדר: `boxloc1` הוא תמיד **השמאלי** (לדחיפת שמאל/ימין) או **העליון** (לדחיפת מעלה/מטה).
+The heavy box is always described with a single location `?boxloc`.
+Both agents must be at the **same cell** (`?from`) adjacent to the box, pushing in the same direction.
 
-### תנאי מטרה
+### Goal Condition
 
-מכיוון שמיקומי תאי ה-goal ידועים מראש מהמפה, תנאי המטרה מציין ישירות את מיקום הקופסאות. לדוגמה:
+Since goal cell positions are known in advance from the map, the goal condition specifies box locations directly. For example:
 
 ```lisp
 (:goal (and
@@ -95,4 +150,4 @@ agent   location   box   bigbox
 ))
 ```
 
-תנאי המטרה יתייחס **רק למיקום הקופסאות** — לא למיקום הסוכנים.
+The goal condition refers **only to box locations** — not to agent positions.
