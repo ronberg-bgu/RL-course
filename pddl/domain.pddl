@@ -1,10 +1,10 @@
 (define (domain box-push)
   (:requirements :strips :typing)
-  (:types agent location box bigbox)
+  (:types agent location box heavybox)
   (:predicates
     (agent-at ?a - agent ?loc - location)
     (box-at ?b - box ?loc - location)
-    (bigbox-at ?b - bigbox ?loc1 - location ?loc2 - location)
+    (heavybox-at ?h - heavybox ?loc - location)
     (clear ?loc - location)
     (adj ?l1 - location ?l2 - location)
     (adj-left ?l1 - location ?l2 - location)
