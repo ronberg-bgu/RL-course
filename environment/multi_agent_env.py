@@ -140,7 +140,15 @@ class MultiAgentBoxPushEnv(ParallelEnv):
                     
                     agent_idx += 1
 
-        self.core_env.agent_pos = (1, 1) # Dummy for MiniGrid assertions
+        # Find an empty cell for the dummy agent position (required by MiniGrid assertions)
+        for y, row in enumerate(self.ascii_map):
+            for x, char in enumerate(row):
+                if char == ' ':
+                    self.core_env.agent_pos = (x, y)
+                    self.core_env.agent_dir = 0
+                    return
+        # Fallback if no empty cell found
+        self.core_env.agent_pos = (1, 1)
         self.core_env.agent_dir = 0
         
     def reset(self, seed=None, options=None):
