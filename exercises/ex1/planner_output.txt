@@ -1,0 +1,42 @@
+pygame 2.6.1 (SDL 2.32.10, Python 3.14.0)
+Hello from the pygame community. https://www.pygame.org/contribute.html
+[*] Successfully generated /Users/omeraviram/Projects/planning/assignment1/RL-course/exercises/ex1/pddl/domain.pddl and /Users/omeraviram/Projects/planning/assignment1/RL-course/exercises/ex1/pddl/problem.pddl
+[*] Translating PDDL to ASCII Map...
+
+Reconstructed ASCII Map:
+WWWWWW
+WAA  W
+W    W
+WBC BW
+WGG GW
+WWWWWW
+
+
+[*] Starting Planner and Visualizer...
+🧠 Solving PDDL problem...
+[96m[1mNOTE: To disable printing of planning engine credits, add this line to your code: `up.shortcuts.get_environment().credits_stream = None`
+[0m[96m  *** Credits ***
+[0m[96m  * In operation mode `OneshotPlanner` at line 13 of `/Users/omeraviram/Projects/planning/assignment1/RL-course/planner/pddl_solver.py`, [0m[96myou are using the following planning engine:
+[0m[96m  * Engine name: Fast Downward
+  * Developers:  Uni Basel team and contributors (cf. https://github.com/aibasel/downward/blob/main/README.md)
+[0m[96m  * Description: [0m[96mFast Downward is a domain-independent classical planning system.[0m[96m
+[0m[96m
+[0mPlan found with 8 steps!
+move(agent_0, loc_1_1, loc_1_2)
+push-small(agent_0, loc_1_2, loc_1_3, loc_1_4, box_0)
+move(agent_0, loc_1_3, loc_1_2)
+move(agent_0, loc_1_2, loc_2_2)
+move(agent_1, loc_2_1, loc_2_2)
+push-heavy(agent_0, agent_1, loc_2_2, loc_2_3, loc_2_4, hbx_0)
+move(agent_1, loc_2_3, loc_3_3)
+push-small(agent_1, loc_3_3, loc_4_3, loc_4_4, box_1)
+✅ Plan found with 8 steps. Booting visualizer...
+Executing: move(agent_0, loc_1_1, loc_1_2)
+Executing: push-small(agent_0, loc_1_2, loc_1_3, loc_1_4, box_0)
+Executing: move(agent_0, loc_1_3, loc_1_2)
+Executing: move(agent_0, loc_1_2, loc_2_2)
+Executing: move(agent_1, loc_2_1, loc_2_2)
+Executing: push-heavy(agent_0, agent_1, loc_2_2, loc_2_3, loc_2_4, hbx_0)
+Executing: move(agent_1, loc_2_3, loc_3_3)
+Executing: push-small(agent_1, loc_3_3, loc_4_3, loc_4_4, box_1)
+🎉 Plan execution complete! Closing in 3 seconds.
