@@ -5,3 +5,5 @@ pettingzoo
 unified-planning
 pyperplan
 up-fast-downward
+google-genai
+python-dotenv
