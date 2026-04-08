@@ -4,7 +4,7 @@
     loc_1_1 loc_2_1 loc_3_1 loc_5_1 loc_6_1 loc_7_1 loc_8_1 loc_1_2 loc_2_2 loc_3_2 loc_5_2 loc_6_2 loc_7_2 loc_8_2 loc_1_3 loc_2_3 loc_3_3 loc_4_3 loc_5_3 loc_6_3 loc_8_3 loc_1_4 loc_2_4 loc_3_4 loc_4_4 loc_5_4 loc_6_4 loc_8_4 loc_1_5 loc_3_5 loc_4_5 loc_5_5 loc_6_5 loc_7_5 loc_8_5 loc_1_6 loc_3_6 loc_4_6 loc_5_6 loc_6_6 loc_7_6 loc_8_6 loc_1_7 loc_2_7 loc_3_7 loc_4_7 loc_5_7 loc_6_7 loc_7_7 loc_8_7 - location
     agent_0 agent_1 - agent
     box_0 box_1 - box
-    bbig_1 - bigbox
+    hbx_0 - heavybox
   )
   (:init
     (clear loc_1_1)
@@ -15,6 +15,7 @@
     (clear loc_7_1)
     (clear loc_8_1)
     (clear loc_1_2)
+    (clear loc_2_2)
     (clear loc_3_2)
     (clear loc_5_2)
     (clear loc_7_2)
@@ -29,6 +30,7 @@
     (clear loc_1_4)
     (clear loc_2_4)
     (clear loc_4_4)
+    (clear loc_6_4)
     (clear loc_8_4)
     (clear loc_1_5)
     (clear loc_3_5)
@@ -39,6 +41,7 @@
     (clear loc_8_5)
     (clear loc_1_6)
     (clear loc_3_6)
+    (clear loc_4_6)
     (clear loc_5_6)
     (clear loc_6_6)
     (clear loc_7_6)
@@ -55,7 +58,7 @@
     (agent-at agent_1 loc_4_6)
     (box-at box_0 loc_6_2)
     (box-at box_1 loc_3_4)
-    (bigbox-at bbig_1 loc_5_4 loc_6_4)
+    (heavybox-at hbx_0 loc_5_4)
     (adj loc_1_1 loc_2_1)
     (adj loc_2_1 loc_1_1)
     (adj-right loc_1_1 loc_2_1)
@@ -368,6 +371,6 @@
   (:goal (and
     (box-at box_0 loc_6_6)
     (box-at box_1 loc_7_6)
-    (bigbox-at bbig_1 loc_5_7 loc_6_7)
+    (heavybox-at hbx_0 loc_5_7)
   ))
 )
