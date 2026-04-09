@@ -11,6 +11,7 @@
     (heavybox-at ?h - heavybox ?loc - location)
     (clear ?loc - location)
     (adj ?l1 - location ?l2 - location)
+    (in-line ?from - location ?boxloc - location ?toloc - location)
   )
 
   (:action move
@@ -31,6 +32,7 @@
       (adj ?from ?boxloc)
       (box-at ?b ?boxloc)
       (adj ?boxloc ?toloc)
+      (in-line ?from ?boxloc ?toloc)
       (clear ?toloc))
     :effect (and
       (agent-at ?a ?boxloc)
@@ -47,11 +49,13 @@
       (not (= ?a1 ?a2))
       (agent-at ?a1 ?from) (agent-at ?a2 ?from)
       (adj ?from ?boxloc) (heavybox-at ?h ?boxloc)
-      (adj ?boxloc ?toloc) (clear ?toloc))
+      (adj ?boxloc ?toloc)
+      (in-line ?from ?boxloc ?toloc)
+      (clear ?toloc))
     :effect (and
       (agent-at ?a1 ?boxloc) (agent-at ?a2 ?boxloc)
       (not (agent-at ?a1 ?from)) (not (agent-at ?a2 ?from))
-      (clear ?from)
+      (clear ?boxloc)
       (heavybox-at ?h ?toloc) (not (heavybox-at ?h ?boxloc))
       (not (clear ?toloc)))
   )

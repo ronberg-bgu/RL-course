@@ -7,7 +7,6 @@ current_dir = os.path.dirname(os.path.abspath(__file__))
 parent_dir = os.path.abspath(os.path.join(current_dir, '../../'))
 sys.path.append(parent_dir)
 
-# Now these imports will work without crashing!
 from visualize_plan import visualize_pddl_plan
 from exercises.ex1.pddl_to_map import parse_pddl_to_map 
 
@@ -20,25 +19,28 @@ Act as an expert in classical planning and PDDL. Your task is to write a strictl
 
 **The World Rules**
 * There are two agents moving on a 2D grid.
-* Agents can move in any of the 4 directions to adjacent empty cells (agents may share a cell).
+* Agents can move in any of the 4 directions to adjacent cells that contain no box. Agents may share a cell.
 * Agents can push a regular box (requires 1 agent) or a heavy box (requires 2 agents).
+* A push is legal only when the agent source cell, the box cell, and the destination cell are in one straight line. Mere adjacency is not enough.
+* This straight-line requirement applies to both `push-small` and `push-heavy`.
 * To push the heavy box, both agents must push simultaneously from the same cell in the same direction.
 * The goal condition must refer only to the final positions of the boxes, not the agents.
 
 **Domain Constraints (STRICT)**
-You must use the following types and predicates exactly as written. Do not invent new ones.
+You must use the following types exactly as written.
 * Types: `agent`, `location`, `box`, `heavybox`.
-* Predicates:
+* Predicates: you must include all of the following, and you may add exactly one extra static predicate: `(in-line ?from - location ?boxloc - location ?toloc - location)`.
   * `(agent-at ?a - agent ?loc - location)`
   * `(box-at ?b - box ?loc - location)`
   * `(heavybox-at ?h - heavybox ?loc - location)`
   * `(clear ?loc - location)` - meaning the location has no box on it.
   * `(adj ?l1 - location ?l2 - location)` - meaning locations are adjacent (bidirectional).
+  * `(in-line ?from - location ?boxloc - location ?toloc - location)` - meaning `?from -> ?boxloc -> ?toloc` is a straight horizontal or vertical push line, with `?boxloc` in the middle.
 
 **Action Definitions**
 Define exactly 3 actions:
 1. `move`: Parameters `(?a - agent ?from - location ?to - location)`. Moves one agent to an adjacent cell.
-2. `push-small`: Parameters `(?a - agent ?from - location ?boxloc - location ?toloc - location ?b - box)`. One agent pushes a small box one cell.
+2. `push-small`: Parameters `(?a - agent ?from - location ?boxloc - location ?toloc - location ?b - box)`. One agent pushes a small box one cell. Its precondition must include `(in-line ?from ?boxloc ?toloc)`, not just adjacency.
 3. `push-heavy`: You MUST use this exact PDDL for the heavy push:
 (:action push-heavy
   :parameters (?a1 - agent ?a2 - agent ?from - location ?boxloc - location ?toloc - location ?h - heavybox)
@@ -46,14 +48,20 @@ Define exactly 3 actions:
     (not (= ?a1 ?a2))
     (agent-at ?a1 ?from) (agent-at ?a2 ?from)
     (adj ?from ?boxloc) (heavybox-at ?h ?boxloc)
-    (adj ?boxloc ?toloc) (clear ?toloc))
+    (adj ?boxloc ?toloc)
+    (in-line ?from ?boxloc ?toloc)
+    (clear ?toloc))
   :effect (and
     (agent-at ?a1 ?boxloc) (agent-at ?a2 ?boxloc)
     (not (agent-at ?a1 ?from)) (not (agent-at ?a2 ?from))
-    (clear ?from)
+    (clear ?boxloc)
     (heavybox-at ?h ?toloc) (not (heavybox-at ?h ?boxloc))
     (not (clear ?toloc)))
 )
+
+**Important Modeling Note**
+Do not use `adj` alone to decide whether a push is legal. `adj` only captures neighboring cells. The straight-line legality of pushing must be enforced with `in-line` for both small and heavy boxes.
+`clear` tracks boxes only, not agents.
 
 **Problem Requirements**
 Create a problem file for a 4x4 grid (X=1..4, Y=1..4).
@@ -64,6 +72,7 @@ Create a problem file for a 4x4 grid (X=1..4, Y=1..4).
   * Heavy box: `hbx_0`.
 * Initial State (`:init`):
   * Define the bidirectional adjacency (`adj`) for the 4x4 grid.
+  * Define all true `(in-line ?from ?boxloc ?toloc)` facts for straight horizontal and vertical triples in the grid. Include only straight triples; do not include bent triples.
   * Set all locations as `(clear)` EXCEPT where boxes are placed initially.
   * Agents: `agent_0` at `loc_1_1`, `agent_1` at `loc_2_1`.
   * Small boxes: `box_0` at `loc_1_3`, `box_1` at `loc_4_3` (do NOT mark these as clear).
@@ -91,6 +100,7 @@ DOMAIN_PDDL = """
     (heavybox-at ?h - heavybox ?loc - location)
     (clear ?loc - location)
     (adj ?l1 - location ?l2 - location)
+    (in-line ?from - location ?boxloc - location ?toloc - location)
   )
 
   (:action move
@@ -111,6 +121,7 @@ DOMAIN_PDDL = """
       (adj ?from ?boxloc)
       (box-at ?b ?boxloc)
       (adj ?boxloc ?toloc)
+      (in-line ?from ?boxloc ?toloc)
       (clear ?toloc))
     :effect (and
       (agent-at ?a ?boxloc)
@@ -127,11 +138,13 @@ DOMAIN_PDDL = """
       (not (= ?a1 ?a2))
       (agent-at ?a1 ?from) (agent-at ?a2 ?from)
       (adj ?from ?boxloc) (heavybox-at ?h ?boxloc)
-      (adj ?boxloc ?toloc) (clear ?toloc))
+      (adj ?boxloc ?toloc)
+      (in-line ?from ?boxloc ?toloc)
+      (clear ?toloc))
     :effect (and
       (agent-at ?a1 ?boxloc) (agent-at ?a2 ?boxloc)
       (not (agent-at ?a1 ?from)) (not (agent-at ?a2 ?from))
-      (clear ?from)
+      (clear ?boxloc)
       (heavybox-at ?h ?toloc) (not (heavybox-at ?h ?boxloc))
       (not (clear ?toloc)))
   )
@@ -185,6 +198,24 @@ PROBLEM_PDDL = """
     (adj loc_1_4 loc_2_4) (adj loc_2_4 loc_1_4)
     (adj loc_2_4 loc_3_4) (adj loc_3_4 loc_2_4)
     (adj loc_3_4 loc_4_4) (adj loc_4_4 loc_3_4)
+
+    ;; Straight push triples
+    (in-line loc_1_1 loc_2_1 loc_3_1) (in-line loc_3_1 loc_2_1 loc_1_1)
+    (in-line loc_2_1 loc_3_1 loc_4_1) (in-line loc_4_1 loc_3_1 loc_2_1)
+    (in-line loc_1_2 loc_2_2 loc_3_2) (in-line loc_3_2 loc_2_2 loc_1_2)
+    (in-line loc_2_2 loc_3_2 loc_4_2) (in-line loc_4_2 loc_3_2 loc_2_2)
+    (in-line loc_1_3 loc_2_3 loc_3_3) (in-line loc_3_3 loc_2_3 loc_1_3)
+    (in-line loc_2_3 loc_3_3 loc_4_3) (in-line loc_4_3 loc_3_3 loc_2_3)
+    (in-line loc_1_4 loc_2_4 loc_3_4) (in-line loc_3_4 loc_2_4 loc_1_4)
+    (in-line loc_2_4 loc_3_4 loc_4_4) (in-line loc_4_4 loc_3_4 loc_2_4)
+    (in-line loc_1_1 loc_1_2 loc_1_3) (in-line loc_1_3 loc_1_2 loc_1_1)
+    (in-line loc_1_2 loc_1_3 loc_1_4) (in-line loc_1_4 loc_1_3 loc_1_2)
+    (in-line loc_2_1 loc_2_2 loc_2_3) (in-line loc_2_3 loc_2_2 loc_2_1)
+    (in-line loc_2_2 loc_2_3 loc_2_4) (in-line loc_2_4 loc_2_3 loc_2_2)
+    (in-line loc_3_1 loc_3_2 loc_3_3) (in-line loc_3_3 loc_3_2 loc_3_1)
+    (in-line loc_3_2 loc_3_3 loc_3_4) (in-line loc_3_4 loc_3_3 loc_3_2)
+    (in-line loc_4_1 loc_4_2 loc_4_3) (in-line loc_4_3 loc_4_2 loc_4_1)
+    (in-line loc_4_2 loc_4_3 loc_4_4) (in-line loc_4_4 loc_4_3 loc_4_2)
 
     ;; Clear locations (all except box locations)
     (clear loc_1_1)
