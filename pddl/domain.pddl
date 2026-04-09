@@ -1,46 +1,93 @@
-(define (domain box-push)
+(define (domain box-pushing)
   (:requirements :strips :typing :equality)
-  (:types agent location box heavybox)
+
+  (:types 
+    agent 
+    location 
+    box 
+    heavybox
+    direction
+  )
+
+  (:constants
+    dir-up dir-down dir-left dir-right - direction
+  )
+
   (:predicates
-    (agent-at ?a - agent ?loc - location)
-    (box-at ?b - box ?loc - location)
-    (heavybox-at ?h - heavybox ?loc - location)
-    (clear ?loc - location)
-    (adj ?l1 - location ?l2 - location)
+    (agent-at ?a - agent ?l - location)
+    (box-at ?b - box ?l - location)
+    (heavybox-at ?b - heavybox ?l - location)
+
+    (adj-dir ?from ?to - location ?d - direction)
+
+    ;; only boxes affect this
+    (clear ?l - location)
   )
 
+  ;; MOVE
   (:action move
-    :parameters (?a - agent ?from - location ?to - location)
-    :precondition (and (agent-at ?a ?from) (adj ?from ?to))
-    :effect (and (agent-at ?a ?to) (not (agent-at ?a ?from)))
-  )
-
-  (:action push-small
-    :parameters (?a - agent ?from - location ?boxloc - location ?toloc - location ?b - box)
-    :precondition (and (agent-at ?a ?from) (adj ?from ?boxloc) (box-at ?b ?boxloc) (adj ?boxloc ?toloc) (clear ?toloc))
-    :effect (and (agent-at ?a ?boxloc) (not (agent-at ?a ?from)) (clear ?from) (box-at ?b ?toloc) (not (box-at ?b ?boxloc)) (not (clear ?toloc)))
-  )
-
-  (:action push-heavy
-    :parameters (?a1 - agent ?a2 - agent ?from - location ?boxloc - location ?toloc - location ?h - heavybox)
+    :parameters (?a - agent ?from ?to - location ?d - direction)
     :precondition (and
-        (not (= ?a1 ?a2))
-        (agent-at ?a1 ?from)
-        (agent-at ?a2 ?from)
-        (adj ?from ?boxloc)
-        (heavybox-at ?h ?boxloc)
-        (adj ?boxloc ?toloc)
-        (clear ?toloc)
+      (agent-at ?a ?from)
+      (adj-dir ?from ?to ?d)
+      (clear ?to)
     )
     :effect (and
-        (agent-at ?a1 ?boxloc)
-        (agent-at ?a2 ?boxloc)
-        (not (agent-at ?a1 ?from))
-        (not (agent-at ?a2 ?from))
-        (clear ?from)
-        (heavybox-at ?h ?toloc)
-        (not (heavybox-at ?h ?boxloc))
-        (not (clear ?toloc))
+      (not (agent-at ?a ?from))
+      (agent-at ?a ?to)
+    )
+  )
+
+  ;; PUSH SMALL
+  (:action push-small
+    :parameters (?a - agent ?from ?boxloc ?toloc - location ?b - box ?d - direction)
+    :precondition (and
+      (agent-at ?a ?from)
+      (box-at ?b ?boxloc)
+
+      (adj-dir ?from ?boxloc ?d)
+      (adj-dir ?boxloc ?toloc ?d)
+
+      (clear ?toloc)
+    )
+    :effect (and
+      (not (agent-at ?a ?from))
+      (agent-at ?a ?boxloc)
+
+      (not (box-at ?b ?boxloc))
+      (box-at ?b ?toloc)
+
+      (clear ?boxloc)
+      (not (clear ?toloc))
+    )
+  )
+
+  ;; PUSH HEAVY
+  (:action push-heavy
+    :parameters (?a1 ?a2 - agent ?from ?boxloc ?toloc - location ?b - heavybox ?d - direction)
+    :precondition (and
+      (not (= ?a1 ?a2))
+      (agent-at ?a1 ?from)
+      (agent-at ?a2 ?from)
+
+      (heavybox-at ?b ?boxloc)
+
+      (adj-dir ?from ?boxloc ?d)
+      (adj-dir ?boxloc ?toloc ?d)
+
+      (clear ?toloc)
+    )
+    :effect (and
+      (not (agent-at ?a1 ?from))
+      (not (agent-at ?a2 ?from))
+      (agent-at ?a1 ?boxloc)
+      (agent-at ?a2 ?boxloc)
+
+      (not (heavybox-at ?b ?boxloc))
+      (heavybox-at ?b ?toloc)
+
+      (clear ?boxloc)
+      (not (clear ?toloc))
     )
   )
 )
