@@ -83,32 +83,22 @@ PDDL_FOLDER = os.path.join(SCRIPT_DIR, "pddl")
 #   Small boxes: box_0, box_1
 #   Heavy box: hbx_0
 #
-# ## My custom map (8x8):
+# ## My custom map (8x7):
 #
 #   Row 0: WWWWWWWW
-#   Row 1: W  AA  W    <- agents at (3,1) and (4,1)
-#   Row 2: W  C   W    <- heavy box at (3,2)
-#   Row 3: W W  B W    <- wall at (2,3), small box at (5,3)
-#   Row 4: W W  B W    <- wall at (2,4), small box at (5,4)
-#   Row 5: W WGGG W    <- wall at (2,5), goals at (3,5), (4,5), (5,5)
-#   Row 6: W      W
-#   Row 7: WWWWWWWW
+#   Row 1: W AA   W    <- agents at (2,1) and (3,1)
+#   Row 2: W W W WW    <- corridor entrances
+#   Row 3: WBWBWCWW    <- small boxes at (1,3), (3,3), heavy box at (5,3)
+#   Row 4: W W W WW
+#   Row 5: WGWGWGWW    <- goals at (1,5), (3,5), (5,5)
+#   Row 6: WWWWWWWW
 #
-# The outer boundary (row 0, row 7, col 0, col 7) is all walls.
-# Internal walls at (2,3), (2,4), and (2,5) form a corridor barrier.
-#
-# Non-wall locations are every (x,y) that is NOT a wall. Agents and boxes
-# occupy locations but those locations still exist.
-#
-# Adjacency: two locations are adjacent if they differ by exactly 1 in
-# either x or y (not both) AND neither is a wall. Adjacency is bidirectional.
-#
-# Clear: a location is clear if it has NO box and NO heavybox on it.
-# Agents do NOT block locations from being clear.
+# The outer boundaries are walls.
+# The internal walls force the agents to push the boxes straight down in perfect 1D paths!
 #
 # Goal: all 3 boxes must reach the goal cells:
-#   box_0 -> loc_3_5
-#   box_1 -> loc_4_5
+#   box_0 -> loc_1_5
+#   box_1 -> loc_3_5
 #   hbx_0 -> loc_5_5
 #
 # Please output the domain.pddl content first, then the problem.pddl content.
@@ -174,150 +164,69 @@ PROBLEM_PDDL = """\
 (define (problem bp-map)
   (:domain box-push)
   (:objects
-    loc_1_1 loc_2_1 loc_3_1 loc_4_1 loc_5_1 loc_6_1 loc_1_2 loc_2_2 loc_3_2 loc_4_2 loc_5_2 loc_6_2 loc_1_3 loc_3_3 loc_4_3 loc_5_3 loc_6_3 loc_1_4 loc_3_4 loc_4_4 loc_5_4 loc_6_4 loc_1_5 loc_3_5 loc_4_5 loc_5_5 loc_6_5 loc_1_6 loc_2_6 loc_3_6 loc_4_6 loc_5_6 loc_6_6 - location
+    loc_1_1 loc_2_1 loc_3_1 loc_4_1 loc_5_1 loc_6_1 loc_1_2 loc_3_2 loc_5_2 loc_1_3 loc_3_3 loc_5_3 loc_1_4 loc_3_4 loc_5_4 loc_1_5 loc_3_5 loc_5_5 - location
     agent_0 agent_1 - agent
     box_0 box_1 - box
     hbx_0 - heavybox
   )
   (:init
-    (clear loc_6_2)
-    (clear loc_1_3)
-    (clear loc_1_6)
-    (clear loc_5_2)
-    (clear loc_6_3)
-    (clear loc_5_6)
-    (clear loc_5_5)
-    (clear loc_1_5)
-    (clear loc_3_4)
-    (clear loc_1_1)
-    (clear loc_2_1)
-    (clear loc_1_2)
-    (clear loc_3_5)
-    (clear loc_4_5)
-    (clear loc_6_5)
-    (clear loc_1_4)
-    (clear loc_2_2)
-    (clear loc_4_3)
-    (clear loc_6_6)
     (clear loc_6_1)
-    (clear loc_4_2)
-    (clear loc_4_6)
+    (clear loc_5_4)
+    (clear loc_5_2)
+    (clear loc_1_2)
+    (clear loc_4_1)
+    (clear loc_1_4)
+    (clear loc_1_5)
+    (clear loc_1_1)
     (clear loc_5_1)
-    (clear loc_6_4)
-    (clear loc_4_4)
-    (clear loc_3_3)
-    (clear loc_2_6)
-    (clear loc_3_6)
-    (agent-at agent_0 loc_3_1)
-    (agent-at agent_1 loc_4_1)
-    (box-at box_0 loc_5_3)
-    (box-at box_1 loc_5_4)
-    (heavybox-at hbx_0 loc_3_2)
+    (clear loc_3_2)
+    (clear loc_3_5)
+    (clear loc_5_5)
+    (clear loc_3_4)
+    (agent-at agent_0 loc_2_1)
+    (agent-at agent_1 loc_3_1)
+    (box-at box_0 loc_1_3)
+    (box-at box_1 loc_3_3)
+    (heavybox-at hbx_0 loc_5_3)
     (adj loc_1_1 loc_2_1)
     (adj loc_2_1 loc_1_1)
     (adj loc_1_1 loc_1_2)
     (adj loc_1_2 loc_1_1)
     (adj loc_2_1 loc_3_1)
     (adj loc_3_1 loc_2_1)
-    (adj loc_2_1 loc_2_2)
-    (adj loc_2_2 loc_2_1)
     (adj loc_3_1 loc_4_1)
     (adj loc_4_1 loc_3_1)
     (adj loc_3_1 loc_3_2)
     (adj loc_3_2 loc_3_1)
     (adj loc_4_1 loc_5_1)
     (adj loc_5_1 loc_4_1)
-    (adj loc_4_1 loc_4_2)
-    (adj loc_4_2 loc_4_1)
     (adj loc_5_1 loc_6_1)
     (adj loc_6_1 loc_5_1)
     (adj loc_5_1 loc_5_2)
     (adj loc_5_2 loc_5_1)
-    (adj loc_6_1 loc_6_2)
-    (adj loc_6_2 loc_6_1)
-    (adj loc_1_2 loc_2_2)
-    (adj loc_2_2 loc_1_2)
     (adj loc_1_2 loc_1_3)
     (adj loc_1_3 loc_1_2)
-    (adj loc_2_2 loc_3_2)
-    (adj loc_3_2 loc_2_2)
-    (adj loc_3_2 loc_4_2)
-    (adj loc_4_2 loc_3_2)
     (adj loc_3_2 loc_3_3)
     (adj loc_3_3 loc_3_2)
-    (adj loc_4_2 loc_5_2)
-    (adj loc_5_2 loc_4_2)
-    (adj loc_4_2 loc_4_3)
-    (adj loc_4_3 loc_4_2)
-    (adj loc_5_2 loc_6_2)
-    (adj loc_6_2 loc_5_2)
     (adj loc_5_2 loc_5_3)
     (adj loc_5_3 loc_5_2)
-    (adj loc_6_2 loc_6_3)
-    (adj loc_6_3 loc_6_2)
     (adj loc_1_3 loc_1_4)
     (adj loc_1_4 loc_1_3)
-    (adj loc_3_3 loc_4_3)
-    (adj loc_4_3 loc_3_3)
     (adj loc_3_3 loc_3_4)
     (adj loc_3_4 loc_3_3)
-    (adj loc_4_3 loc_5_3)
-    (adj loc_5_3 loc_4_3)
-    (adj loc_4_3 loc_4_4)
-    (adj loc_4_4 loc_4_3)
-    (adj loc_5_3 loc_6_3)
-    (adj loc_6_3 loc_5_3)
     (adj loc_5_3 loc_5_4)
     (adj loc_5_4 loc_5_3)
-    (adj loc_6_3 loc_6_4)
-    (adj loc_6_4 loc_6_3)
     (adj loc_1_4 loc_1_5)
     (adj loc_1_5 loc_1_4)
-    (adj loc_3_4 loc_4_4)
-    (adj loc_4_4 loc_3_4)
     (adj loc_3_4 loc_3_5)
     (adj loc_3_5 loc_3_4)
-    (adj loc_4_4 loc_5_4)
-    (adj loc_5_4 loc_4_4)
-    (adj loc_4_4 loc_4_5)
-    (adj loc_4_5 loc_4_4)
-    (adj loc_5_4 loc_6_4)
-    (adj loc_6_4 loc_5_4)
     (adj loc_5_4 loc_5_5)
     (adj loc_5_5 loc_5_4)
-    (adj loc_6_4 loc_6_5)
-    (adj loc_6_5 loc_6_4)
-    (adj loc_1_5 loc_1_6)
-    (adj loc_1_6 loc_1_5)
-    (adj loc_3_5 loc_4_5)
-    (adj loc_4_5 loc_3_5)
-    (adj loc_3_5 loc_3_6)
-    (adj loc_3_6 loc_3_5)
-    (adj loc_4_5 loc_5_5)
-    (adj loc_5_5 loc_4_5)
-    (adj loc_4_5 loc_4_6)
-    (adj loc_4_6 loc_4_5)
-    (adj loc_5_5 loc_6_5)
-    (adj loc_6_5 loc_5_5)
-    (adj loc_5_5 loc_5_6)
-    (adj loc_5_6 loc_5_5)
-    (adj loc_6_5 loc_6_6)
-    (adj loc_6_6 loc_6_5)
-    (adj loc_1_6 loc_2_6)
-    (adj loc_2_6 loc_1_6)
-    (adj loc_2_6 loc_3_6)
-    (adj loc_3_6 loc_2_6)
-    (adj loc_3_6 loc_4_6)
-    (adj loc_4_6 loc_3_6)
-    (adj loc_4_6 loc_5_6)
-    (adj loc_5_6 loc_4_6)
-    (adj loc_5_6 loc_6_6)
-    (adj loc_6_6 loc_5_6)
   )
   (:goal
     (and
-    (box-at box_0 loc_3_5)
-    (box-at box_1 loc_4_5)
+    (box-at box_0 loc_1_5)
+    (box-at box_1 loc_3_5)
     (heavybox-at hbx_0 loc_5_5)
   )
   )
