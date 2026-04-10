@@ -1,3 +1,157 @@
+import argparse
+import subprocess
+from pathlib import Path
+from textwrap import dedent
+
+
+PROMPT_TEXT = dedent("""
+You are generating PDDL for a deterministic box-pushing world.
+
+Requirements:
+- Use domain name: box-push
+- Use types: agent, location, box, heavybox
+- Use predicates:
+  - (agent-at ?a - agent ?loc - location)
+  - (box-at ?b - box ?loc - location)
+  - (heavybox-at ?h - heavybox ?loc - location)
+  - (clear ?loc - location)
+  - (adj ?l1 - location ?l2 - location)
+  - (adj-left ?l1 - location ?l2 - location)
+  - (adj-right ?l1 - location ?l2 - location)
+  - (adj-up ?l1 - location ?l2 - location)
+  - (adj-down ?l1 - location ?l2 - location)
+
+Actions:
+- move
+- push-small
+- push-heavy
+
+Heavy box clarification:
+- The heavy box is 1x1.
+- It uses type heavybox.
+- Its predicate is heavybox-at.
+- Its object name is hbx_0.
+- A heavy box push requires both agents to stand on the same location adjacent to the heavy box
+  and push in the same direction simultaneously.
+
+Map:
+WWWWWWWW
+W  AA  W
+W   C  W
+W W  B W
+W W  B W
+W WGG  W
+W   G  W
+WWWWWWWW
+
+Legend:
+W = wall
+A = agent
+B = small box
+C = heavy box
+G = goal
+space = empty cell
+
+Need:
+1. A valid general domain.pddl
+2. A valid problem.pddl derived from the map
+3. The goal should refer directly to box / heavybox locations
+4. Compatibility with the course simulator/repository conventions
+""")
+
+
+DOMAIN_PDDL = dedent("""
+(define (domain box-push)
+  (:requirements :strips :typing :equality :disjunctive-preconditions)
+
+  (:types
+    agent location box heavybox
+  )
+
+  (:predicates
+    (agent-at ?a - agent ?loc - location)
+    (box-at ?b - box ?loc - location)
+    (heavybox-at ?h - heavybox ?loc - location)
+    (clear ?loc - location)
+
+    (adj ?l1 - location ?l2 - location)
+    (adj-left ?l1 - location ?l2 - location)
+    (adj-right ?l1 - location ?l2 - location)
+    (adj-up ?l1 - location ?l2 - location)
+    (adj-down ?l1 - location ?l2 - location)
+  )
+
+  (:action move
+    :parameters (?a - agent ?from - location ?to - location)
+    :precondition (and
+      (agent-at ?a ?from)
+      (adj ?from ?to)
+      (clear ?to)
+    )
+    :effect (and
+      (not (agent-at ?a ?from))
+      (agent-at ?a ?to)
+    )
+  )
+
+  (:action push-small
+    :parameters (?a - agent ?from - location ?boxloc - location ?toloc - location ?b - box)
+    :precondition (and
+      (agent-at ?a ?from)
+      (box-at ?b ?boxloc)
+      (clear ?toloc)
+      (or
+        (and (adj-up ?from ?boxloc)    (adj-up ?boxloc ?toloc))
+        (and (adj-down ?from ?boxloc)  (adj-down ?boxloc ?toloc))
+        (and (adj-left ?from ?boxloc)  (adj-left ?boxloc ?toloc))
+        (and (adj-right ?from ?boxloc) (adj-right ?boxloc ?toloc))
+      )
+    )
+    :effect (and
+      (not (agent-at ?a ?from))
+      (agent-at ?a ?boxloc)
+
+      (not (box-at ?b ?boxloc))
+      (box-at ?b ?toloc)
+
+      (clear ?boxloc)
+      (not (clear ?toloc))
+    )
+  )
+
+  (:action push-heavy
+    :parameters (?a1 - agent ?a2 - agent ?from - location ?boxloc - location ?toloc - location ?h - heavybox)
+    :precondition (and
+      (not (= ?a1 ?a2))
+      (agent-at ?a1 ?from)
+      (agent-at ?a2 ?from)
+      (heavybox-at ?h ?boxloc)
+      (clear ?toloc)
+      (or
+        (and (adj-up ?from ?boxloc)    (adj-up ?boxloc ?toloc))
+        (and (adj-down ?from ?boxloc)  (adj-down ?boxloc ?toloc))
+        (and (adj-left ?from ?boxloc)  (adj-left ?boxloc ?toloc))
+        (and (adj-right ?from ?boxloc) (adj-right ?boxloc ?toloc))
+      )
+    )
+    :effect (and
+      (not (agent-at ?a1 ?from))
+      (not (agent-at ?a2 ?from))
+      (agent-at ?a1 ?boxloc)
+      (agent-at ?a2 ?boxloc)
+
+      (not (heavybox-at ?h ?boxloc))
+      (heavybox-at ?h ?toloc)
+
+      (clear ?boxloc)
+      (not (clear ?toloc))
+    )
+  )
+)
+""").strip() + "\n"
+
+
+PROBLEM_PDDL = dedent("""
 (define (problem bp-map)
   (:domain box-push)
 
@@ -189,3 +343,84 @@
     )
   )
 )
+""").strip() + "\n"
+
+
+def write_text_file(path: Path, content: str) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(content, encoding="utf-8")
+
+
+def run_planner(repo_root: Path) -> subprocess.CompletedProcess[str]:
+    solver = repo_root / "planner" / "pddl_solver.py"
+    domain = repo_root / "pddl" / "domain.pddl"
+    problem = repo_root / "pddl" / "problem.pddl"
+
+    if not solver.exists():
+        raise FileNotFoundError(f"Could not find planner script at: {solver}")
+
+    cmd = ["py", str(solver), str(domain), str(problem)]
+    return subprocess.run(
+        cmd,
+        cwd=repo_root,
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+
+
+def main() -> int:
+    parser = argparse.ArgumentParser(description="Write PDDL files and run the planner.")
+    parser.add_argument(
+        "--print-prompt",
+        action="store_true",
+        help="Print the prompt text used for the LLM workflow.",
+    )
+    args = parser.parse_args()
+
+    repo_root = Path(__file__).resolve().parent
+    pddl_dir = repo_root / "pddl"
+
+    write_text_file(repo_root / "llm_prompt.txt", PROMPT_TEXT)
+    write_text_file(pddl_dir / "domain.pddl", DOMAIN_PDDL)
+    write_text_file(pddl_dir / "problem.pddl", PROBLEM_PDDL)
+
+    if args.print_prompt:
+        print("=== LLM PROMPT ===")
+        print(PROMPT_TEXT)
+        print("==================\n")
+
+    print("Wrote:")
+    print(f"  {pddl_dir / 'domain.pddl'}")
+    print(f"  {pddl_dir / 'problem.pddl'}")
+    print(f"  {repo_root / 'llm_prompt.txt'}")
+    print()
+
+    try:
+        result = run_planner(repo_root)
+    except Exception as exc:
+        error_text = f"Planner execution failed before running:\n{exc}\n"
+        write_text_file(repo_root / "planner_output.txt", error_text)
+        print(error_text)
+        return 1
+
+    combined_output = ""
+    if result.stdout:
+        combined_output += result.stdout
+    if result.stderr:
+        if combined_output and not combined_output.endswith("\n"):
+            combined_output += "\n"
+        combined_output += result.stderr
+
+    write_text_file(repo_root / "planner_output.txt", combined_output)
+
+    print("=== Planner output ===")
+    print(combined_output, end="" if combined_output.endswith("\n") else "\n")
+    print("======================")
+    print(f"Saved full planner log to: {repo_root / 'planner_output.txt'}")
+
+    return result.returncode
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())

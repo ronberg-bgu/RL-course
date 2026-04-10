@@ -1,0 +1,53 @@
+
+You are generating PDDL for a deterministic box-pushing world.
+
+Requirements:
+- Use domain name: box-push
+- Use types: agent, location, box, heavybox
+- Use predicates:
+  - (agent-at ?a - agent ?loc - location)
+  - (box-at ?b - box ?loc - location)
+  - (heavybox-at ?h - heavybox ?loc - location)
+  - (clear ?loc - location)
+  - (adj ?l1 - location ?l2 - location)
+  - (adj-left ?l1 - location ?l2 - location)
+  - (adj-right ?l1 - location ?l2 - location)
+  - (adj-up ?l1 - location ?l2 - location)
+  - (adj-down ?l1 - location ?l2 - location)
+
+Actions:
+- move
+- push-small
+- push-heavy
+
+Heavy box clarification:
+- The heavy box is 1x1.
+- It uses type heavybox.
+- Its predicate is heavybox-at.
+- Its object name is hbx_0.
+- A heavy box push requires both agents to stand on the same location adjacent to the heavy box
+  and push in the same direction simultaneously.
+
+Map:
+WWWWWWWW
+W  AA  W
+W   C  W
+W W  B W
+W W  B W
+W WGG  W
+W   G  W
+WWWWWWWW
+
+Legend:
+W = wall
+A = agent
+B = small box
+C = heavy box
+G = goal
+space = empty cell
+
+Need:
+1. A valid general domain.pddl
+2. A valid problem.pddl derived from the map
+3. The goal should refer directly to box / heavybox locations
+4. Compatibility with the course simulator/repository conventions

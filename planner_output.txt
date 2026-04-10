@@ -1,0 +1,30 @@
+[96m[1mNOTE: To disable printing of planning engine credits, add this line to your code: `up.shortcuts.get_environment().credits_stream = None`
+[0m[96m  *** Credits ***
+[0m[96m  * In operation mode `OneshotPlanner` at line 563 of `D:\BGU\Automatic\RL-course\venv\Lib\site-packages\unified_planning\shortcuts.py`, [0m[96myou are using the following planning engine:
+[0m[96m  * Engine name: Fast Downward
+  * Developers:  Uni Basel team and contributors (cf. https://github.com/aibasel/downward/blob/main/README.md)
+[0m[96m  * Description: [0m[96mFast Downward is a domain-independent classical planning system.[0m[96m
+[0m[96m
+[0mPlan found with 22 steps!
+move(agent_0, loc_3_1, loc_4_1)
+push-heavy(agent_0, agent_1, loc_4_1, loc_4_2, loc_4_3, hbx_0)
+push-heavy(agent_0, agent_1, loc_4_2, loc_4_3, loc_4_4, hbx_0)
+push-heavy(agent_0, agent_1, loc_4_3, loc_4_4, loc_4_5, hbx_0)
+push-heavy(agent_0, agent_1, loc_4_4, loc_4_5, loc_4_6, hbx_0)
+move(agent_0, loc_4_5, loc_5_5)
+move(agent_0, loc_5_5, loc_6_5)
+move(agent_0, loc_6_5, loc_6_4)
+move(agent_0, loc_6_4, loc_6_3)
+move(agent_1, loc_4_5, loc_5_5)
+push-small(agent_0, loc_6_3, loc_5_3, loc_4_3, box_0)
+push-small(agent_0, loc_5_3, loc_4_3, loc_3_3, box_0)
+move(agent_1, loc_5_5, loc_6_5)
+move(agent_0, loc_4_3, loc_4_2)
+move(agent_1, loc_6_5, loc_6_4)
+move(agent_0, loc_4_2, loc_3_2)
+push-small(agent_0, loc_3_2, loc_3_3, loc_3_4, box_0)
+push-small(agent_0, loc_3_3, loc_3_4, loc_3_5, box_0)
+move(agent_0, loc_3_4, loc_3_3)
+move(agent_0, loc_3_3, loc_4_3)
+push-small(agent_1, loc_6_4, loc_5_4, loc_4_4, box_1)
+push-small(agent_0, loc_4_3, loc_4_4, loc_4_5, box_1)
