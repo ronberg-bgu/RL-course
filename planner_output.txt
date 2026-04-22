@@ -1,0 +1,358 @@
+(venv) C:\Users\ahmad\PycharmProjects\RL-course>python llm_pipeline.py
+pygame 2.6.1 (SDL 2.28.4, Python 3.10.11)
+Hello from the pygame community. https://www.pygame.org/contribute.html
+Solving my LLM-generated PDDL files...- llm_pipline.py DEBUG
+NOTE: To disable printing of planning engine credits, add this line to your code: `up.shortcuts.get_environment().credits_stream = None`
+  *** Credits ***
+  * In operation mode `OneshotPlanner` at line 563 of `C:\Users\ahmad\PycharmProjects\RL-course\venv\lib\site-packages\unified_planning\shortcuts.py`, you are using the following planning engine:
+  * Engine name: Fast Downward
+  * Developers:  Uni Basel team and contributors (cf. https://github.com/aibasel/downward/blob/main/README.md)
+  * Description: Fast Downward is a domain-independent classical planning system.
+
+Plan found with 49 steps!
+move(agent_0, loc_0_2, loc_0_3)
+push-big-down(agent_0, agent_1, loc_0_3, loc_0_3, loc_1_3, loc_1_3, loc_2_3, loc_2_3, bbig1)
+push-big-down(agent_0, agent_1, loc_1_3, loc_1_3, loc_2_3, loc_2_3, loc_3_3, loc_3_3, bbig1)
+push-big-down(agent_0, agent_1, loc_2_3, loc_2_3, loc_3_3, loc_3_3, loc_4_3, loc_4_3, bbig1)
+push-big-down(agent_0, agent_1, loc_3_3, loc_3_3, loc_4_3, loc_4_3, loc_5_3, loc_5_3, bbig1)
+move(agent_0, loc_4_3, loc_4_4)
+move(agent_1, loc_4_3, loc_4_2)
+move(agent_0, loc_4_4, loc_3_4)
+move(agent_1, loc_4_2, loc_4_1)
+move(agent_1, loc_4_1, loc_4_0)
+move(agent_1, loc_4_0, loc_3_0)
+move(agent_1, loc_3_0, loc_2_0)
+push-small(agent_1, loc_2_0, loc_2_1, loc_2_2, box_1)
+push-small(agent_1, loc_2_1, loc_2_2, loc_2_3, box_1)
+push-small(agent_1, loc_2_2, loc_2_3, loc_2_4, box_1)
+move(agent_1, loc_2_3, loc_1_3)
+move(agent_1, loc_1_3, loc_1_4)
+move(agent_0, loc_3_4, loc_3_3)
+push-small(agent_1, loc_1_4, loc_2_4, loc_3_4, box_1)
+push-small(agent_1, loc_2_4, loc_3_4, loc_4_4, box_1)
+move(agent_0, loc_3_3, loc_2_3)
+move(agent_0, loc_2_3, loc_1_3)
+move(agent_1, loc_3_4, loc_3_3)
+move(agent_1, loc_3_3, loc_3_2)
+move(agent_1, loc_3_2, loc_3_1)
+move(agent_0, loc_1_3, loc_2_3)
+move(agent_1, loc_3_1, loc_3_2)
+move(agent_0, loc_2_3, loc_2_2)
+move(agent_1, loc_3_2, loc_3_1)
+move(agent_0, loc_2_2, loc_2_3)
+move(agent_1, loc_3_1, loc_3_2)
+move(agent_1, loc_3_2, loc_3_3)
+move(agent_1, loc_3_3, loc_3_4)
+push-small(agent_1, loc_3_4, loc_4_4, loc_5_4, box_1)
+move(agent_0, loc_2_3, loc_1_3)
+move(agent_0, loc_1_3, loc_0_3)
+move(agent_0, loc_0_3, loc_0_2)
+move(agent_1, loc_4_4, loc_4_3)
+move(agent_1, loc_4_3, loc_4_2)
+move(agent_1, loc_4_2, loc_4_1)
+move(agent_1, loc_4_1, loc_3_1)
+move(agent_0, loc_0_2, loc_0_1)
+move(agent_1, loc_3_1, loc_2_1)
+move(agent_1, loc_2_1, loc_3_1)
+push-small(agent_0, loc_0_1, loc_1_1, loc_2_1, box_0)
+move(agent_1, loc_3_1, loc_3_2)
+push-small(agent_0, loc_1_1, loc_2_1, loc_3_1, box_0)
+push-small(agent_0, loc_2_1, loc_3_1, loc_4_1, box_0)
+push-small(agent_0, loc_3_1, loc_4_1, loc_5_1, box_0)
+
+Executing plan in simulator...- llm_pipline.py DEBUG
+
+Executing: move(agent_0, loc_0_2, loc_0_3)
+  BEFORE agent_0: loc_0_2
+  BEFORE agent_1: loc_0_3
+  AFTER  agent_0: loc_0_3
+  AFTER  agent_1: loc_0_3
+
+Executing: push-big-down(agent_0, agent_1, loc_0_3, loc_0_3, loc_1_3, loc_1_3, loc_2_3, loc_2_3, bbig1)
+  BEFORE agent_0: loc_0_3
+  BEFORE agent_1: loc_0_3
+  AFTER  agent_0: loc_1_3
+  AFTER  agent_1: loc_1_3
+
+Executing: push-big-down(agent_0, agent_1, loc_1_3, loc_1_3, loc_2_3, loc_2_3, loc_3_3, loc_3_3, bbig1)
+  BEFORE agent_0: loc_1_3
+  BEFORE agent_1: loc_1_3
+  AFTER  agent_0: loc_2_3
+  AFTER  agent_1: loc_2_3
+
+Executing: push-big-down(agent_0, agent_1, loc_2_3, loc_2_3, loc_3_3, loc_3_3, loc_4_3, loc_4_3, bbig1)
+  BEFORE agent_0: loc_2_3
+  BEFORE agent_1: loc_2_3
+  AFTER  agent_0: loc_3_3
+  AFTER  agent_1: loc_3_3
+
+Executing: push-big-down(agent_0, agent_1, loc_3_3, loc_3_3, loc_4_3, loc_4_3, loc_5_3, loc_5_3, bbig1)
+  BEFORE agent_0: loc_3_3
+  BEFORE agent_1: loc_3_3
+  AFTER  agent_0: loc_4_3
+  AFTER  agent_1: loc_4_3
+
+Executing: move(agent_0, loc_4_3, loc_4_4)
+  BEFORE agent_0: loc_4_3
+  BEFORE agent_1: loc_4_3
+  AFTER  agent_0: loc_4_4
+  AFTER  agent_1: loc_4_3
+
+Executing: move(agent_1, loc_4_3, loc_4_2)
+  BEFORE agent_0: loc_4_4
+  BEFORE agent_1: loc_4_3
+  AFTER  agent_0: loc_4_4
+  AFTER  agent_1: loc_4_2
+
+Executing: move(agent_0, loc_4_4, loc_3_4)
+  BEFORE agent_0: loc_4_4
+  BEFORE agent_1: loc_4_2
+  AFTER  agent_0: loc_3_4
+  AFTER  agent_1: loc_4_2
+
+Executing: move(agent_1, loc_4_2, loc_4_1)
+  BEFORE agent_0: loc_3_4
+  BEFORE agent_1: loc_4_2
+  AFTER  agent_0: loc_3_4
+  AFTER  agent_1: loc_4_1
+
+Executing: move(agent_1, loc_4_1, loc_4_0)
+  BEFORE agent_0: loc_3_4
+  BEFORE agent_1: loc_4_1
+  AFTER  agent_0: loc_3_4
+  AFTER  agent_1: loc_4_0
+
+Executing: move(agent_1, loc_4_0, loc_3_0)
+  BEFORE agent_0: loc_3_4
+  BEFORE agent_1: loc_4_0
+  AFTER  agent_0: loc_3_4
+  AFTER  agent_1: loc_3_0
+
+Executing: move(agent_1, loc_3_0, loc_2_0)
+  BEFORE agent_0: loc_3_4
+  BEFORE agent_1: loc_3_0
+  AFTER  agent_0: loc_3_4
+  AFTER  agent_1: loc_2_0
+
+Executing: push-small(agent_1, loc_2_0, loc_2_1, loc_2_2, box_1)
+  BEFORE agent_0: loc_3_4
+  BEFORE agent_1: loc_2_0
+  AFTER  agent_0: loc_3_4
+  AFTER  agent_1: loc_2_1
+
+Executing: push-small(agent_1, loc_2_1, loc_2_2, loc_2_3, box_1)
+  BEFORE agent_0: loc_3_4
+  BEFORE agent_1: loc_2_1
+  AFTER  agent_0: loc_3_4
+  AFTER  agent_1: loc_2_2
+
+Executing: push-small(agent_1, loc_2_2, loc_2_3, loc_2_4, box_1)
+  BEFORE agent_0: loc_3_4
+  BEFORE agent_1: loc_2_2
+  AFTER  agent_0: loc_3_4
+  AFTER  agent_1: loc_2_3
+
+Executing: move(agent_1, loc_2_3, loc_1_3)
+  BEFORE agent_0: loc_3_4
+  BEFORE agent_1: loc_2_3
+  AFTER  agent_0: loc_3_4
+  AFTER  agent_1: loc_1_3
+
+Executing: move(agent_1, loc_1_3, loc_1_4)
+  BEFORE agent_0: loc_3_4
+  BEFORE agent_1: loc_1_3
+  AFTER  agent_0: loc_3_4
+  AFTER  agent_1: loc_1_4
+
+Executing: move(agent_0, loc_3_4, loc_3_3)
+  BEFORE agent_0: loc_3_4
+  BEFORE agent_1: loc_1_4
+  AFTER  agent_0: loc_3_3
+  AFTER  agent_1: loc_1_4
+
+Executing: push-small(agent_1, loc_1_4, loc_2_4, loc_3_4, box_1)
+  BEFORE agent_0: loc_3_3
+  BEFORE agent_1: loc_1_4
+  AFTER  agent_0: loc_3_3
+  AFTER  agent_1: loc_2_4
+
+Executing: push-small(agent_1, loc_2_4, loc_3_4, loc_4_4, box_1)
+  BEFORE agent_0: loc_3_3
+  BEFORE agent_1: loc_2_4
+  AFTER  agent_0: loc_3_3
+  AFTER  agent_1: loc_3_4
+
+Executing: move(agent_0, loc_3_3, loc_2_3)
+  BEFORE agent_0: loc_3_3
+  BEFORE agent_1: loc_3_4
+  AFTER  agent_0: loc_2_3
+  AFTER  agent_1: loc_3_4
+
+Executing: move(agent_0, loc_2_3, loc_1_3)
+  BEFORE agent_0: loc_2_3
+  BEFORE agent_1: loc_3_4
+  AFTER  agent_0: loc_1_3
+  AFTER  agent_1: loc_3_4
+
+Executing: move(agent_1, loc_3_4, loc_3_3)
+  BEFORE agent_0: loc_1_3
+  BEFORE agent_1: loc_3_4
+  AFTER  agent_0: loc_1_3
+  AFTER  agent_1: loc_3_3
+
+Executing: move(agent_1, loc_3_3, loc_3_2)
+  BEFORE agent_0: loc_1_3
+  BEFORE agent_1: loc_3_3
+  AFTER  agent_0: loc_1_3
+  AFTER  agent_1: loc_3_2
+
+Executing: move(agent_1, loc_3_2, loc_3_1)
+  BEFORE agent_0: loc_1_3
+  BEFORE agent_1: loc_3_2
+  AFTER  agent_0: loc_1_3
+  AFTER  agent_1: loc_3_1
+
+Executing: move(agent_0, loc_1_3, loc_2_3)
+  BEFORE agent_0: loc_1_3
+  BEFORE agent_1: loc_3_1
+  AFTER  agent_0: loc_2_3
+  AFTER  agent_1: loc_3_1
+
+Executing: move(agent_1, loc_3_1, loc_3_2)
+  BEFORE agent_0: loc_2_3
+  BEFORE agent_1: loc_3_1
+  AFTER  agent_0: loc_2_3
+  AFTER  agent_1: loc_3_2
+
+Executing: move(agent_0, loc_2_3, loc_2_2)
+  BEFORE agent_0: loc_2_3
+  BEFORE agent_1: loc_3_2
+  AFTER  agent_0: loc_2_2
+  AFTER  agent_1: loc_3_2
+
+Executing: move(agent_1, loc_3_2, loc_3_1)
+  BEFORE agent_0: loc_2_2
+  BEFORE agent_1: loc_3_2
+  AFTER  agent_0: loc_2_2
+  AFTER  agent_1: loc_3_1
+
+Executing: move(agent_0, loc_2_2, loc_2_3)
+  BEFORE agent_0: loc_2_2
+  BEFORE agent_1: loc_3_1
+  AFTER  agent_0: loc_2_3
+  AFTER  agent_1: loc_3_1
+
+Executing: move(agent_1, loc_3_1, loc_3_2)
+  BEFORE agent_0: loc_2_3
+  BEFORE agent_1: loc_3_1
+  AFTER  agent_0: loc_2_3
+  AFTER  agent_1: loc_3_2
+
+Executing: move(agent_1, loc_3_2, loc_3_3)
+  BEFORE agent_0: loc_2_3
+  BEFORE agent_1: loc_3_2
+  AFTER  agent_0: loc_2_3
+  AFTER  agent_1: loc_3_3
+
+Executing: move(agent_1, loc_3_3, loc_3_4)
+  BEFORE agent_0: loc_2_3
+  BEFORE agent_1: loc_3_3
+  AFTER  agent_0: loc_2_3
+  AFTER  agent_1: loc_3_4
+
+Executing: push-small(agent_1, loc_3_4, loc_4_4, loc_5_4, box_1)
+  BEFORE agent_0: loc_2_3
+  BEFORE agent_1: loc_3_4
+  AFTER  agent_0: loc_2_3
+  AFTER  agent_1: loc_4_4
+
+Executing: move(agent_0, loc_2_3, loc_1_3)
+  BEFORE agent_0: loc_2_3
+  BEFORE agent_1: loc_4_4
+  AFTER  agent_0: loc_1_3
+  AFTER  agent_1: loc_4_4
+
+Executing: move(agent_0, loc_1_3, loc_0_3)
+  BEFORE agent_0: loc_1_3
+  BEFORE agent_1: loc_4_4
+  AFTER  agent_0: loc_0_3
+  AFTER  agent_1: loc_4_4
+
+Executing: move(agent_0, loc_0_3, loc_0_2)
+  BEFORE agent_0: loc_0_3
+  BEFORE agent_1: loc_4_4
+  AFTER  agent_0: loc_0_2
+  AFTER  agent_1: loc_4_4
+
+Executing: move(agent_1, loc_4_4, loc_4_3)
+  BEFORE agent_0: loc_0_2
+  BEFORE agent_1: loc_4_4
+  AFTER  agent_0: loc_0_2
+  AFTER  agent_1: loc_4_3
+
+Executing: move(agent_1, loc_4_3, loc_4_2)
+  BEFORE agent_0: loc_0_2
+  BEFORE agent_1: loc_4_3
+  AFTER  agent_0: loc_0_2
+  AFTER  agent_1: loc_4_2
+
+Executing: move(agent_1, loc_4_2, loc_4_1)
+  BEFORE agent_0: loc_0_2
+  BEFORE agent_1: loc_4_2
+  AFTER  agent_0: loc_0_2
+  AFTER  agent_1: loc_4_1
+
+Executing: move(agent_1, loc_4_1, loc_3_1)
+  BEFORE agent_0: loc_0_2
+  BEFORE agent_1: loc_4_1
+  AFTER  agent_0: loc_0_2
+  AFTER  agent_1: loc_3_1
+
+Executing: move(agent_0, loc_0_2, loc_0_1)
+  BEFORE agent_0: loc_0_2
+  BEFORE agent_1: loc_3_1
+  AFTER  agent_0: loc_0_1
+  AFTER  agent_1: loc_3_1
+
+Executing: move(agent_1, loc_3_1, loc_2_1)
+  BEFORE agent_0: loc_0_1
+  BEFORE agent_1: loc_3_1
+  AFTER  agent_0: loc_0_1
+  AFTER  agent_1: loc_2_1
+
+Executing: move(agent_1, loc_2_1, loc_3_1)
+  BEFORE agent_0: loc_0_1
+  BEFORE agent_1: loc_2_1
+  AFTER  agent_0: loc_0_1
+  AFTER  agent_1: loc_3_1
+
+Executing: push-small(agent_0, loc_0_1, loc_1_1, loc_2_1, box_0)
+  BEFORE agent_0: loc_0_1
+  BEFORE agent_1: loc_3_1
+  AFTER  agent_0: loc_1_1
+  AFTER  agent_1: loc_3_1
+
+Executing: move(agent_1, loc_3_1, loc_3_2)
+  BEFORE agent_0: loc_1_1
+  BEFORE agent_1: loc_3_1
+  AFTER  agent_0: loc_1_1
+  AFTER  agent_1: loc_3_2
+
+Executing: push-small(agent_0, loc_1_1, loc_2_1, loc_3_1, box_0)
+  BEFORE agent_0: loc_1_1
+  BEFORE agent_1: loc_3_2
+  AFTER  agent_0: loc_2_1
+  AFTER  agent_1: loc_3_2
+
+Executing: push-small(agent_0, loc_2_1, loc_3_1, loc_4_1, box_0)
+  BEFORE agent_0: loc_2_1
+  BEFORE agent_1: loc_3_2
+  AFTER  agent_0: loc_3_1
+  AFTER  agent_1: loc_3_2
+
+Executing: push-small(agent_0, loc_3_1, loc_4_1, loc_5_1, box_0)
+  BEFORE agent_0: loc_3_1
+  BEFORE agent_1: loc_3_2
+  AFTER  agent_0: loc_4_1
+  AFTER  agent_1: loc_3_2
+Plan execution complete.

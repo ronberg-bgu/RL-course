@@ -19,7 +19,7 @@ class AgentObj(WorldObj):
         self.dir = dir
 
     def can_overlap(self):
-        return False
+        return True
 
     def render(self, img):
         c = COLORS.get(self.color, (255, 0, 0))
@@ -142,17 +142,30 @@ class MultiAgentBoxPushEnv(ParallelEnv):
 
         self.core_env.agent_pos = (1, 1) # Dummy for MiniGrid assertions
         self.core_env.agent_dir = 0
-        
+
+    def _sync_agent_objects_on_grid(self):
+        # Remove all agent objects from the whole grid
+        for y in range(self.height):
+            for x in range(self.width):
+                cell = self.core_env.grid.get(x, y)
+                if cell is not None and getattr(cell, "type", None) == "agent":
+                    self.core_env.grid.set(x, y, None)
+
+        # Re-add exactly one agent object per occupied location.
+        # If multiple agents share a cell, just place one representative object there.
+        occupied = set()
+        for agent, pos in self.agent_positions.items():
+            if pos not in occupied:
+                self.core_env.grid.set(*pos, self.agent_objects[agent])
+                occupied.add(pos)
+
     def reset(self, seed=None, options=None):
         self.agents = self.possible_agents[:]
         self.steps = 0
         
         self.core_env.reset(seed=seed)
-        
-        # Place agents in grid for initial render and correct obs
-        for agent in self.agents:
-            pos = self.agent_positions[agent]
-            self.core_env.grid.set(*pos, self.agent_objects[agent])
+
+        self._sync_agent_objects_on_grid()
             
         observations = {}
         for agent in self.agents:
@@ -182,12 +195,7 @@ class MultiAgentBoxPushEnv(ParallelEnv):
             self.agents = []
             return {}, {}, {}, {}, {}
 
-        # Clear agent objects from grid to prevent trailing clones
-        for agent in self.agents:
-            px, py = self.agent_positions[agent]
-            cell = self.core_env.grid.get(px, py)
-            if cell is self.agent_objects[agent]:
-                self.core_env.grid.set(px, py, None)
+
 
         # Pass 1: Gather Intents
         agent_intents = {}
@@ -280,7 +288,8 @@ class MultiAgentBoxPushEnv(ParallelEnv):
         if any(terminations.values()) or any(truncations.values()):
             self.agents = []
 
-        for agent in self.possible_agents:
+        self._sync_agent_objects_on_grid()
+        for agent in self.agents:
             if agent in actions:
                 pos = self.agent_positions[agent]
                 self.core_env.agent_pos = pos

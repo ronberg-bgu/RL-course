@@ -1,0 +1,234 @@
+You are an expert in classical planning and PDDL.
+
+Generate exactly TWO files only:
+1. DOMAIN.PDDL
+2. PROBLEM.PDDL
+
+Do not output any explanation.
+Do not output any notes.
+Do not output any analysis.
+Do not output any markdown fences.
+Do not output anything before the first file.
+Do not output anything after the second file.
+
+Output format must be exactly:
+
+----- DOMAIN.PDDL -----
+<full domain file>
+
+----- PROBLEM.PDDL -----
+<full problem file>
+
+The planning problem is a deterministic multi-agent Box Pushing world.
+
+Use the following rules and constraints.
+
+==================================================
+1) WORLD SEMANTICS
+==================================================
+
+The world is a 2D grid with walls/obstacles, free cells, goal cells, agents, regular boxes, and one heavy box.
+
+There are exactly:
+- 2 agents
+- 2 regular boxes
+- 1 heavy box
+
+Agents can move in the four cardinal directions: up, down, left, right.
+
+A move is allowed only if the destination cell is free of walls and boxes.
+Agents are allowed to occupy the same cell as another agent.
+
+A regular box occupies exactly one grid cell.
+A regular box can be pushed by a single agent:
+- the agent must be adjacent to the box
+- the box must move one cell in the same direction
+- the destination cell of the box must be free
+- after the push, the agent moves into the previous box cell
+
+The heavy box also occupies exactly one grid cell.
+It is NOT a 2-cell object.
+The heavy box can be moved only by a joint push of both agents:
+- both agents must start from the same cell
+- that shared cell must be adjacent to the heavy box
+- both agents must push in the same direction simultaneously
+- the destination cell of the heavy box must be free
+- after the push, both agents move into the previous heavy-box cell
+- a single agent trying to push a heavy box cannot move it
+
+The goal condition refers only to final box locations, not to final agent locations.
+
+==================================================
+2) VERY IMPORTANT MODELING DECISION
+==================================================
+
+Although an assignment table may mention parameters like ?boxloc1 ?boxloc2 ?toloc1 ?toloc2 for big-box actions, DO NOT model the heavy box as occupying two cells.
+
+In this task, the heavy box is 1x1, exactly like a regular box in size.
+The only difference is that it requires both agents, from the same cell, pushing in the same direction at the same time.
+
+Therefore:
+- model the heavy box using ONE location only
+- do NOT use a two-cell heavy-box representation
+- do NOT use predicates that imply the heavy box spans two grid cells
+
+==================================================
+3) PDDL RESTRICTIONS
+==================================================
+
+Use a simple planner-friendly encoding.
+
+Allowed / preferred:
+- :strips
+- :typing
+- optionally :equality only if truly needed
+
+Avoid advanced features unless absolutely necessary:
+- no conditional effects
+- no quantified preconditions/effects
+- no numeric fluents
+- no derived predicates
+- no durative actions
+- no ADL unless absolutely required
+
+Keep the encoding simple and compatible with standard classical planners.
+
+Very important:
+- Do not use OR in action preconditions.
+- Do not require ADL.
+- Keep the domain planner-friendly.
+
+==================================================
+4) TYPES AND OBJECT NAMING
+==================================================
+
+Use these exact types:
+- agent
+- location
+- box
+- bigbox
+
+Use these object naming conventions:
+- agents: agent_0, agent_1
+- regular boxes: box_0, box_1
+- heavy box: bbig1
+- locations: loc_X_Y
+  for example: loc_0_0, loc_1_3, etc.
+
+==================================================
+5) ACTION NAMING AND PARAMETERS
+==================================================
+
+Use these action names exactly:
+
+- move
+- push-small
+- push-big-up
+- push-big-down
+- push-big-left
+- push-big-right
+
+Use these exact parameter signatures:
+
+- move:
+  ?a - agent ?from - location ?to - location
+
+- push-small:
+  ?a - agent ?from - location ?boxloc - location ?toloc - location ?b - box
+
+- push-big-up:
+  ?a1 ?a2 - agent ?from1 ?from2 ?boxloc1 ?boxloc2 ?toloc1 ?toloc2 - location ?b - bigbox
+
+- push-big-down:
+  same parameter list as push-big-up
+
+- push-big-left:
+  same parameter list as push-big-up
+
+- push-big-right:
+  same parameter list as push-big-up
+
+Important clarification:
+Even though the push-big-* action signatures include ?boxloc1 ?boxloc2 ?toloc1 ?toloc2, the heavy box must still be modeled as a 1x1 object occupying a single cell in the actual world semantics.
+
+Therefore, preserve the exact required action names and parameter lists above, but encode the logic so that it still matches the real environment semantics:
+- one heavy box
+- one actual box location
+- both agents start from the same cell
+- both agents push in the same direction simultaneously
+- after the push, both agents move into the heavy box’s previous cell
+
+If needed, treat some of the extra location parameters in push-big-* as redundant technical parameters required only to satisfy the interface, while keeping the true semantics of the heavy box as 1x1.
+
+==================================================
+6) PREDICATE DESIGN REQUIREMENTS
+==================================================
+
+You may choose the exact predicate names, but the model must clearly represent at least:
+- agent locations
+- regular-box locations
+- heavy-box location
+- free cells
+- directional adjacency relations
+
+Use directional adjacency predicates such as:
+- adj-up
+- adj-down
+- adj-left
+- adj-right
+
+Agents may share a cell with each other.
+Boxes cannot share a cell with a box.
+Boxes cannot occupy walls.
+An agent cannot move into a box cell unless that action is a legal push.
+
+Because agents may share cells, do not use a predicate design that incorrectly forbids two agents from being in the same location.
+
+It is acceptable that a location containing an agent is still considered free for movement and coordination purposes, as long as boxes cannot move into occupied box cells and the model still correctly allows both agents to stand in the same location.
+
+==================================================
+7) REQUIRED PROBLEM INSTANCE
+==================================================
+
+Generate a concrete solvable 6x6 problem instance.
+
+The grid must be exactly 6 rows by 6 columns.
+
+Use exactly:
+- 2 agents
+- 2 regular boxes
+- 1 heavy box
+
+Use this exact high-level layout:
+- In the first row from the top, place both agents.
+- In the second row from the top, place one regular box and one heavy box.
+- In the third row from the top, place the other regular box.
+- In the last row from the top, place all goal locations for all boxes.
+
+Additional requirements:
+- The instance must be solvable.
+- The heavy box must be placed so that solving the problem requires at least one joint heavy push by both agents.
+- You may add some walls/obstacles, but keep the instance solvable and not overly complicated.
+- Represent all non-wall cells as location objects.
+- Include all needed directional adjacency facts.
+- Include the initial positions of both agents, both regular boxes, and the heavy box.
+- Include appropriate free-cell facts.
+- The goal should specify only the final locations of:
+  - box_0
+  - box_1
+  - bbig1
+- Do not include any goal conditions on agent positions.
+
+Make the coordinates and adjacency facts fully consistent with the chosen 6x6 layout.
+
+==================================================
+8) FINAL OUTPUT RULE
+==================================================
+
+Return exactly and only:
+
+----- DOMAIN.PDDL -----
+<full domain file>
+
+----- PROBLEM.PDDL -----
+<full problem file>
