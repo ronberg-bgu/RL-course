@@ -1,0 +1,80 @@
+============================================================
+  HW1 — LLM-Generated PDDL Pipeline
+============================================================
+
+[1] Writing LLM-generated PDDL files ...
+    domain  → /home/aburmad/RL-course/exercises/ex1/pddl/domain.pddl
+    problem → /home/aburmad/RL-course/exercises/ex1/pddl/problem.pddl
+
+[2] Reconstructing ASCII map from PDDL files ...
+    Reconstructed map:
+      Row 0: WWWWWWWW
+      Row 1: W AA   W
+      Row 2: W W W WW
+      Row 3: WBWBWCWW
+      Row 4: W W W WW
+      Row 5: WGWGWGWW
+      Row 6: WWWWWWWW
+
+[3] Solving PDDL and launching visual simulation ...
+pygame 2.6.1 (SDL 2.28.4, Python 3.12.3)
+Hello from the pygame community. https://www.pygame.org/contribute.html
+🧠 Solving PDDL problem...
+[96m[1mNOTE: To disable printing of planning engine credits, add this line to your code: `up.shortcuts.get_environment().credits_stream = None`
+[0m[96m  *** Credits ***
+[0m[96m  * In operation mode `OneshotPlanner` at line 13 of `/home/aburmad/RL-course/planner/pddl_solver.py`, [0m[96myou are using the following planning engine:
+[0m[96m  * Engine name: Fast Downward
+  * Developers:  Uni Basel team and contributors (cf. https://github.com/aibasel/downward/blob/main/README.md)
+[0m[96m  * Description: [0m[96mFast Downward is a domain-independent classical planning system.[0m[96m
+[0m[96m
+[0mPlan found with 23 steps!
+move(agent_0, loc_2_1, loc_1_1)
+move(agent_0, loc_1_1, loc_1_2)
+push-small(agent_0, loc_1_2, loc_1_3, loc_1_4, box_0)
+push-small(agent_0, loc_1_3, loc_1_4, loc_1_5, box_0)
+move(agent_0, loc_1_4, loc_1_3)
+move(agent_0, loc_1_3, loc_1_2)
+move(agent_0, loc_1_2, loc_1_1)
+move(agent_0, loc_1_1, loc_2_1)
+move(agent_0, loc_2_1, loc_3_1)
+move(agent_0, loc_3_1, loc_3_2)
+push-small(agent_0, loc_3_2, loc_3_3, loc_3_4, box_1)
+move(agent_1, loc_3_1, loc_4_1)
+push-small(agent_0, loc_3_3, loc_3_4, loc_3_5, box_1)
+move(agent_0, loc_3_4, loc_3_3)
+move(agent_0, loc_3_3, loc_3_2)
+move(agent_0, loc_3_2, loc_3_1)
+move(agent_0, loc_3_1, loc_4_1)
+move(agent_0, loc_4_1, loc_5_1)
+move(agent_0, loc_5_1, loc_5_2)
+move(agent_1, loc_4_1, loc_5_1)
+move(agent_1, loc_5_1, loc_5_2)
+push-heavy(agent_0, agent_1, loc_5_2, loc_5_3, loc_5_4, hbx_0)
+push-heavy(agent_0, agent_1, loc_5_3, loc_5_4, loc_5_5, hbx_0)
+✅ Plan found with 23 steps. Booting visualizer...
+Executing: move(agent_0, loc_2_1, loc_1_1)
+Executing: move(agent_0, loc_1_1, loc_1_2)
+Executing: push-small(agent_0, loc_1_2, loc_1_3, loc_1_4, box_0)
+Executing: push-small(agent_0, loc_1_3, loc_1_4, loc_1_5, box_0)
+Executing: move(agent_0, loc_1_4, loc_1_3)
+Executing: move(agent_0, loc_1_3, loc_1_2)
+Executing: move(agent_0, loc_1_2, loc_1_1)
+Executing: move(agent_0, loc_1_1, loc_2_1)
+Executing: move(agent_0, loc_2_1, loc_3_1)
+Executing: move(agent_0, loc_3_1, loc_3_2)
+Executing: push-small(agent_0, loc_3_2, loc_3_3, loc_3_4, box_1)
+Executing: move(agent_1, loc_3_1, loc_4_1)
+Executing: push-small(agent_0, loc_3_3, loc_3_4, loc_3_5, box_1)
+Executing: move(agent_0, loc_3_4, loc_3_3)
+Executing: move(agent_0, loc_3_3, loc_3_2)
+Executing: move(agent_0, loc_3_2, loc_3_1)
+Executing: move(agent_0, loc_3_1, loc_4_1)
+Executing: move(agent_0, loc_4_1, loc_5_1)
+Executing: move(agent_0, loc_5_1, loc_5_2)
+Executing: move(agent_1, loc_4_1, loc_5_1)
+Executing: move(agent_1, loc_5_1, loc_5_2)
+Executing: push-heavy(agent_0, agent_1, loc_5_2, loc_5_3, loc_5_4, hbx_0)
+Executing: push-heavy(agent_0, agent_1, loc_5_3, loc_5_4, loc_5_5, hbx_0)
+🎉 Plan execution complete! Closing in 3 seconds.
+
+✅ Pipeline complete.
