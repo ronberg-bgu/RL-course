@@ -3,6 +3,7 @@ import time
 import re
 from environment.multi_agent_env import MultiAgentBoxPushEnv
 from planner.pddl_solver import solve_pddl
+from exercises.ex1.pddl_parser import generate_ascii_map
 from minigrid.core.constants import DIR_TO_VEC
 
 def extract_target_pos(pddl_action):
@@ -67,14 +68,14 @@ def get_required_actions(env, agent, target_pos):
     return actions
 
 def visualize_pddl_plan(ascii_map, domain_file, problem_file):
-    print("🧠 Solving PDDL problem...")
+    print(" Solving PDDL problem...")
     plan = solve_pddl(domain_file, problem_file)
     
     if not plan:
-        print("❌ No plan could be found. Cannot visualize.")
+        print(" No plan could be found. Cannot visualize.")
         return
         
-    print(f"✅ Plan found with {len(plan.actions)} steps. Booting visualizer...")
+    print(f" Plan found with {len(plan.actions)} steps. Booting visualizer...")
     
     env = MultiAgentBoxPushEnv(ascii_map=ascii_map, render_mode="human")
     env.reset()
@@ -117,27 +118,19 @@ def visualize_pddl_plan(ascii_map, domain_file, problem_file):
                     
             time.sleep(0.4) 
                 
-    print("🎉 Plan execution complete! Closing in 3 seconds.")
+    print(" Plan execution complete! Closing in 3 seconds.")
     time.sleep(3)
     pygame.quit()
 
 if __name__ == "__main__":
     from environment.pddl_extractor import generate_pddl_for_env
     # We test visualizer on a large map with a joint BigBox push
-    large_map = [
-        "WWWWWWWW",
-        "W  AA  W",
-        "W B C  W",
-        "W      W",
-        "W   B  W",
-        "W G G GW",
-        "WWWWWWWW"
-    ]
+    large_map = generate_ascii_map("pddl/problem.pddl")
     
-    print("🌍 Generating Environment and extracting PDDL...")
+    #print(" Generating Environment and extracting PDDL...")
     env_sim = MultiAgentBoxPushEnv(ascii_map=large_map, render_mode="rgb_array")
     env_sim.reset()
-    generate_pddl_for_env(env_sim, "pddl")
+    #generate_pddl_for_env(env_sim, "pddl")
     
-    print("🚀 Running visualization pipeline...")
+    print("Running visualization pipeline...")
     visualize_pddl_plan(large_map, "pddl/domain.pddl", "pddl/problem.pddl")
