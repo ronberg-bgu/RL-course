@@ -171,13 +171,20 @@ class MultiAgentBoxPushEnv(ParallelEnv):
 
     def step(self, actions):
         self.steps += 1
-        
+
+        # Clear stale agent objects from the grid left by previous observation generation
+        for agent in self.possible_agents:
+            pos = self.agent_positions[agent]
+            cell = self.core_env.grid.get(*pos)
+            if isinstance(cell, AgentObj):
+                self.core_env.grid.set(*pos, None)
+
         observations = {}
         rewards = {agent: 0 for agent in self.agents}
         terminations = {agent: False for agent in self.agents}
         truncations = {agent: False for agent in self.agents}
         infos = {agent: {} for agent in self.agents}
-        
+
         if not actions:
             self.agents = []
             return {}, {}, {}, {}, {}
