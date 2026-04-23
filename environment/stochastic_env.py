@@ -134,8 +134,8 @@ class StochasticMultiAgentBoxPushEnv(MultiAgentBoxPushEnv):
                             self.core_env.grid.set(nx, ny, box_obj)
                             for agent, _ in pushers:
                                 self.agent_positions[agent] = box_pos
-                            if n_cell is not None and n_cell.type == "goal":
-                                self._apply_goal_termination(rewards, terminations)
+                            # if n_cell is not None and n_cell.type == "goal":
+                            #     self._apply_goal_termination(rewards, terminations)
                         # push fails → agents stay, world unchanged
 
                 # Either way, these agents' intents are consumed
@@ -162,8 +162,8 @@ class StochasticMultiAgentBoxPushEnv(MultiAgentBoxPushEnv):
                         self.core_env.grid.set(*fwd_fwd_pos, fwd_cell)
                         self.core_env.grid.set(*fwd_pos, None)
                         self.agent_positions[agent] = fwd_pos
-                        if fwd_fwd_cell is not None and fwd_fwd_cell.type == "goal":
-                            self._apply_goal_termination(rewards, terminations)
+                        # if fwd_fwd_cell is not None and fwd_fwd_cell.type == "goal":
+                        #     self._apply_goal_termination(rewards, terminations)
                     # push fails → agent stays, world unchanged
 
             elif fwd_cell is None or fwd_cell.can_overlap():
@@ -176,11 +176,24 @@ class StochasticMultiAgentBoxPushEnv(MultiAgentBoxPushEnv):
 
                 if actual_fwd_cell is None or actual_fwd_cell.can_overlap():
                     self.agent_positions[agent] = actual_fwd_pos
-                    if actual_fwd_cell is not None and actual_fwd_cell.type == "goal":
-                        self._apply_goal_termination(rewards, terminations)
+                    # if actual_fwd_cell is not None and actual_fwd_cell.type == "goal":
+                    #     self._apply_goal_termination(rewards, terminations)
                 # else: deviated into obstacle → agent stays, no error
 
             # else: intended cell is a wall / other obstacle → no-op
+
+        # ── NEW: Global Goal Check ────────────────────────────────────
+        # Scan the grid to see if any empty goals are left
+        goals_remaining = 0
+        for y in range(self.core_env.grid.height):
+            for x in range(self.core_env.grid.width):
+                c = self.core_env.grid.get(x, y)
+                if c is not None and c.type == "goal":
+                    goals_remaining += 1
+
+        # If 0 goals are left, all boxes have been successfully placed!
+        if goals_remaining == 0:
+            self._apply_goal_termination(rewards, terminations)
 
         # ── Truncation check ──────────────────────────────────────────
         if self.steps >= self.max_steps:
@@ -192,7 +205,9 @@ class StochasticMultiAgentBoxPushEnv(MultiAgentBoxPushEnv):
 
         # ── Generate observations ─────────────────────────────────────
         for agent in self.possible_agents:
-            if agent in actions:
+            # FIX: Ensure all active agents are redrawn and get observations,
+            # even if they did not submit an action this specific turn.
+            if agent in self.agents:
                 pos = self.agent_positions[agent]
                 self.core_env.agent_pos = pos
                 self.core_env.agent_dir = self.agent_dirs[agent]
