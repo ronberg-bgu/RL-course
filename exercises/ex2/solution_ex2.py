@@ -13,6 +13,8 @@ from gettext import translation
 import itertools
 import sys
 import os
+import contextlib
+import io
 
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "../..")))
 
@@ -42,56 +44,66 @@ ASCII_MAP = [
 # Part 1 — Online Planning
 # ===========================================================================
 
-def run_online_planning(env, max_replans: int = 300) -> int:
-    """
-    Execute one episode using online planning:
-      replan from the current state → execute only the first PDDL action → repeat.
+# Global cache to store plans across runs
+PLAN_CACHE = {}
 
-    Returns
-    -------
-    int
-        Number of *env* steps taken (counting each rotate/forward individually).
-        Returns max_replans * <average_actions_per_plan_step> as a large sentinel
-        if the goal was never reached within max_replans replanning calls.
-    """
+import contextlib
+import io
+
+# Global cache to store plans across runs
+PLAN_CACHE = {}
+
+def run_online_planning(env, max_replans: int = 300) -> int:
+    global PLAN_CACHE
+    
     obs, _ = env.reset()
     total_env_steps = 0
     done = False
+    
+    cached_plan_actions = []
 
     for _ in range(max_replans):
         if done:
             break
 
-        # ── 1. Export current state ──────────────────────────────────
-        domain_path, problem_path = generate_pddl_for_env(env)
+        current_state = get_state(env)
 
-        # ── 2. Plan ──────────────────────────────────────────────────
-        plan = solve_pddl(domain_path, problem_path)
-        if not plan or len(plan.actions) == 0:
-            break  # goal already reached (planner returns empty plan)
+        # 1. Plan Retrieval
+        if not cached_plan_actions:
+            if current_state in PLAN_CACHE:
+                cached_plan_actions = PLAN_CACHE[current_state].copy()
+            else:
+                domain_path, problem_path = generate_pddl_for_env(env)
 
-        # ── 3. Execute the first PDDL action ─────────────────────────
-        pddl_action   = plan.actions[0]
+                # Suppress Fast Downward terminal output
+                with contextlib.redirect_stdout(io.StringIO()):
+                    plan = solve_pddl(domain_path, problem_path)
+
+                if not plan or len(plan.actions) == 0:
+                    break
+
+                PLAN_CACHE[current_state] = plan.actions.copy()
+                cached_plan_actions = plan.actions.copy()
+
+        # 2. Action Execution
+        pddl_action = cached_plan_actions.pop(0)
         agent_targets = extract_target_pos(pddl_action)
-
+        
         if not agent_targets:
-            break
+            cached_plan_actions = []
+            continue
 
-        # Build per-agent action queues (rotations + forward)
         agents_in_action = list(agent_targets.keys())
         action_queues = {
             a: get_required_actions(env, a, agent_targets[a])
             for a in agents_in_action
         }
 
-        # Pad shorter queues so all agents execute their final forward together
+        # Sync agent movement
         max_len = max(len(q) for q in action_queues.values())
         for a in agents_in_action:
-            action_queues[a] = (
-                [None] * (max_len - len(action_queues[a])) + action_queues[a]
-            )
+            action_queues[a] = [None] * (max_len - len(action_queues[a])) + action_queues[a]
 
-        # Step through the queue
         while any(len(q) > 0 for q in action_queues.values()):
             step_actions = {}
             for a in agents_in_action:
@@ -107,8 +119,14 @@ def run_online_planning(env, max_replans: int = 300) -> int:
                 done = True
                 break
 
-    return total_env_steps
+        # 3. Stochastic Verification
+        # Reset plan queue if the agent did not land in the expected cell
+        for a, target in agent_targets.items():
+            if env.agent_positions[a] != target:
+                cached_plan_actions = []
+                break
 
+    return total_env_steps if done else env.max_steps
 
 # ===========================================================================
 # Part 2 — Modified Policy Iteration
@@ -417,29 +435,29 @@ if __name__ == "__main__":
     print(f"\nOnline Planning  →  mean = {mean_ol:.2f}  std = {std_ol:.2f}\n")
 
     # ── Part 2: Modified Policy Iteration ───────────────────────────────────
-    print("=" * 60)
-    print("Part 2 — Modified Policy Iteration")
-    print("=" * 60)
+    # print("=" * 60)
+    # print("Part 2 — Modified Policy Iteration")
+    # print("=" * 60)
 
-    env_mpi = StochasticMultiAgentBoxPushEnv(ascii_map=ASCII_MAP, max_steps=500)
-    policy, V = modified_policy_iteration(env_mpi)
+    # env_mpi = StochasticMultiAgentBoxPushEnv(ascii_map=ASCII_MAP, max_steps=500)
+    # policy, V = modified_policy_iteration(env_mpi)
+    
+    # def mpi_policy_fn(env, obs):
+    #     """Convert current env state to a joint action using the MPI policy."""
+    #     state = get_state(env)
+    #     joint_action = policy[state]
+    #     # joint_action is a tuple (action_agent0, action_agent1)
+    #     agents = env.possible_agents
+    #     return {agents[0]: joint_action[0], agents[1]: joint_action[1]}
 
-    def mpi_policy_fn(env, obs):
-        """Convert current env state to a joint action using the MPI policy."""
-        state = get_state(env)
-        joint_action = policy[state]
-        # joint_action is a tuple (action_agent0, action_agent1)
-        agents = env.possible_agents
-        return {agents[0]: joint_action[0], agents[1]: joint_action[1]}
-
-    mean_mpi, std_mpi = evaluate_policy(mpi_policy_fn, env_mpi, n_runs=100)
-    print(f"\nMPI              →  mean = {mean_mpi:.2f}  std = {std_mpi:.2f}\n")
+    # mean_mpi, std_mpi = evaluate_policy(mpi_policy_fn, env_mpi, n_runs=100)
+    # print(f"\nMPI              →  mean = {mean_mpi:.2f}  std = {std_mpi:.2f}\n")
 
     # ── Summary ──────────────────────────────────────────────────────────────
     print("=" * 60)
     print("SUMMARY")
-    print("=" * 60)
+    print("=" * 60) 
     print(f"{'Algorithm':<25} {'Mean steps':>12} {'Std steps':>12}")
     print("-" * 50)
     print(f"{'Online Planning':<25} {mean_ol:>12.2f} {std_ol:>12.2f}")
-    print(f"{'MPI':<25} {mean_mpi:>12.2f} {std_mpi:>12.2f}")
+    # print(f"{'MPI':<25} {mean_mpi:>12.2f} {std_mpi:>12.2f}")
