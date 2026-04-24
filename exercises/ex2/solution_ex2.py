@@ -9,6 +9,8 @@ Fill in the three TODO sections below:
 Do NOT modify evaluate_policy or the __main__ block.
 """
 
+from gettext import translation
+import itertools
 import sys
 import os
 
@@ -19,6 +21,8 @@ from environment.stochastic_env import StochasticMultiAgentBoxPushEnv
 from environment.pddl_extractor import generate_pddl_for_env
 from planner.pddl_solver import solve_pddl
 from visualize_plan import extract_target_pos, get_required_actions
+from minigrid.core.constants import DIR_TO_VEC
+
 
 # ---------------------------------------------------------------------------
 # Map used in both parts (same as Assignment 1)
@@ -152,31 +156,165 @@ def get_state(env) -> tuple:
 
     return (a0_pos, a0_dir, a1_pos, a1_dir, box0_pos, box1_pos, heavy_pos)
 
+def get_single_agent_intents(state, agent_index, action, env):
+    
+    if action == 0:
+        return [(1.0, "rotate_left")]
+    elif action == 1:
+        return [(1.0, "rotate_right")]
+    
+    if action == 2:
+
+        if agent_index == 0:
+            agent_pos = state[0]
+            agent_dir = state[1]
+        else:
+            agent_pos = state[2]
+            agent_dir = state[3]
+        
+        target_vec = DIR_TO_VEC[agent_dir]
+        target_pos = (agent_pos[0] + target_vec[0], agent_pos[1] + target_vec[1])
+
+        box_positions = [pos for pos in state[4:7] if pos is not None]
+
+        target_cell = env.core_env.grid.get(target_pos[0], target_pos[1])
+        target_is_wall = (target_cell is not None and target_cell.type == "wall")
+
+        if target_is_wall:
+            return [(1.0, "stay")]
+        
+        elif target_pos in box_positions:
+            # Check if the box can be pushed
+            push_target_pos = (target_pos[0] + target_vec[0], target_pos[1] + target_vec[1])
+            push_cell = env.core_env.grid.get(push_target_pos[0], push_target_pos[1])
+            push_is_wall = (push_cell is not None and push_cell.type == "wall")
+
+            if not (push_is_wall or (push_target_pos in box_positions)):
+                return [(0.8, "push"), (0.2, "stay")]
+            else:
+                return [(1.0, "stay")]
+            
+        else:
+            return [(0.8, "move_forward"), (0.1, "slip_left"), (0.1, "slip_right")]
+        
+def simulate_joint_intents(state, joint_intent, env):
+    a0_pos, a0_dir, a1_pos, a1_dir, box0_pos, box1_pos, heavy_pos = state
+
+    def get_tentative_move(pos, dir, intent):
+        new_pos, new_dir = pos, dir
+        push_box_target = None
+
+        if intent == "rotate_left":
+            new_dir = (dir - 1) % 4
+        elif intent == "rotate_right":
+            new_dir = (dir + 1) % 4
+        elif intent == "move_forward" or intent == "push":
+            target_vec = DIR_TO_VEC[dir]
+            new_pos = (pos[0] + target_vec[0], pos[1] + target_vec[1])
+            if intent == "push":
+                push_box_target = (new_pos[0] + target_vec[0], new_pos[1] + target_vec[1])
+        elif intent == "slip_left":
+            slip_dir = (dir - 1) % 4
+            slip_vec = DIR_TO_VEC[slip_dir]
+            new_pos = (pos[0] + slip_vec[0], pos[1] + slip_vec[1])
+        elif intent == "slip_right":
+            slip_dir = (dir + 1) % 4
+            slip_vec = DIR_TO_VEC[slip_dir]
+            new_pos = (pos[0] + slip_vec[0], pos[1] + slip_vec[1])            
+
+        return new_pos, new_dir, push_box_target
+    
+    new_a0_pos, new_a0_dir, a0_push_target = get_tentative_move(a0_pos, a0_dir, joint_intent[0])
+    new_a1_pos, new_a1_dir, a1_push_target = get_tentative_move(a1_pos, a1_dir, joint_intent[1])
+
+    new_box0_pos, new_box1_pos, new_heavy_pos = box0_pos, box1_pos, heavy_pos
+
+    if (new_a0_pos == heavy_pos and new_a1_pos != heavy_pos) or (new_a1_pos == heavy_pos and new_a0_pos != heavy_pos):
+        if new_a0_pos == heavy_pos: new_a0_pos = a0_pos
+        if new_a1_pos == heavy_pos: new_a1_pos = a1_pos
+
+    elif new_a0_pos == heavy_pos and new_a1_pos == heavy_pos:
+        if a0_push_target == a1_push_target and a0_push_target is not None:
+            new_heavy_pos = a0_push_target
+        else:
+            new_a0_pos, new_a1_pos = a0_pos, a1_pos
+
+    if new_a0_pos == box0_pos: new_box0_pos = a0_push_target
+    if new_a0_pos == box1_pos: new_box1_pos = a0_push_target
+    if new_a1_pos == box0_pos: new_box0_pos = a1_push_target
+    if new_a1_pos == box1_pos: new_box1_pos = a1_push_target
+
+    if a0_push_target == new_a1_pos or a1_push_target == new_a0_pos:
+        new_a0_pos, new_a1_pos = a0_pos, a1_pos
+        new_box0_pos, new_box1_pos, new_heavy_pos = box0_pos, box1_pos, heavy_pos
+        
+    if (a0_push_target is not None and a1_push_target is not None) and (a0_push_target == a1_push_target) and (new_a0_pos != heavy_pos):
+        new_a0_pos, new_a1_pos = a0_pos, a1_pos
+        new_box0_pos, new_box1_pos = box0_pos, box1_pos 
+
+    # Re-sort using the updated variable names
+    small_boxes = [b for b in [new_box0_pos, new_box1_pos] if b is not None]
+    small_boxes.sort()
+    final_box0 = small_boxes[0] if len(small_boxes) > 0 else None
+    final_box1 = small_boxes[1] if len(small_boxes) > 1 else None
+
+    # Construct the final resulting state
+    final_state = (new_a0_pos, new_a0_dir, new_a1_pos, new_a1_dir, final_box0, final_box1, new_heavy_pos)
+    
+    # Step reward is typically -1
+    reward = -1 
+    
+    return final_state, reward
+    
 
 def build_transition_model(env):
-    """
-    TODO — Build the full MDP transition model analytically.
 
-    This function should enumerate every reachable state and, for every state
-    and every joint action, return the list of (probability, next_state, reward)
-    triples that follow from the stochastic transition rules.
+    transitions = {}
+    start_state = get_state(env)
 
-    Suggested signature of the returned data structure:
+    queue = [start_state]
+    visited = set([start_state])
 
-        transitions[state][joint_action] = [(prob, next_state, reward), ...]
+    single_agent_actions = [0,1,2]  # forward, rotate left, rotate right
+    joint_actions = list(itertools.product(single_agent_actions, repeat=2))  # all joint actions
+    
+    while queue:
+        current_state = queue.pop(0)
+        transitions[current_state] = {}
 
-    where joint_action is a tuple of per-agent actions, e.g. (2, 2) means
-    both agents move forward simultaneously.
+        for joint_action in joint_actions:
+            agent0_intents = get_single_agent_intents(current_state, 0, joint_action[0], env)
+            agent1_intents = get_single_agent_intents(current_state, 1, joint_action[1], env)
 
-    Tips
-    ----
-    * Start with a *single*-agent, *single*-box toy map to validate your model
-      before scaling to the full assignment map.
-    * Use env.move_success_prob and env.push_success_prob for the probabilities.
-    * A state is terminal if all boxes are at their goal positions — you can
-      detect this by checking against the goal locations in the PDDL problem.
-    """
-    raise NotImplementedError("TODO: implement build_transition_model")
+            # Combine intents to get joint outcomes
+            joint_outcomes = []
+            
+            for prob0, intent0 in agent0_intents:
+                for prob1, intent1 in agent1_intents:
+                    joint_prob = prob0 * prob1
+                    joint_intent = (intent0, intent1)
+                    next_state, reward = simulate_joint_intents(current_state, joint_intent, env)
+                    joint_outcomes.append((joint_prob, next_state, reward))
+
+            collapsed_outcomes = {}
+            for prob, next_state, reward in joint_outcomes:
+                if next_state not in collapsed_outcomes:
+                    collapsed_outcomes[next_state] = [0.0, reward]
+                collapsed_outcomes[next_state][0] += prob
+            
+            final_outcomes = []
+            for next_state, (prob, reward) in collapsed_outcomes.items():
+                final_outcomes.append((prob, next_state, reward))
+                
+                if next_state not in visited:
+                    visited.add(next_state)
+                    queue.append(next_state)
+            
+            transitions[current_state][joint_action] = final_outcomes
+
+    return transitions
+
+
 
 
 def modified_policy_iteration(
