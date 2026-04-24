@@ -397,7 +397,7 @@ if __name__ == "__main__":
 
     # Direct evaluation loop for online planning
     online_steps = []
-    for i in range(5):
+    for i in range(100):
         env_ep = StochasticMultiAgentBoxPushEnv(ascii_map=ASCII_MAP, max_steps=500)
         steps = run_online_planning(env_ep)
         online_steps.append(steps)
@@ -438,7 +438,7 @@ if __name__ == "__main__":
                 
         return out_acts
 
-    mean_mpi, std_mpi = evaluate_policy(mpi_policy_fn, env_mpi, n_runs=5)
+    mean_mpi, std_mpi = evaluate_policy(mpi_policy_fn, env_mpi, n_runs=100)
     print(f"\nMPI              →  mean = {mean_mpi:.2f}  std = {std_mpi:.2f}\n")
 
     # ── Summary ──────────────────────────────────────────────────────────────
