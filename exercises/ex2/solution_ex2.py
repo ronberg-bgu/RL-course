@@ -11,6 +11,9 @@ Do NOT modify evaluate_policy or the __main__ block.
 import itertools
 import sys
 import os
+import contextlib
+import io
+from tqdm import tqdm
 
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "../..")))
 
@@ -56,56 +59,78 @@ ASCII_MAP = [
 # Part 1 — Online Planning
 # ===========================================================================
 
-def run_online_planning(env, max_replans: int = 300) -> int:
-    """
-    Execute one episode using online planning:
-      replan from the current state → execute only the first PDDL action → repeat.
+# 🧠 NEW: Global Cache to remember optimal PDDL plans across all 100 runs
+GLOBAL_PLAN_CACHE = {}
 
-    Returns
-    -------
-    int
-        Number of *env* steps taken (counting each rotate/forward individually).
-        Returns max_replans * <average_actions_per_plan_step> as a large sentinel
-        if the goal was never reached within max_replans replanning calls.
-    """
+
+def run_online_planning(env, max_replans: int = 300, run_idx: int = 1, prev_steps: int = None) -> int:
+    global GLOBAL_PLAN_CACHE  # Access the cross-run cache
+
     obs, _ = env.reset()
     total_env_steps = 0
     done = False
+
+    desc_str = f"Run {run_idx}/100"
+    if prev_steps is not None:
+        desc_str += f" (Prev run: {prev_steps} steps)"
+
+    pbar = tqdm(
+        total=None,
+        desc=desc_str,
+        bar_format="{desc} | Current steps: {n_fmt}",
+        leave=False
+    )
+
+    # Local queue for the current execution
+    cached_plan_actions = []
 
     for _ in range(max_replans):
         if done:
             break
 
-        # ── 1. Export current state ──────────────────────────────────
-        domain_path, problem_path = generate_pddl_for_env(env)
+        # Get the unique mathematical representation of the board
+        current_state = get_state(env)
 
-        # ── 2. Plan ──────────────────────────────────────────────────
-        plan = solve_pddl(domain_path, problem_path)
-        if not plan or len(plan.actions) == 0:
-            break  # goal already reached (planner returns empty plan)
+        # ── 1. GLOBAL CACHE CHECK ──
+        if not cached_plan_actions:
+            if current_state in GLOBAL_PLAN_CACHE:
+                # We have seen this exact board state! Instantly load the plan.
+                cached_plan_actions = GLOBAL_PLAN_CACHE[current_state].copy()
+            else:
+                # We have never seen this board state before. Call the heavy PDDL planner.
+                domain_path, problem_path = generate_pddl_for_env(env)
 
-        # ── 3. Execute the first PDDL action ─────────────────────────
-        pddl_action   = plan.actions[0]
+                with contextlib.redirect_stdout(io.StringIO()):
+                    plan = solve_pddl(domain_path, problem_path)
+
+                if not plan or len(plan.actions) == 0:
+                    pbar.close()
+                    return env.max_steps
+
+                # Save the new plan to the GLOBAL cache so we never have to plan it again
+                GLOBAL_PLAN_CACHE[current_state] = plan.actions.copy()
+
+                # Load it into the local execution queue
+                cached_plan_actions = plan.actions.copy()
+
+        # ── 2. Pop the next action from the queue ──
+        pddl_action = cached_plan_actions.pop(0)
         agent_targets = extract_target_pos(pddl_action)
-
         if not agent_targets:
-            break
+            cached_plan_actions = []
+            continue
 
-        # Build per-agent action queues (rotations + forward)
         agents_in_action = list(agent_targets.keys())
         action_queues = {
             a: get_required_actions(env, a, agent_targets[a])
             for a in agents_in_action
         }
 
-        # Pad shorter queues so all agents execute their final forward together
         max_len = max(len(q) for q in action_queues.values())
         for a in agents_in_action:
-            action_queues[a] = (
-                [None] * (max_len - len(action_queues[a])) + action_queues[a]
-            )
+            action_queues[a] = [None] * (max_len - len(action_queues[a])) + action_queues[a]
 
-        # Step through the queue
+        # ── 3. Execute the physical moves ──
         while any(len(q) > 0 for q in action_queues.values()):
             step_actions = {}
             for a in agents_in_action:
@@ -117,9 +142,26 @@ def run_online_planning(env, max_replans: int = 300) -> int:
             obs, rewards, terms, truncs, _ = env.step(step_actions)
             total_env_steps += 1
 
+            pbar.update(1)
+
             if any(terms.values()) or any(truncs.values()):
                 done = True
                 break
+
+        if done:
+            break
+
+        # ── 4. EXECUTION MONITORING (Did the stochastic env cause a slip?) ──
+        for a, target in agent_targets.items():
+            if env.agent_positions[a] != target:
+                # Someone slipped! The queued plan is invalid. Clear it so we replan next loop.
+                cached_plan_actions = []
+                break
+
+    pbar.close()
+
+    if not done:
+        return env.max_steps
 
     return total_env_steps
 
@@ -312,19 +354,18 @@ def build_transition_model(env):
 
     actions = [0, 1, 2, 3]  # East, South, West, North
     all_joint_actions = list(itertools.product(actions, repeat=2))
-    states_processed = 0
+
+    # Initialize a dynamic counter (total=None)
+    pbar = tqdm(total=None, desc="Mapping reachable states", unit=" state", leave=False)
 
     while queue:
         state = queue.pop(0)
         transitions[state] = {}
-        states_processed += 1
-
-        if states_processed % 500 == 0:
-            print(f"  ... processed {states_processed} reachable states")
 
         if is_terminal(state):
             for ja in all_joint_actions:
                 transitions[state][ja] = [(1.0, state, 0.0)]
+            pbar.update(1)
             continue
 
         # Check every joint action and cleanly save the outcomes!
@@ -338,9 +379,58 @@ def build_transition_model(env):
                     visited.add(ns)
                     queue.append(ns)
 
+        # Tick the progress bar forward by 1
+        pbar.update(1)
+
+    # Safely close the bar when the queue is empty
+    pbar.close()
+
     print(f"✅ Model Complete! Mapped {len(transitions)} reachable states.")
     return transitions
 
+
+def get_heuristic_V(env, states):
+    """
+    Dynamically scans the environment for goals and initializes the value
+    function based on the Manhattan distance of the boxes to the closest goal.
+    """
+    # 1. Find all goal coordinates dynamically
+    goals = []
+    for y in range(env.height):
+        for x in range(env.width):
+            cell = env.core_env.grid.get(x, y)
+            if cell is not None and cell.type == "goal":
+                goals.append((x, y))
+
+    V = {}
+
+    # Helper to find the closest goal distance
+    def min_goal_dist(pos):
+        if not goals:
+            return 0.0
+        return min(abs(pos[0] - gx) + abs(pos[1] - gy) for gx, gy in goals)
+
+    # 2. Build the initial V table
+    for s in states:
+        a0, a1, b0, b1, heavy = s
+        heuristic_value = 0.0
+
+        if heavy is not None:
+            heuristic_value -= min_goal_dist(heavy)
+        if b0 is not None:
+            heuristic_value -= min_goal_dist(b0)
+        if b1 is not None:
+            heuristic_value -= min_goal_dist(b1)
+
+        V[s] = heuristic_value
+
+    # 3. ── NEW PRINT STATEMENT ──
+    # Calculate the min and max to prove the board is "tilted"
+    min_v = min(V.values()) if V else 0.0
+    max_v = max(V.values()) if V else 0.0
+    print(f"  ↳ Heuristic initialized: {len(V)} states tilted (Range: {min_v} to {max_v})")
+
+    return V
 
 def modified_policy_iteration(
     env,
@@ -370,8 +460,8 @@ def modified_policy_iteration(
     transitions = build_transition_model(env)
     states = list(transitions.keys())
 
-    # 1: Initialize v_0 (arbitrarily)
-    V = {s: 0.0 for s in states}
+    # 1: Initialize v_0 (Using robust heuristic function!)
+    V = get_heuristic_V(env, states)
     policy = {}
 
     # 2: repeat
@@ -462,38 +552,44 @@ def evaluate_policy(policy_fn, env, n_runs: int = 100, max_steps: int = 500):
 if __name__ == "__main__":
     env = StochasticMultiAgentBoxPushEnv(ascii_map=ASCII_MAP, max_steps=500)
 
-    # # ── Part 1: Online Planning ──────────────────────────────────────────────
-    # print("=" * 60)
-    # print("Part 1 — Online Planning (classical planner on stochastic env)")
-    # print("=" * 60)
-    #
-    # # Wrap run_online_planning as a policy function for the evaluator
-    # def online_planning_policy(env, obs):
-    #     """
-    #     This wrapper runs one COMPLETE episode internally and is only a shim
-    #     for the evaluator.  evaluate_policy will reset the env before each
-    #     call, so we hand control back immediately with a do-nothing action
-    #     after the first step — the real logic is inside run_online_planning.
-    #
-    #     NOTE: because run_online_planning drives the env loop itself, you
-    #     should call it directly (see the manual loop below) for the 100-run
-    #     evaluation; or adapt the evaluate_policy call to suit your design.
-    #     """
-    #     raise NotImplementedError(
-    #         "Adapt this shim or call run_online_planning directly in a loop."
-    #     )
-    #
-    # # Direct evaluation loop for online planning
-    # online_steps = []
-    # for i in range(1):
-    #     env_ep = StochasticMultiAgentBoxPushEnv(ascii_map=ASCII_MAP, max_steps=500)
-    #     steps = run_online_planning(env_ep)
-    #     online_steps.append(steps)
-    #     if (i + 1) % 10 == 0:
-    #         print(f"  run {i+1}/100 — steps so far: {steps}")
-    #
-    # mean_ol, std_ol = float(np.mean(online_steps)), float(np.std(online_steps))
-    # print(f"\nOnline Planning  →  mean = {mean_ol:.2f}  std = {std_ol:.2f}\n")
+    # ── Part 1: Online Planning ──────────────────────────────────────────────
+    print("=" * 60)
+    print("Part 1 — Online Planning (classical planner on stochastic env)")
+    print("=" * 60)
+
+    # Wrap run_online_planning as a policy function for the evaluator
+    def online_planning_policy(env, obs):
+        """
+        This wrapper runs one COMPLETE episode internally and is only a shim
+        for the evaluator.  evaluate_policy will reset the env before each
+        call, so we hand control back immediately with a do-nothing action
+        after the first step — the real logic is inside run_online_planning.
+
+        NOTE: because run_online_planning drives the env loop itself, you
+        should call it directly (see the manual loop below) for the 100-run
+        evaluation; or adapt the evaluate_policy call to suit your design.
+        """
+        raise NotImplementedError(
+            "Adapt this shim or call run_online_planning directly in a loop."
+        )
+
+    # Direct evaluation loop for online planning
+    online_steps = []
+    print("\nEvaluating Online Planning (100 episodes)...")
+    prev = None  # Variable to hold the steps from the last run
+
+    # Master progress bar for the 100 runs
+    for i in tqdm(range(100), desc="Overall Progress"):
+        env_ep = StochasticMultiAgentBoxPushEnv(ascii_map=ASCII_MAP, max_steps=500)
+
+        # Pass both the run number and the previous steps!
+        steps = run_online_planning(env_ep, run_idx=i + 1, prev_steps=prev)
+
+        online_steps.append(steps)
+        prev = steps  # Update prev for the next loop iteration
+
+    mean_ol, std_ol = float(np.mean(online_steps)), float(np.std(online_steps))
+    print(f"\nOnline Planning  →  mean = {mean_ol:.2f}  std = {std_ol:.2f}\n")
 
     # ── Part 2: Modified Policy Iteration ───────────────────────────────────
     print("=" * 60)
