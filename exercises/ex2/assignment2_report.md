@@ -3,6 +3,15 @@
 ## Overview
 This project tackles the complex challenge of operating within a multi-agent stochastic environment. The primary challenge was managing the stochastic nature of the environment (an 80% success rate for physical actions and a 20% chance of "slipping") while ensuring theoretical correctness and computational efficiency.
 
+## How to Run
+To execute the evaluation and generate the performance comparison, ensure you are in the `ex2` directory and run the following command in your terminal:
+
+```bash
+python .\exercises\ex2\solution_ex2.py
+```
+
+*Note: The first few runs of the Online Planner may be slightly slower as the `GLOBAL_PLAN_CACHE` is populated. The MPI algorithm will then trigger its BFS state-space mapping before beginning the policy iteration convergence.*
+
 ---
 
 ## 1. Environment & PDDL Extractor Architecture
@@ -38,7 +47,7 @@ Because the environment is a Markov Decision Process (MDP), the optimal classica
 MPI requires building a complete Transition Model (a graph of all possible multiverses) and using the Bellman Equation to find the optimal policy.
 
 ### Reachability Graph Search (BFS)
-Rather than using a naive nested `for` loop to iterate over every possible permutation of grid coordinates—which would generate a massive number of physically impossible configurations - we implemented a targeted Breadth-First Search (BFS). Starting strictly from the initial state, the BFS simulates valid actions to dynamically discover and map only the *physically reachable* states. This drastically pruned the state space before the Bellman updates even began.
+Rather than using a naive nested `for` loop to iterate over every possible permutation of grid coordinates—which would generate a massive number of physically impossible configurations—we implemented a targeted Breadth-First Search (BFS). Starting strictly from the initial state, the BFS simulates valid actions to dynamically discover and map only the *physically reachable* states. This drastically pruned the state space before the Bellman updates even began.
 
 ### State Abstraction (Dimensionality Reduction)
 Even within physically reachable bounds, the raw state space of a multi-agent gridworld is incredibly large. 
@@ -61,3 +70,4 @@ While MPI yielded a lower mean step count, this highlights differences in archit
 * **Sequential vs. Joint Actions:** PDDL is a sequential planner. It forces one agent to move while the other waits, inherently inflating the "step count" clock. MPI utilizes a **Joint Action Space**, allowing both agents to move simultaneously. *(Note on future expansions: If a strictly 1:1 mechanical comparison is ever required, extra future work could involve extending the PDDL domain to support parallel actions, thereby equalizing this discrepancy).*
 * **Stochastic Awareness vs. Determinism:** The core reason MPI outperforms Online Planning in raw speed is its fundamental awareness of the environment's probabilities. MPI's Bellman equations explicitly factor in the 20% slip rate, allowing it to mathematically favor safer, central routes. The Fast Downward planner assumes the world is perfectly deterministic; it is completely blind to risk and only reacts to stochasticity after a failure has already occurred.
 * **Variance and Stability (Standard Deviation):** MPI also demonstrates a noticeably lower standard deviation across runs compared to Online Planning. Because the deterministic planner creates fragile, "perfect world" sequences, a single stochastic slip breaks the entire plan, forcing it to halt, re-evaluate, and often take inefficient detours to recover. MPI, conversely, has already mapped the optimal recovery action for every possible state *before* an agent even slips. Its joint-action policy inherently minimizes risk, resulting in highly consistent execution times and a much tighter spread of episode lengths.
+```
