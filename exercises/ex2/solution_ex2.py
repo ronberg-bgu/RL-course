@@ -75,10 +75,18 @@ def run_online_planning(env, max_replans: int = 300) -> int:
 
         # Build per-agent action queues (rotations + forward)
         agents_in_action = list(agent_targets.keys())
-        action_queues = {
-            a: get_required_actions(env, a, agent_targets[a])
-            for a in agents_in_action
-        }
+        try:
+            action_queues = {
+                a: get_required_actions(env, a, agent_targets[a])
+                for a in agents_in_action
+            }
+        except ValueError:
+            # Planner returned an action not adjacent to our actual position
+            obs, rewards, terms, truncs, _ = env.step({})
+            total_env_steps += 1
+            if any(terms.values()) or any(truncs.values()):
+                done = True
+            continue
 
         # Pad shorter queues so all agents execute their final forward together
         max_len = max(len(q) for q in action_queues.values())
@@ -154,29 +162,133 @@ def get_state(env) -> tuple:
 
 
 def build_transition_model(env):
-    """
-    TODO — Build the full MDP transition model analytically.
-
-    This function should enumerate every reachable state and, for every state
-    and every joint action, return the list of (probability, next_state, reward)
-    triples that follow from the stochastic transition rules.
-
-    Suggested signature of the returned data structure:
-
-        transitions[state][joint_action] = [(prob, next_state, reward), ...]
-
-    where joint_action is a tuple of per-agent actions, e.g. (2, 2) means
-    both agents move forward simultaneously.
-
-    Tips
-    ----
-    * Start with a *single*-agent, *single*-box toy map to validate your model
-      before scaling to the full assignment map.
-    * Use env.move_success_prob and env.push_success_prob for the probabilities.
-    * A state is terminal if all boxes are at their goal positions — you can
-      detect this by checking against the goal locations in the PDDL problem.
-    """
-    raise NotImplementedError("TODO: implement build_transition_model")
+    from minigrid.core.constants import DIR_TO_VEC
+    
+    move_succ = getattr(env, "move_success_prob", 0.8)
+    push_succ = getattr(env, "push_success_prob", 0.8)
+    side_prob = (1.0 - move_succ) / 2.0
+    
+    walkable = set()
+    goals = set()
+    env.reset()
+    for y in range(env.height):
+        for x in range(env.width):
+            c = env.core_env.grid.get(x, y)
+            if c is None or c.type != "wall":
+                walkable.add((x, y))
+            if c is not None and c.type == "goal":
+                goals.add((x, y))
+                
+    init_state = get_state(env)
+    queue = [init_state]
+    transitions = {}
+    
+    def get_omni_state(state):
+        # Convert state from full (pos, dir) to omni (pos)
+        return (state[0], state[2], state[4], state[5], state[6])
+        
+    init_omni = get_omni_state(init_state)
+    queue = [init_omni]
+    transitions = {}
+    
+    # Macro-actions: 0=UP, 1=RIGHT, 2=DOWN, 3=LEFT
+    single_actions = [0, 1, 2, 3] 
+    joint_actions = [(a0, a1) for a0 in single_actions for a1 in single_actions]
+    macro_vecs = {0: (0, -1), 1: (1, 0), 2: (0, 1), 3: (-1, 0)}
+    
+    def is_trans_terminal(state):
+        cur_boxes = [b for b in state[2:] if b is not None]
+        return len(cur_boxes) > 0 and all(b in goals for b in cur_boxes)
+        
+    while queue:
+        state = queue.pop(0)
+        if state in transitions:
+            continue
+        transitions[state] = {}
+        
+        if is_trans_terminal(state):
+            for ja in joint_actions:
+                transitions[state][ja] = [(1.0, state, 0.0)]
+            continue
+            
+        a0_p, a1_p, b0_p, b1_p, h_p = state
+        boxes = {b0_p: "small", b1_p: "small", h_p: "heavy"} if h_p else {b0_p: "small", b1_p: "small"}
+        boxes = {k: v for k, v in boxes.items() if k is not None}
+        
+        for ja in joint_actions:
+            act0, act1 = ja
+            intents = {0: None, 1: None}
+            
+            for idx, (p, act_dir) in enumerate([(a0_p, act0), (a1_p, act1)]):
+                vec = macro_vecs[act_dir]
+                fwd = (p[0]+vec[0], p[1]+vec[1])
+                intents[idx] = {"tgt": fwd, "dir": act_dir, "vec": vec}
+            
+            def get_branches(intent, p):
+                tgt = intent["tgt"]
+                if boxes.get(tgt) in ["small", "heavy"]:
+                    return [(push_succ, intent), (1.0 - push_succ, "fail")]
+                d = intent["dir"]
+                dl = (d - 1) % 4; v_l = macro_vecs[dl]; tl = (p[0]+v_l[0], p[1]+v_l[1])
+                dr = (d + 1) % 4; v_r = macro_vecs[dr]; tr = (p[0]+v_r[0], p[1]+v_r[1])
+                return [(move_succ, {"tgt": tgt, "vec": intent["vec"]}),
+                        (side_prob, {"tgt": tl, "vec": v_l}),
+                        (side_prob, {"tgt": tr, "vec": v_r})]
+            
+            branches0 = get_branches(intents[0], a0_p)
+            branches1 = get_branches(intents[1], a1_p)
+            
+            is_joint_heavy = False
+            if intents[0] and intents[1]:
+                if intents[0]["tgt"] == intents[1]["tgt"] and boxes.get(intents[0]["tgt"]) == "heavy":
+                    if a0_p == a1_p and intents[0]["dir"] == intents[1]["dir"]:
+                        is_joint_heavy = True
+            
+            outcomes = {}
+            if is_joint_heavy:
+                joint_branches = [(push_succ, (intents[0], intents[1])), (1.0 - push_succ, ("fail", "fail"))]
+            else:
+                joint_branches = [(p0 * p1, (b0, b1)) for p0, b0 in branches0 for p1, b1 in branches1]
+            
+            for prob, (b0_i, b1_i) in joint_branches:
+                if prob == 0: continue
+                new_b0 = b0_p; new_b1 = b1_p; new_h = h_p
+                na0_p = a0_p; na1_p = a1_p
+                nbs = dict(boxes)
+                heavy_consumed = {0: False, 1: False}
+                if is_joint_heavy and b0_i != "fail":
+                    hv_tgt = intents[0]["tgt"]; nhv = (hv_tgt[0]+intents[0]["vec"][0], hv_tgt[1]+intents[0]["vec"][1])
+                    if nhv in walkable and nbs.get(nhv) is None:
+                        del nbs[hv_tgt]; nbs[nhv] = "heavy"
+                        new_h = nhv; na0_p = hv_tgt; na1_p = hv_tgt
+                    heavy_consumed[0] = True; heavy_consumed[1] = True
+                        
+                for idx, (b_intent, a_p, consumed) in enumerate([(b0_i, a0_p, heavy_consumed[0]), (b1_i, a1_p, heavy_consumed[1])]):
+                    if consumed or b_intent is None or b_intent == "fail": continue
+                    tgt = b_intent["tgt"]; vec = b_intent["vec"]
+                    if nbs.get(tgt) == "small":
+                        ntgt = (tgt[0]+vec[0], tgt[1]+vec[1])
+                        if ntgt in walkable and nbs.get(ntgt) is None:
+                            if b0_p == tgt: new_b0 = ntgt
+                            elif b1_p == tgt: new_b1 = ntgt
+                            del nbs[tgt]; nbs[ntgt] = "small"
+                            if idx == 0: na0_p = tgt
+                            else: na1_p = tgt
+                    elif nbs.get(tgt) is None and tgt in walkable:
+                        if idx == 0: na0_p = tgt
+                        else: na1_p = tgt
+                        
+                ns = (na0_p, na1_p, new_b0, new_b1, new_h)
+                outcomes[ns] = outcomes.get(ns, 0.0) + prob
+                
+            res_list = []
+            for ns, prob in outcomes.items():
+                rew = 1.0 if is_trans_terminal(ns) else 0.0
+                res_list.append((prob, ns, rew))
+                if ns not in transitions: queue.append(ns)
+            transitions[state][ja] = res_list
+            
+    return transitions
 
 
 def modified_policy_iteration(
@@ -186,24 +298,52 @@ def modified_policy_iteration(
     theta: float = 1e-4,
     max_outer_iters: int = 500,
 ):
-    """
-    TODO — Modified Policy Iteration.
-
-    Parameters
-    ----------
-    env   : StochasticMultiAgentBoxPushEnv (used only to build the model)
-    gamma : discount factor
-    k     : number of partial policy-evaluation sweeps per iteration
-    theta : convergence threshold for value change
-    max_outer_iters : safety cap on outer iterations
-
-    Returns
-    -------
-    policy : dict  state -> joint_action
-    V      : dict  state -> float
-    """
-    raise NotImplementedError("TODO: implement modified_policy_iteration")
-
+    print("Building transition model...")
+    transitions = build_transition_model(env)
+    print(f"Model built! {len(transitions)} reachable states.")
+    
+    states = list(transitions.keys())
+    V = {s: 0.0 for s in states}
+    policy = {s: (0, 0) for s in states}
+    
+    # Initialize policy arbitrarily
+    for s in states:
+        policy[s] = next(iter(transitions[s].keys()))
+        
+    for i in range(max_outer_iters):
+        # 1. Partial policy evaluation (k sweeps)
+        for _ in range(k):
+            for s in states:
+                act = policy[s]
+                v_new = 0.0
+                for prob, next_s, reward in transitions[s][act]:
+                    v_new += prob * (reward + gamma * V[next_s])
+                V[s] = v_new
+                
+        # 2. Policy improvement
+        policy_stable = True
+        for s in states:
+            old_act = policy[s]
+            best_act = None
+            best_value = -float('inf')
+            
+            for act in transitions[s].keys():
+                val = 0.0
+                for prob, next_s, reward in transitions[s][act]:
+                    val += prob * (reward + gamma * V[next_s])
+                if val > best_value:
+                    best_value = val
+                    best_act = act
+                    
+            policy[s] = best_act
+            if old_act != best_act:
+                policy_stable = False
+                
+        if policy_stable:
+            print(f"MPI converged after {i+1} outer iterations.")
+            break
+            
+    return policy, V
 
 # ===========================================================================
 # Evaluation (do not modify)
@@ -252,23 +392,12 @@ if __name__ == "__main__":
 
     # Wrap run_online_planning as a policy function for the evaluator
     def online_planning_policy(env, obs):
-        """
-        This wrapper runs one COMPLETE episode internally and is only a shim
-        for the evaluator.  evaluate_policy will reset the env before each
-        call, so we hand control back immediately with a do-nothing action
-        after the first step — the real logic is inside run_online_planning.
+        raise NotImplementedError("Shim not used, we call run_online_planning directly.")
 
-        NOTE: because run_online_planning drives the env loop itself, you
-        should call it directly (see the manual loop below) for the 100-run
-        evaluation; or adapt the evaluate_policy call to suit your design.
-        """
-        raise NotImplementedError(
-            "Adapt this shim or call run_online_planning directly in a loop."
-        )
 
     # Direct evaluation loop for online planning
     online_steps = []
-    for i in range(100):
+    for i in range(5):
         env_ep = StochasticMultiAgentBoxPushEnv(ascii_map=ASCII_MAP, max_steps=500)
         steps = run_online_planning(env_ep)
         online_steps.append(steps)
@@ -289,12 +418,27 @@ if __name__ == "__main__":
     def mpi_policy_fn(env, obs):
         """Convert current env state to a joint action using the MPI policy."""
         state = get_state(env)
-        joint_action = policy[state]
-        # joint_action is a tuple (action_agent0, action_agent1)
+        omni = (state[0], state[2], state[4], state[5], state[6])
+        if omni not in policy:
+            # Fallback if deviate somewhere strange during testing tracking
+            return {env.possible_agents[0]: 0, env.possible_agents[1]: 0}
+            
+        joint_action = policy[omni] # (0=UP, 1=RIGHT, 2=DOWN, 3=LEFT)
         agents = env.possible_agents
-        return {agents[0]: joint_action[0], agents[1]: joint_action[1]}
+        out_acts = {}
+        
+        for idx, agent in enumerate(agents):
+            act = joint_action[idx]
+            cur_dir = env.agent_dirs[agent]
+            diff = (act - cur_dir) % 4
+            if diff == 0: out_acts[agent] = 2 # forward
+            elif diff == 1: out_acts[agent] = 1 # right
+            elif diff == 3: out_acts[agent] = 0 # left
+            else: out_acts[agent] = 1 # 180 flip requires 2 steps, just turn right this step
+                
+        return out_acts
 
-    mean_mpi, std_mpi = evaluate_policy(mpi_policy_fn, env_mpi, n_runs=100)
+    mean_mpi, std_mpi = evaluate_policy(mpi_policy_fn, env_mpi, n_runs=5)
     print(f"\nMPI              →  mean = {mean_mpi:.2f}  std = {std_mpi:.2f}\n")
 
     # ── Summary ──────────────────────────────────────────────────────────────

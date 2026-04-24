@@ -59,12 +59,6 @@ class StochasticMultiAgentBoxPushEnv(MultiAgentBoxPushEnv):
         else:
             return (intended_dir + 1) % 4   # 90° right of intended
 
-    def _apply_goal_termination(self, rewards, terminations):
-        """Mark all agents as terminated with reward 1."""
-        for a in self.agents:
-            rewards[a] = 1.0
-            terminations[a] = True
-
     # ------------------------------------------------------------------
     # Core step override
     # ------------------------------------------------------------------
@@ -181,6 +175,11 @@ class StochasticMultiAgentBoxPushEnv(MultiAgentBoxPushEnv):
             self._apply_goal_termination(rewards, terminations)
 
         # ── Truncation check ──────────────────────────────────────────
+        if self._check_success():
+            for a in self.agents:
+                rewards[a] = 1.0
+                terminations[a] = True
+                
         if self.steps >= self.max_steps:
             for a in self.agents:
                 truncations[a] = True
