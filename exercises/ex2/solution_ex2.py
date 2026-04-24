@@ -44,6 +44,16 @@ ASCII_MAP = [
     "WWWWW",
 ]
 
+ASCII_MAP = [
+    "WWWWW",
+    "WAA W",
+    "WBC W",
+    "W   W",
+    "W B W",
+    "WGGGW",
+    "WWWWW",
+]
+
 # ASCII_MAP = [
 #     "WWWWWWWW",
 #     "W  AA  W",
@@ -362,7 +372,7 @@ def build_transition_model(env):
     all_joint_actions = list(itertools.product(actions, repeat=2))
 
     # Initialize a dynamic counter (total=None)
-    pbar = tqdm(total=None, desc="Mapping reachable states", unit=" state", leave=False)
+    pbar = tqdm(total=None, desc="Mapping reachable states", unit=" state", leave=True)
 
     while queue:
         state = queue.pop(0)
@@ -446,8 +456,6 @@ def modified_policy_iteration(
     max_outer_iters: int = 500,
 ):
     """
-    TODO — Modified Policy Iteration.
-
     Parameters
     ----------
     env   : StochasticMultiAgentBoxPushEnv (used only to build the model)
