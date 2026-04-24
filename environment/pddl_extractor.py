@@ -69,7 +69,7 @@ def generate_domain(domain_path):
         f.write(domain_str)
 
 
-def generate_problem(env, problem_path):
+def generate_problem(env, problem_path, goals=None):
     w, h = env.width, env.height
 
     locations = []
@@ -149,23 +149,39 @@ def generate_problem(env, problem_path):
     for l1, l2, l3 in aligned_triplets:
         init_str += f"    (aligned {l1} {l2} {l3})\n"
 
-    # ── FIX: ANTI-SWAP GOAL ASSIGNMENT ──
+    # ── DYNAMIC GOAL ASSIGNMENT ──
+    if goals is None:
+        goals = []  # Fallback
+
+    # Sort goals purely by X coordinate (left to right)
+    sorted_goals = sorted(goals, key=lambda g: g[0])
     goal_conditions = []
-    goal_y = h - 2
 
-    for h_name, _ in heavyboxes:
-        goal_conditions.append(f"(heavybox-at {h_name} loc_2_{goal_y})")
+    # Identify the center goal for the heavy box, and outer goals for small boxes
+    if len(sorted_goals) >= 3:
+        heavy_goal = sorted_goals[1]
+        small_goals = [sorted_goals[0], sorted_goals[2]]
+    elif len(sorted_goals) > 0:
+        heavy_goal = sorted_goals[0]
+        small_goals = sorted_goals[1:]
+    else:
+        heavy_goal, small_goals = None, []
 
-    # Strictly sort the boxes by X coordinate (index 1 of the split string)
+    # 1. Assign Heavy Box to the center goal
+    if heavy_goal:
+        for h_name, _ in heavyboxes:
+            goal_conditions.append(f"(heavybox-at {h_name} loc_{heavy_goal[0]}_{heavy_goal[1]})")
+
+    # 2. Assign Small Boxes to the outer goals (sorted by X so they don't cross paths)
     def get_x(b_tuple):
         return int(b_tuple[1].split('_')[1])
 
     sorted_small_boxes = sorted(boxes, key=get_x)
 
-    small_xs = [1, 3]
     for i, (b_name, _) in enumerate(sorted_small_boxes):
-        if i < len(small_xs):
-            goal_conditions.append(f"(box-at {b_name} loc_{small_xs[i]}_{goal_y})")
+        if i < len(small_goals):
+            g = small_goals[i]
+            goal_conditions.append(f"(box-at {b_name} loc_{g[0]}_{g[1]})")
 
     if goal_conditions:
         goal_str = "(and\n" + "\n".join(f"    {g}" for g in goal_conditions) + "\n  )"
@@ -187,12 +203,12 @@ def generate_problem(env, problem_path):
         f.write(problem_str)
 
 
-def generate_pddl_for_env(env, pddl_folder="pddl"):
+def generate_pddl_for_env(env, pddl_folder="pddl", goals=None):
     os.makedirs(pddl_folder, exist_ok=True)
     domain_path = os.path.join(pddl_folder, "domain.pddl")
     problem_path = os.path.join(pddl_folder, "problem.pddl")
 
     generate_domain(domain_path)
-    generate_problem(env, problem_path)
+    generate_problem(env, problem_path, goals=goals)
 
     return domain_path, problem_path

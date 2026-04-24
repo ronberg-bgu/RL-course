@@ -69,6 +69,12 @@ def run_online_planning(env, max_replans: int = 300, run_idx: int = 1, prev_step
     obs, _ = env.reset()
     total_env_steps = 0
     done = False
+    initial_goals = []
+    for y in range(env.height):
+        for x in range(env.width):
+            cell = env.core_env.grid.get(x, y)
+            if cell is not None and cell.type == "goal":
+                initial_goals.append((x, y))
 
     desc_str = f"Run {run_idx}/100"
     if prev_steps is not None:
@@ -98,7 +104,7 @@ def run_online_planning(env, max_replans: int = 300, run_idx: int = 1, prev_step
                 cached_plan_actions = GLOBAL_PLAN_CACHE[current_state].copy()
             else:
                 # We have never seen this board state before. Call the heavy PDDL planner.
-                domain_path, problem_path = generate_pddl_for_env(env)
+                domain_path, problem_path = generate_pddl_for_env(env, goals=initial_goals)
 
                 with contextlib.redirect_stdout(io.StringIO()):
                     plan = solve_pddl(domain_path, problem_path)
@@ -556,22 +562,6 @@ if __name__ == "__main__":
     print("=" * 60)
     print("Part 1 — Online Planning (classical planner on stochastic env)")
     print("=" * 60)
-
-    # Wrap run_online_planning as a policy function for the evaluator
-    def online_planning_policy(env, obs):
-        """
-        This wrapper runs one COMPLETE episode internally and is only a shim
-        for the evaluator.  evaluate_policy will reset the env before each
-        call, so we hand control back immediately with a do-nothing action
-        after the first step — the real logic is inside run_online_planning.
-
-        NOTE: because run_online_planning drives the env loop itself, you
-        should call it directly (see the manual loop below) for the 100-run
-        evaluation; or adapt the evaluate_policy call to suit your design.
-        """
-        raise NotImplementedError(
-            "Adapt this shim or call run_online_planning directly in a loop."
-        )
 
     # Direct evaluation loop for online planning
     online_steps = []
