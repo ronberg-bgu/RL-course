@@ -23,6 +23,28 @@ from environment.pddl_extractor import generate_pddl_for_env
 from planner.pddl_solver import solve_pddl
 from visualize_plan import extract_target_pos, get_required_actions
 
+
+class DualLogger:
+    def __init__(self):
+        # Safely builds the path: exercises/ex2/output.txt
+        filepath = os.path.join("exercises", "ex2", "output.txt")
+
+        self.terminal = sys.stdout
+        # The "w" mode ensures the file is completely reset on every run!
+        self.log = open(filepath, "w", encoding="utf-8")
+
+    def write(self, message):
+        self.terminal.write(message)
+        self.log.write(message)
+
+    def flush(self):
+        self.terminal.flush()
+        self.log.flush()
+
+
+# Hijack the standard print output
+sys.stdout = DualLogger()
+
 # ---------------------------------------------------------------------------
 # Map used in both parts (same as Assignment 1)
 # ---------------------------------------------------------------------------
@@ -34,25 +56,35 @@ ASCII_MAP = [
     "WWWWW",
 ]
 
-ASCII_MAP = [
-    "WWWWW",
-    "WAA W",
-    "WBCBW",
-    "W   W",
-    "W   W",
-    "WGGGW",
-    "WWWWW",
-]
+# ASCII_MAP = [
+#     "WWWWW",
+#     "WAA W",
+#     "WBCBW",
+#     "W   W",
+#     "W   W",
+#     "WGGGW",
+#     "WWWWW",
+# ]
 
-ASCII_MAP = [
-    "WWWWW",
-    "WAA W",
-    "WBC W",
-    "W   W",
-    "W B W",
-    "WGGGW",
-    "WWWWW",
-]
+# ASCII_MAP = [
+#     "WWWWW",
+#     "WAA W",
+#     "WBC W",
+#     "W   W",
+#     "W B W",
+#     "WGGGW",
+#     "WWWWW",
+# ]
+
+# ASCII_MAP = [
+#     "WWWWWW",
+#     "W AA W",
+#     "WB C W",
+#     "W    W",
+#     "W  B W",
+#     "WG GGW",
+#     "WWWWWW",
+# ]
 
 # ASCII_MAP = [
 #     "WWWWWWWW",
@@ -365,47 +397,64 @@ def build_transition_model(env):
     # ── 4. Main BFS Execution Loop ─────────────────────────────────
     env.reset()
     start_state = get_state(env)
-    queue = [start_state]
-    visited = {start_state}
+
+    # --- 🧠 NEW: The Memory Hack (Integer Mapping) ---
+    state_to_id = {start_state: 0}
+    id_to_state = {0: start_state}
+    next_id = 1
+
+    queue = [0]  # Queue now holds tiny integers instead of massive tuples!
+    visited = {0}
 
     actions = [0, 1, 2, 3]  # East, South, West, North
     all_joint_actions = list(itertools.product(actions, repeat=2))
 
-    # Initialize a dynamic counter (total=None)
     pbar = tqdm(total=None, desc="Mapping reachable states", unit=" state", leave=True)
 
     while queue:
-        state = queue.pop(0)
-        transitions[state] = {}
+        state_id = queue.pop(0)
+        state_tuple = id_to_state[state_id]  # Unpack the actual tuple to do the physics math
+        transitions[state_id] = {}
 
-        if is_terminal(state):
+        if is_terminal(state_tuple):
             for ja in all_joint_actions:
-                transitions[state][ja] = [(1.0, state, 0.0)]
+                transitions[state_id][ja] = [(1.0, state_id, 0.0)]
             pbar.update(1)
             continue
 
-        # Check every joint action and cleanly save the outcomes!
         for j_act in all_joint_actions:
-            final_outcomes = calculate_outcomes_list(state, j_act)
-            transitions[state][j_act] = final_outcomes
+            # Calculate the outcomes using the physical tuples
+            raw_outcomes = calculate_outcomes_list(state_tuple, j_act)
+            mapped_outcomes = []
 
-            # Add newly discovered states to the queue
-            for prob, ns, reward in final_outcomes:
-                if ns not in visited:
-                    visited.add(ns)
-                    queue.append(ns)
+            for prob, ns_tuple, reward in raw_outcomes:
+                # If we've never seen this multiverse outcome before, give it an ID
+                if ns_tuple not in state_to_id:
+                    state_to_id[ns_tuple] = next_id
+                    id_to_state[next_id] = ns_tuple
+                    next_id += 1
 
-        # Tick the progress bar forward by 1
+                # Grab the ID and store it in our lightweight outcomes list
+                ns_id = state_to_id[ns_tuple]
+                mapped_outcomes.append((prob, ns_id, reward))
+
+                if ns_id not in visited:
+                    visited.add(ns_id)
+                    queue.append(ns_id)
+
+            transitions[state_id][j_act] = mapped_outcomes
+
         pbar.update(1)
 
-    # Safely close the bar when the queue is empty
     pbar.close()
 
     print(f"✅ Model Complete! Mapped {len(transitions)} reachable states.")
-    return transitions
+
+    # We must return the mapping dictionaries so MPI can use them!
+    return transitions, state_to_id, id_to_state
 
 
-def get_heuristic_V(env, states):
+def get_heuristic_V(env, state_ids, id_to_state):
     """
     Dynamically scans the environment for goals and initializes the value
     function based on the Manhattan distance of the boxes to the closest goal.
@@ -427,8 +476,9 @@ def get_heuristic_V(env, states):
         return min(abs(pos[0] - gx) + abs(pos[1] - gy) for gx, gy in goals)
 
     # 2. Build the initial V table
-    for s in states:
-        a0, a1, b0, b1, heavy = s
+    for s_id in state_ids:
+        # Unpack the integer back into physical coordinates
+        a0, a1, b0, b1, heavy = id_to_state[s_id]
         heuristic_value = 0.0
 
         if heavy is not None:
@@ -438,10 +488,8 @@ def get_heuristic_V(env, states):
         if b1 is not None:
             heuristic_value -= min_goal_dist(b1)
 
-        V[s] = heuristic_value
+        V[s_id] = heuristic_value
 
-    # 3. ── NEW PRINT STATEMENT ──
-    # Calculate the min and max to prove the board is "tilted"
     min_v = min(V.values()) if V else 0.0
     max_v = max(V.values()) if V else 0.0
     print(f"  ↳ Heuristic initialized: {len(V)} states tilted (Range: {min_v} to {max_v})")
@@ -455,75 +503,63 @@ def modified_policy_iteration(
     theta: float = 1e-4,
     max_outer_iters: int = 500,
 ):
-    """
-    Parameters
-    ----------
-    env   : StochasticMultiAgentBoxPushEnv (used only to build the model)
-    gamma : discount factor
-    k     : number of partial policy-evaluation sweeps per iteration
-    theta : convergence threshold for value change
-    max_outer_iters : safety cap on outer iterations
-
-    Returns
-    -------
-    policy : dict  state -> joint_action
-    V      : dict  state -> float
-    """
     print("\n🧠 Starting Modified Policy Iteration...")
 
-    transitions = build_transition_model(env)
-    states = list(transitions.keys())
+    # Unpack our lightweight model and mapping dictionaries
+    transitions, state_to_id, id_to_state = build_transition_model(env)
+    state_ids = list(transitions.keys())
 
-    # 1: Initialize v_0 (Using robust heuristic function!)
-    V = get_heuristic_V(env, states)
-    policy = {}
+    # Initialize V using the IDs
+    V = get_heuristic_V(env, state_ids, id_to_state)
+    policy_ids = {}
 
-    # 2: repeat
     for i in range(max_outer_iters):
-        # Store v_k to check convergence at the end of the loop
         V_old_outer = V.copy()
 
-        # 3: Policy Improvement (pi_{k+1})
-        for s in states:
+        # 3: Policy Improvement (using tiny integers!)
+        for s_id in state_ids:
             best_action = None
             best_value = -float('inf')
 
-            for action, outcomes in transitions[s].items():
+            for action, outcomes in transitions[s_id].items():
                 q_s_a = 0.0
-                for prob, next_s, reward in outcomes:
-                    q_s_a += prob * (reward + gamma * V[next_s])
+                for prob, next_s_id, reward in outcomes:
+                    q_s_a += prob * (reward + gamma * V[next_s_id])
 
                 if q_s_a > best_value:
                     best_value = q_s_a
                     best_action = action
 
-            policy[s] = best_action
+            policy_ids[s_id] = best_action
 
-        # 4, 5, 6, 7: Partial Evaluation (k sweeps)
+        # 4, 5, 6, 7: Partial Evaluation
         for _ in range(k):
             new_V = V.copy()
-            for s in states:
-                action = policy.get(s)
+            for s_id in state_ids:
+                action = policy_ids.get(s_id)
                 if action is None: continue
 
                 v_s = 0.0
-                for prob, next_s, reward in transitions[s][action]:
-                    v_s += prob * (reward + gamma * V[next_s])
+                for prob, next_s_id, reward in transitions[s_id][action]:
+                    v_s += prob * (reward + gamma * V[next_s_id])
 
-                new_V[s] = v_s
-            # Update v_{k, j}
+                new_V[s_id] = v_s
             V = new_V
 
-        # 8 & 9: Update and check convergence ||v_{k+1} - v_k|| < epsilon
-        max_diff = max([abs(V[s] - V_old_outer[s]) for s in states])
-
+        max_diff = max([abs(V[s] - V_old_outer[s]) for s in state_ids])
         print(f"  Outer Iteration {i + 1} complete. Max Value Diff: {max_diff:.6f}")
 
         if max_diff < theta:
             print(f"🎯 MPI Converged to optimal value after {i + 1} iterations!")
             break
 
-    return policy, V
+    # ── THE MAGIC TRICK ──
+    # Translate the integer policy back into a physical tuple policy for the evaluator
+    final_policy = {}
+    for s_id, action in policy_ids.items():
+        final_policy[id_to_state[s_id]] = action
+
+    return final_policy, V
 
 
 # ===========================================================================
