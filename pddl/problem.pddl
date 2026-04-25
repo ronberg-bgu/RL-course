@@ -7,13 +7,13 @@
     hbx_0 - heavybox
   )
   (:init
-    (clear loc_3_3)
-    (clear loc_1_2)
     (clear loc_2_1)
-    (clear loc_1_1)
-    (clear loc_2_2)
+    (clear loc_3_3)
     (clear loc_3_1)
-    (agent-at agent_0 loc_2_2)
+    (clear loc_2_2)
+    (clear loc_1_1)
+    (clear loc_1_2)
+    (agent-at agent_0 loc_3_1)
     (agent-at agent_1 loc_1_2)
     (box-at box_0 loc_3_2)
     (box-at box_1 loc_1_3)

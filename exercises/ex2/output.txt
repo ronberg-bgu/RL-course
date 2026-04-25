@@ -4,7 +4,7 @@ Part 1 — Online Planning (classical planner on stochastic env)
 
 Evaluating Online Planning (100 episodes)...
 
-Online Planning  →  mean = 18.49  std = 3.98
+Online Planning  →  mean = 17.88  std = 2.85
 
 ============================================================
 Part 2 — Modified Policy Iteration
@@ -39,12 +39,12 @@ Part 2 — Modified Policy Iteration
   Outer Iteration 23 complete. Max Value Diff: 0.000096
 🎯 MPI Converged to optimal value after 23 iterations!
 
-MPI              →  mean = 13.03  std = 2.17
+MPI              →  mean = 12.79  std = 2.67
 
 ============================================================
 SUMMARY
 ============================================================
 Algorithm                   Mean steps    Std steps
 --------------------------------------------------
-Online Planning                  18.49         3.98
-MPI                              13.03         2.17
+Online Planning                  17.88         2.85
+MPI                              12.79         2.67

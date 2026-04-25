@@ -46,15 +46,15 @@ class DualLogger:
 sys.stdout = DualLogger()
 
 # ---------------------------------------------------------------------------
-# Map used in both parts (same as Assignment 1)
+# Maps
 # ---------------------------------------------------------------------------
-ASCII_MAP = [
-    "WWWWW",
-    "WAA W",
-    "WBCBW",
-    "WGGGW",
-    "WWWWW",
-]
+# ASCII_MAP = [
+#     "WWWWW",
+#     "WAA W",
+#     "WBCBW",
+#     "WGGGW",
+#     "WWWWW",
+# ]
 
 # ASCII_MAP = [
 #     "WWWWW",
@@ -86,15 +86,15 @@ ASCII_MAP = [
 #     "WWWWWW",
 # ]
 
-# ASCII_MAP = [
-#     "WWWWWWWW",
-#     "W  AA  W",
-#     "W B C  W",
-#     "W      W",
-#     "W   B  W",
-#     "W G G GW",
-#     "WWWWWWWW",
-# ]
+ASCII_MAP = [
+    "WWWWWWWW",
+    "W  AA  W",
+    "W B C  W",
+    "W      W",
+    "W   B  W",
+    "W G G GW",
+    "WWWWWWWW",
+]
 
 
 # ===========================================================================
@@ -217,18 +217,6 @@ def run_online_planning(env, max_replans: int = 300, run_idx: int = 1, prev_step
 # ===========================================================================
 # Part 2 — Modified Policy Iteration
 # ===========================================================================
-
-# ---------------------------------------------------------------------------
-# State representation
-# ---------------------------------------------------------------------------
-# A state is a tuple:
-#   (agent0_pos, agent0_dir, agent1_pos, agent1_dir,
-#    box0_pos,   box1_pos,   heavy_pos)
-#
-# where positions are (col, row) tuples and directions are 0-3.
-#
-# Feel free to simplify (e.g. drop agent directions if you argue they are
-# irrelevant) as long as you justify it in your live demo.
 
 def get_state(env) -> tuple:
     """Extract the current state tuple from a live environment."""
@@ -561,6 +549,36 @@ def modified_policy_iteration(
 
     return final_policy, V
 
+def mpi_policy_fn(env, obs):
+    """Convert current env state to a joint action using the MPI policy."""
+    state = get_state(env)
+
+    # Safety fallback
+    if state not in policy:
+        agents = env.possible_agents
+        return {agents[0]: 2, agents[1]: 2}
+
+    joint_action = policy[state]
+    agents = env.possible_agents
+    sim_actions = {}
+
+    for i, agent in enumerate(agents):
+        target_dir = joint_action[i]
+        current_dir = env.agent_dirs[agent]
+
+        # Scenario 1: Facing the correct way
+        if current_dir == target_dir:
+            sim_actions[agent] = 2  # Command 2: Move Forward
+
+        # Scenario 2: Target is 90 degrees to the right
+        elif (current_dir + 1) % 4 == target_dir:
+            sim_actions[agent] = 1  # Command 1: Turn Right
+
+        # Scenario 3: Target is Left or directly Behind
+        else:
+            sim_actions[agent] = 0  # Command 0: Turn Left
+
+    return sim_actions
 
 # ===========================================================================
 # Evaluation (do not modify)
@@ -632,38 +650,6 @@ if __name__ == "__main__":
 
     env_mpi = StochasticMultiAgentBoxPushEnv(ascii_map=ASCII_MAP, max_steps=500)
     policy, V = modified_policy_iteration(env_mpi)
-
-
-    def mpi_policy_fn(env, obs):
-        """Convert current env state to a joint action using the MPI policy."""
-        state = get_state(env)
-
-        # Safety fallback
-        if state not in policy:
-            agents = env.possible_agents
-            return {agents[0]: 2, agents[1]: 2}
-
-        joint_action = policy[state]
-        agents = env.possible_agents
-        sim_actions = {}
-
-        for i, agent in enumerate(agents):
-            target_dir = joint_action[i]
-            current_dir = env.agent_dirs[agent]
-
-            # Scenario 1: Facing the correct way
-            if current_dir == target_dir:
-                sim_actions[agent] = 2  # Command 2: Move Forward
-
-            # Scenario 2: Target is 90 degrees to the right
-            elif (current_dir + 1) % 4 == target_dir:
-                sim_actions[agent] = 1  # Command 1: Turn Right
-
-            # Scenario 3: Target is Left or directly Behind
-            else:
-                sim_actions[agent] = 0  # Command 0: Turn Left
-
-        return sim_actions
 
     mean_mpi, std_mpi = evaluate_policy(mpi_policy_fn, env_mpi, n_runs=100)
     print(f"\nMPI              →  mean = {mean_mpi:.2f}  std = {std_mpi:.2f}\n")
