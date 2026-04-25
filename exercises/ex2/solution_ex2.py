@@ -11,10 +11,12 @@ Do NOT modify evaluate_policy or the __main__ block.
 
 import sys
 import os
+import re
 
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "../..")))
 
 import numpy as np
+from minigrid.core.constants import DIR_TO_VEC
 from environment.stochastic_env import StochasticMultiAgentBoxPushEnv
 from environment.pddl_extractor import generate_pddl_for_env
 from planner.pddl_solver import solve_pddl
@@ -38,6 +40,50 @@ ASCII_MAP = [
 # Part 1 — Online Planning
 # ===========================================================================
 
+def parse_pddl_to_map(domain_file, problem_file):
+    with open(problem_file, 'r') as f:
+        problem_text = f.read()
+
+    locations = re.findall(r'loc_(\d+)_(\d+)', problem_text)
+    if not locations:
+        raise ValueError("No locations found in the problem file.")
+        
+    # Visualizer expects loc_X_Y where X=Col, Y=Row
+    max_x = max([int(x) for x, y in locations])
+    max_y = max([int(y) for x, y in locations])
+
+    # Arrays are accessed as grid[row][column] -> grid[y][x]
+    grid = [[' ' for _ in range(max_x)] for _ in range(max_y)]
+
+    # Grab everything between :init and :goal
+    init_match = re.search(r'\(:init(.*?)\(:goal', problem_text, re.DOTALL | re.IGNORECASE)
+    
+    # FIX: Grab EVERYTHING from :goal to the end of the file
+    goal_match = re.search(r'\(:goal(.*)', problem_text, re.DOTALL | re.IGNORECASE)
+    
+    init_text = init_match.group(1) if init_match else problem_text
+    goal_text = goal_match.group(1) if goal_match else ""
+
+    # Parse X (col) and Y (row) and place them correctly in the matrix
+    for x, y in re.findall(r'loc_(\d+)_(\d+)', goal_text):
+        grid[int(y)-1][int(x)-1] = 'G'
+        
+    for x, y in re.findall(r'agent-at\s+\S+\s+loc_(\d+)_(\d+)', init_text):
+        grid[int(y)-1][int(x)-1] = 'A'
+    for x, y in re.findall(r'box-at\s+\S+\s+loc_(\d+)_(\d+)', init_text):
+        grid[int(y)-1][int(x)-1] = 'B'
+    for x, y in re.findall(r'heavybox-at\s+\S+\s+loc_(\d+)_(\d+)', init_text):
+        grid[int(y)-1][int(x)-1] = 'C'
+
+    ascii_map = []
+    wall_row = "W" * (max_x + 2)
+    ascii_map.append(wall_row)
+    for row in grid:
+        ascii_map.append("W" + "".join(row) + "W")
+    ascii_map.append(wall_row)
+
+    return ascii_map
+
 def run_online_planning(env, max_replans: int = 300) -> int:
     """
     Execute one episode using online planning:
@@ -60,6 +106,12 @@ def run_online_planning(env, max_replans: int = 300) -> int:
 
         # ── 1. Export current state ──────────────────────────────────
         domain_path, problem_path = generate_pddl_for_env(env)
+        x = parse_pddl_to_map(domain_path, problem_path)
+
+        print("\nReconstructed ASCII Map:")
+        for row in x:
+            print(row)
+        print("\n")
 
         # ── 2. Plan ──────────────────────────────────────────────────
         plan = solve_pddl(domain_path, problem_path)
@@ -150,8 +202,88 @@ def get_state(env) -> tuple:
     box1_pos   = small_boxes[1] if len(small_boxes) > 1 else None
     heavy_pos  = heavy_boxes[0] if heavy_boxes else None
 
-    return (a0_pos, a0_dir, a1_pos, a1_dir, box0_pos, box1_pos, heavy_pos)
+    #return (a0_pos, a0_dir, a1_pos, a1_dir, box0_pos, box1_pos, heavy_pos)
+    return (a0_pos, a0_dir, box0_pos)
 
+_static_grid_cache = None
+
+def _get_static_grid(env):
+    """Scan env grid once and cache wall/goal positions (they never change)."""
+    global _static_grid_cache
+    if _static_grid_cache is not None:
+        return _static_grid_cache
+    walls = set()
+    goals = set()
+    for y in range(env.height):
+        for x in range(env.width):
+            cell = env.core_env.grid.get(x, y)
+            if cell is not None:
+                if cell.type == "wall":
+                    walls.add((x, y))
+                elif cell.type == "goal":
+                    goals.add((x, y))
+    _static_grid_cache = (frozenset(walls), frozenset(goals))
+    return _static_grid_cache
+
+
+def get_stochastic_outcomes(env, s, act) -> list:
+    """
+    Analytical transition model — single agent, single small box.
+    s   = (agent_pos, agent_dir, box_pos)
+          box_pos=None means the box is already on a goal (terminal state).
+    act = 0 rotate-left | 1 rotate-right | 2 forward
+    Returns [(probability, next_state, reward), ...]
+    """
+    agent_pos, agent_dir, box_pos = s
+    move_p = env.move_success_prob
+    push_p = env.push_success_prob
+    side_p = (1.0 - move_p) / 2.0
+    walls, goals = _get_static_grid(env)
+
+    # Terminal — self-loop, no reward
+    if box_pos is None:
+        return [(1.0, s, 0.0)]
+
+    # Rotate left / right — deterministic
+    if act == 0:
+        return [(1.0, (agent_pos, (agent_dir - 1) % 4, box_pos), 0.0)]
+    if act == 1:
+        return [(1.0, (agent_pos, (agent_dir + 1) % 4, box_pos), 0.0)]
+
+    # Forward (action 2)
+    dv  = DIR_TO_VEC[agent_dir]
+    fwd = (agent_pos[0] + int(dv[0]), agent_pos[1] + int(dv[1]))
+
+    # Wall directly ahead — no-op
+    if fwd in walls:
+        return [(1.0, s, 0.0)]
+
+    # Push attempt (agent faces the box)
+    if fwd == box_pos:
+        dest = (box_pos[0] + int(dv[0]), box_pos[1] + int(dv[1]))
+        if dest in walls:                       # precondition not met — no-op
+            return [(1.0, s, 0.0)]
+        reward  = 1.0 if dest in goals else 0.0
+        new_box = None if dest in goals else dest
+        return [
+            (push_p,       (fwd, agent_dir, new_box), reward),
+            (1.0 - push_p, s,                         0.0),
+        ]
+
+    # Move into free cell — three possible actual directions
+    prob_map = {}
+    for actual_dir, prob in [
+        (agent_dir,            move_p),
+        ((agent_dir - 1) % 4, side_p),
+        ((agent_dir + 1) % 4, side_p),
+    ]:
+        av = DIR_TO_VEC[actual_dir]
+        af = (agent_pos[0] + int(av[0]), agent_pos[1] + int(av[1]))
+        # Deviated into wall or box → agent stays
+        next_s = (af, agent_dir, box_pos) if (af not in walls and af != box_pos) else s
+        prob_map[next_s] = prob_map.get(next_s, 0.0) + prob
+
+    return [(p, ns, 0.0) for ns, p in prob_map.items()]
 
 def build_transition_model(env):
     """
@@ -176,7 +308,32 @@ def build_transition_model(env):
     * A state is terminal if all boxes are at their goal positions — you can
       detect this by checking against the goal locations in the PDDL problem.
     """
-    raise NotImplementedError("TODO: implement build_transition_model")
+    env.reset()
+    initial_state = get_state(env)
+    all_states = set()
+    queue = [initial_state]
+    transitions = {}
+    
+    # Define your joint actions here or pass them in
+    actions = list(range(env.action_space(env.possible_agents[0]).n))
+    #joint_actions = list(itertools.product(actions, actions))
+
+    while queue:
+        s = queue.pop(0)
+        if s in all_states:
+            continue
+        all_states.add(s)
+        
+        transitions[s] = {}
+        for act in actions:
+            outcomes = get_stochastic_outcomes(env, s, act) 
+            transitions[s][(act, 0)] = outcomes
+            
+            for prob, next_s, reward in outcomes:
+                if next_s not in all_states:
+                    queue.append(next_s)
+                    
+    return transitions # Crucial return for MPI to work
 
 
 def modified_policy_iteration(
@@ -202,7 +359,73 @@ def modified_policy_iteration(
     policy : dict  state -> joint_action
     V      : dict  state -> float
     """
-    raise NotImplementedError("TODO: implement modified_policy_iteration")
+    # Get the model 
+    transitions = build_transition_model(env)
+    all_states = list(transitions.keys())
+    
+    # Intialize according to Readme
+    V = {s: 0.0 for s in all_states}
+    policy = {}
+    for s in all_states:
+        # First aritrary action
+        first_action = next(iter(transitions[s].keys()))
+        policy[s] = first_action
+
+    # Outer Loop
+    for outer_iter in range(max_outer_iters):
+        
+        # Partial policy evaluation
+        for _ in range(k):
+            delta = 0
+            new_V = V.copy() 
+            
+            for s in all_states:
+                action = policy[s]
+                expected_value = 0.0
+                
+                # Bellman equation 
+                for prob, next_s, reward in transitions[s][action]:
+                    expected_value += prob * (reward + gamma * V[next_s])
+                
+                new_V[s] = expected_value
+                delta = max(delta, abs(expected_value - V[s]))
+            
+            V = new_V
+            
+            if delta < theta:
+                break
+
+        # Policy improvement
+        policy_stable = True
+        
+        for s in all_states:
+            old_action = policy[s]
+            best_action = None
+            max_val = -float('inf')
+            
+            # Find the action that maximizes expected return: argmax_a Σ P * (R + γ * V(s'))
+            for a, outcomes in transitions[s].items():
+                val_a = 0.0
+                for prob, next_s, reward in outcomes:
+                    val_a += prob * (reward + gamma * V[next_s])
+                
+                if val_a > max_val:
+                    max_val = val_a
+                    best_action = a
+            
+            policy[s] = best_action
+            
+            # If the best action changed, our policy is not yet stable
+            if best_action != old_action:
+                policy_stable = False
+                
+        # Convergence check
+        # If no actions changed for any state, we have found the optimal policy
+        if policy_stable:
+            print(f"MPI converged after {outer_iter + 1} iterations.")
+            break
+
+    return policy, V
 
 
 # ===========================================================================
@@ -268,7 +491,7 @@ if __name__ == "__main__":
 
     # Direct evaluation loop for online planning
     online_steps = []
-    for i in range(100):
+    for i in range(1):
         env_ep = StochasticMultiAgentBoxPushEnv(ascii_map=ASCII_MAP, max_steps=500)
         steps = run_online_planning(env_ep)
         online_steps.append(steps)
