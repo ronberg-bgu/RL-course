@@ -12,6 +12,8 @@ Do NOT modify evaluate_policy or the __main__ block.
 import sys
 import os
 import re
+import itertools
+from tqdm import tqdm
 
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "../..")))
 
@@ -218,8 +220,8 @@ def get_state(env) -> tuple:
     box1_pos   = small_boxes[1] if len(small_boxes) > 1 else None
     heavy_pos  = heavy_boxes[0] if heavy_boxes else None
 
-    #return (a0_pos, a0_dir, a1_pos, a1_dir, box0_pos, box1_pos, heavy_pos)
-    return (a0_pos, a0_dir, box0_pos)
+    return (a0_pos, a0_dir, a1_pos, a1_dir, box0_pos, box1_pos, heavy_pos)
+    # return (a0_pos, a0_dir, box0_pos)
 
 _static_grid_cache = None
 # Filled in build_transition_model: one representative state with box_pos is None
@@ -244,64 +246,152 @@ def _get_static_grid(env):
     return _static_grid_cache
 
 
-def get_stochastic_outcomes(env, s, act) -> list:
+def get_stochastic_outcomes(env, s, joint_act) -> list:
     """
-    Analytical transition model — single agent, single small box.
-    s   = (agent_pos, agent_dir, box_pos)
-          box_pos=None means the box is already on a goal (terminal state).
-    act = 0 rotate-left | 1 rotate-right | 2 forward
-    Returns [(probability, next_state, reward), ...]
+    Analytical transition for 2 agents, 2 small boxes, 1 heavy box.
+    s = (a0_pos, a0_dir, a1_pos, a1_dir, box0_pos, box1_pos, heavy_pos)
+      *_pos = None means that box is on a goal.
+    joint_act = (act0, act1), 0=rotate-left, 1=rotate-right, 2=forward
+
+    Physics from stochastic_env.py:
+      - Direction stochasticity applies only to free movement, not pushes.
+      - Heavy box: both agents must be at the same cell, same direction, both
+        moving forward into the heavy box.
+      - Reward 1.0 only when ALL boxes are on goals (terminal transition).
     """
-    agent_pos, agent_dir, box_pos = s
+    a0_pos, a0_dir, a1_pos, a1_dir, box0_pos, box1_pos, heavy_pos = s
+    act0, act1 = joint_act
     move_p = env.move_success_prob
     push_p = env.push_success_prob
     side_p = (1.0 - move_p) / 2.0
     walls, goals = _get_static_grid(env)
 
-    # Terminal — self-loop, no reward
-    if box_pos is None:
+    # Terminal — all boxes on goals; self-loop, no reward
+    if box0_pos is None and box1_pos is None and heavy_pos is None:
         return [(1.0, s, 0.0)]
 
-    # Rotate left / right — deterministic
-    if act == 0:
-        return [(1.0, (agent_pos, (agent_dir - 1) % 4, box_pos), 0.0)]
-    if act == 1:
-        return [(1.0, (agent_pos, (agent_dir + 1) % 4, box_pos), 0.0)]
+    def rot(d, act):
+        if act == 0: return (d - 1) % 4
+        if act == 1: return (d + 1) % 4
+        return d
 
-    # Forward (action 2)
-    dv  = DIR_TO_VEC[agent_dir]
-    fwd = (agent_pos[0] + int(dv[0]), agent_pos[1] + int(dv[1]))
+    a0_dir_out = rot(a0_dir, act0)
+    a1_dir_out = rot(a1_dir, act1)
 
-    # Wall directly ahead — no-op
-    if fwd in walls:
-        return [(1.0, s, 0.0)]
+    # Neither agent moves forward — purely deterministic
+    if act0 != 2 and act1 != 2:
+        ns = (a0_pos, a0_dir_out, a1_pos, a1_dir_out, box0_pos, box1_pos, heavy_pos)
+        return [(1.0, ns, 0.0)]
 
-    # Push attempt (agent faces the box)
-    if fwd == box_pos:
-        dest = (box_pos[0] + int(dv[0]), box_pos[1] + int(dv[1]))
-        if dest in walls:                       # precondition not met — no-op
-            return [(1.0, s, 0.0)]
-        reward  = 1.0 if dest in goals else 0.0
-        new_box = None if dest in goals else dest
+    def fwd_of(pos, d):
+        v = DIR_TO_VEC[d]
+        return (pos[0] + int(v[0]), pos[1] + int(v[1]))
+
+    fwd0 = fwd_of(a0_pos, a0_dir) if act0 == 2 else None
+    fwd1 = fwd_of(a1_pos, a1_dir) if act1 == 2 else None
+
+    # ── Heavy-box push: both agents same cell + dir + both forward ───────
+    # Resolved first (Pass 2 in env), consumes both agents' forward intents.
+    if (act0 == 2 and act1 == 2
+            and a0_pos == a1_pos and a0_dir == a1_dir
+            and heavy_pos is not None and fwd0 == heavy_pos):
+        dest = fwd_of(heavy_pos, a0_dir)
+        if dest in walls:
+            return [(1.0, (a0_pos, a0_dir_out, a1_pos, a1_dir_out,
+                           box0_pos, box1_pos, heavy_pos), 0.0)]
+        new_h = None if dest in goals else dest
+        all_done = box0_pos is None and box1_pos is None and new_h is None
+        r = 1.0 if all_done else 0.0
+        ns_ok   = (heavy_pos, a0_dir_out, heavy_pos, a1_dir_out,
+                   box0_pos, box1_pos, new_h)
+        ns_fail = (a0_pos, a0_dir_out, a1_pos, a1_dir_out,
+                   box0_pos, box1_pos, heavy_pos)
         return [
-            (push_p,       (fwd, agent_dir, new_box), reward),
-            (1.0 - push_p, s,                         0.0),
+            (push_p,       ns_ok,   r),
+            (1.0 - push_p, ns_fail, 0.0),
         ]
 
-    # Move into free cell — three possible actual directions
-    prob_map = {}
-    for actual_dir, prob in [
-        (agent_dir,            move_p),
-        ((agent_dir - 1) % 4, side_p),
-        ((agent_dir + 1) % 4, side_p),
-    ]:
-        av = DIR_TO_VEC[actual_dir]
-        af = (agent_pos[0] + int(av[0]), agent_pos[1] + int(av[1]))
-        # Deviated into wall or box → agent stays
-        next_s = (af, agent_dir, box_pos) if (af not in walls and af != box_pos) else s
-        prob_map[next_s] = prob_map.get(next_s, 0.0) + prob
+    # ── Individual forward actions (Pass 3 in env) ───────────────────────
+    # Agents are processed independently; boxes can be updated by agent 0
+    # before agent 1 acts (sequential within the same step).
 
-    return [(p, ns, 0.0) for ns, p in prob_map.items()]
+    def agent_outcomes(pos, orig_dir, fwd, b0, b1, h):
+        """
+        Returns [(prob, new_pos, new_b0, new_b1, new_h), ...]
+        If fwd is None (rotating agent) returns a single no-op outcome.
+        Push stochasticity is deterministic in direction (no slip on push).
+        Free movement applies directional stochasticity.
+        """
+        if fwd is None:
+            return [(1.0, pos, b0, b1, h)]
+
+        # Push small box 0
+        if b0 is not None and fwd == b0:
+            v = DIR_TO_VEC[orig_dir]
+            dest = (b0[0] + int(v[0]), b0[1] + int(v[1]))
+            if dest in walls:
+                return [(1.0, pos, b0, b1, h)]
+            new_b0 = None if dest in goals else dest
+            return [
+                (push_p,       fwd,  new_b0, b1, h),
+                (1.0 - push_p, pos,  b0,     b1, h),
+            ]
+
+        # Push small box 1
+        if b1 is not None and fwd == b1:
+            v = DIR_TO_VEC[orig_dir]
+            dest = (b1[0] + int(v[0]), b1[1] + int(v[1]))
+            if dest in walls:
+                return [(1.0, pos, b0, b1, h)]
+            new_b1 = None if dest in goals else dest
+            return [
+                (push_p,       fwd,  b0, new_b1, h),
+                (1.0 - push_p, pos,  b0, b1,     h),
+            ]
+
+        # Single agent cannot push the heavy box — no-op
+        if h is not None and fwd == h:
+            return [(1.0, pos, b0, b1, h)]
+
+        # Wall ahead — no-op
+        if fwd in walls:
+            return [(1.0, pos, b0, b1, h)]
+
+        # Free cell — stochastic direction (slip left/right possible)
+        prob_map = {}
+        for actual_dir, prob in [
+            (orig_dir,            move_p),
+            ((orig_dir - 1) % 4, side_p),
+            ((orig_dir + 1) % 4, side_p),
+        ]:
+            v  = DIR_TO_VEC[actual_dir]
+            af = (pos[0] + int(v[0]), pos[1] + int(v[1]))
+            if af in walls or af == b0 or af == b1 or af == h:
+                af = pos  # deviated into obstacle — stay
+            key = (af, b0, b1, h)
+            prob_map[key] = prob_map.get(key, 0.0) + prob
+        return [(p, *k) for k, p in prob_map.items()]
+
+    # Compose: agent 0 acts first, then agent 1 on the resulting box state
+    a0_outs = agent_outcomes(a0_pos, a0_dir, fwd0, box0_pos, box1_pos, heavy_pos)
+
+    prob_map = {}
+    for p0, na0, b0_mid, b1_mid, h_mid in a0_outs:
+        a1_outs = agent_outcomes(a1_pos, a1_dir, fwd1, b0_mid, b1_mid, h_mid)
+        for p1, na1, fb0, fb1, fh in a1_outs:
+            p = p0 * p1
+            if p < 1e-12:
+                continue
+            all_done = fb0 is None and fb1 is None and fh is None
+            reward = 1.0 if all_done else 0.0
+            ns = (na0, a0_dir_out, na1, a1_dir_out, fb0, fb1, fh)
+            if ns in prob_map:
+                prev_p, prev_r = prob_map[ns]
+                prob_map[ns] = (prev_p + p, prev_r + p * reward)
+            else:
+                prob_map[ns] = (p, p * reward)
+
+    return [(p, ns, r / p) for ns, (p, r) in prob_map.items() if p > 1e-12]
 
 def build_transition_model(env):
     """
@@ -334,7 +424,7 @@ def build_transition_model(env):
     
     # Define your joint actions here or pass them in
     actions = list(range(env.action_space(env.possible_agents[0]).n))
-    #joint_actions = list(itertools.product(actions, actions))
+    joint_actions = list(itertools.product(actions, actions))
 
     while queue:
         s = queue.pop(0)
@@ -343,16 +433,16 @@ def build_transition_model(env):
         all_states.add(s)
         
         transitions[s] = {}
-        for act in actions:
-            outcomes = get_stochastic_outcomes(env, s, act) 
-            transitions[s][(act, 0)] = outcomes
+        for act in joint_actions:
+            outcomes = get_stochastic_outcomes(env, s, act)
+            transitions[s][act] = outcomes
             
             for prob, next_s, reward in outcomes:
                 if next_s not in all_states:
                     queue.append(next_s)
 
     global _mdp_canonical_terminal_state
-    terminals = [k for k in all_states if k[2] is None]
+    terminals = [k for k in all_states if k[4] is None and k[5] is None and k[6] is None]
     _mdp_canonical_terminal_state = min(terminals) if terminals else None
 
     return transitions # Crucial return for MPI to work
@@ -467,7 +557,7 @@ def evaluate_policy(policy_fn, env, n_runs: int = 100, max_steps: int = 500):
     """
     steps_per_run = []
 
-    for _ in range(n_runs):
+    for _ in tqdm(range(n_runs)):
         obs, _ = env.reset()
         steps  = 0
         done   = False
@@ -514,7 +604,7 @@ if __name__ == "__main__":
     # Direct evaluation loop for online planning
     online_steps = []
     for i in range(0):
-        env_ep = StochasticMultiAgentBoxPushEnv(ascii_map=ASCII_MAP, max_steps=500)
+        env_ep = StochasticMultiAgentBoxPushEnv(ascii_map=ASCII_MAP, max_steps=200) #500
         steps = run_online_planning(env_ep)
         online_steps.append(steps)
         if (i + 1) % 10 == 0:
@@ -539,7 +629,7 @@ if __name__ == "__main__":
         agents = env.possible_agents
         return {agents[0]: joint_action[0], agents[1]: joint_action[1]}
 
-    mean_mpi, std_mpi = evaluate_policy(mpi_policy_fn, env_mpi, n_runs=100)
+    mean_mpi, std_mpi = evaluate_policy(mpi_policy_fn, env_mpi, n_runs=10)
     print(f"\nMPI              →  mean = {mean_mpi:.2f}  std = {std_mpi:.2f}\n")
 
     # ── Summary ──────────────────────────────────────────────────────────────
