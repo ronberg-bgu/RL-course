@@ -177,10 +177,12 @@ def run_online_planning(env, max_replans: int = 300) -> int:
 def get_state(env) -> tuple:
     """Extract the current state tuple from a live environment."""
     agents = env.possible_agents
-    a0_pos = env.agent_positions[agents[0]]
-    a0_dir = env.agent_dirs[agents[0]]
-    a1_pos = env.agent_positions[agents[1]]
-    a1_dir = env.agent_dirs[agents[1]]
+    x = env.agent_positions[agents[0]]
+    y = env.agent_positions[agents[1]]
+    a0_pos = (int(x[0]), int(x[1]))
+    a0_dir = int(env.agent_dirs[agents[0]])
+    a1_pos = (int(y[0]), int(y[1]))
+    a1_dir = int(env.agent_dirs[agents[1]])
 
     # Collect box positions by scanning the grid
     small_boxes = []
@@ -198,7 +200,21 @@ def get_state(env) -> tuple:
     small_boxes.sort()
     heavy_boxes.sort()
 
-    box0_pos   = small_boxes[0] if len(small_boxes) > 0 else None
+    _, goals = _get_static_grid(env)
+
+    # Single tracked small box: same as the 1-box MDP — follow the not-yet-on-goal
+    # small boxes in sorted order, not "first in sort is on goal => None" while
+    # another small box is still in play (that mis-matched the policy keys).
+    not_on_goal = [p for p in small_boxes if p not in goals]
+    if not not_on_goal:
+        # 2+ small boxes: "all on goals" is not the same as the 1-box MDP's
+        # set of (agent, dir, None) states. Use the canonical terminal key
+        # produced when building the transition model so policy[] matches.
+        if _mdp_canonical_terminal_state is not None:
+            return _mdp_canonical_terminal_state
+        box0_pos = None
+    else:
+        box0_pos = not_on_goal[0]
     box1_pos   = small_boxes[1] if len(small_boxes) > 1 else None
     heavy_pos  = heavy_boxes[0] if heavy_boxes else None
 
@@ -206,6 +222,8 @@ def get_state(env) -> tuple:
     return (a0_pos, a0_dir, box0_pos)
 
 _static_grid_cache = None
+# Filled in build_transition_model: one representative state with box_pos is None
+_mdp_canonical_terminal_state = None
 
 def _get_static_grid(env):
     """Scan env grid once and cache wall/goal positions (they never change)."""
@@ -332,7 +350,11 @@ def build_transition_model(env):
             for prob, next_s, reward in outcomes:
                 if next_s not in all_states:
                     queue.append(next_s)
-                    
+
+    global _mdp_canonical_terminal_state
+    terminals = [k for k in all_states if k[2] is None]
+    _mdp_canonical_terminal_state = min(terminals) if terminals else None
+
     return transitions # Crucial return for MPI to work
 
 
@@ -491,7 +513,7 @@ if __name__ == "__main__":
 
     # Direct evaluation loop for online planning
     online_steps = []
-    for i in range(1):
+    for i in range(0):
         env_ep = StochasticMultiAgentBoxPushEnv(ascii_map=ASCII_MAP, max_steps=500)
         steps = run_online_planning(env_ep)
         online_steps.append(steps)
