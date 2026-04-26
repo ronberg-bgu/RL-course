@@ -67,7 +67,7 @@ Even within physically reachable bounds, the raw state space of a multi-agent gr
 ---
 
 ## 4. Comparative Analysis & Benchmarking
-*(Note: Evaluation conducted over 100 episodes on the primary assignment map)*
+*(Note: Evaluation conducted over 100 episodes on a single map)*
 * **Online Planning:** 40.62 Mean Steps (Std: 8.88)
 * **MPI:** 24.59 Mean Steps (Std: 4.20)
 
