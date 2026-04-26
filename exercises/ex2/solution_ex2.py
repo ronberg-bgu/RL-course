@@ -13,6 +13,7 @@ import sys
 import os
 import re
 import itertools
+from collections import deque
 from tqdm import tqdm
 
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "../..")))
@@ -28,14 +29,17 @@ from visualize_plan import extract_target_pos, get_required_actions
 # Map used in both parts (same as Assignment 1)
 # ---------------------------------------------------------------------------
 ASCII_MAP = [
-    "WWWWWWWW",
-    "W  AA  W",
-    "W B C  W",
-    "W      W",
-    "W   B  W",
-    "W G G GW",
-    "WWWWWWWW",
+    "WWWWW",
+    "WAA W",
+    "WBBCW",
+    "WGGGW",
+    "WWWWW",
 ]
+
+# Part 2 runtime knobs.  The full explicit MDP can be large; keep the default
+# exact, and set MDP_BUILD_STATE_LIMIT to a small number for quick smoke tests.
+MDP_BUILD_STATE_LIMIT = None
+MDP_SHOW_PROGRESS = True
 
 
 # ===========================================================================
@@ -204,21 +208,34 @@ def get_state(env) -> tuple:
 
     _, goals = _get_static_grid(env)
 
-    # Single tracked small box: same as the 1-box MDP — follow the not-yet-on-goal
-    # small boxes in sorted order, not "first in sort is on goal => None" while
-    # another small box is still in play (that mis-matched the policy keys).
-    not_on_goal = [p for p in small_boxes if p not in goals]
-    if not not_on_goal:
-        # 2+ small boxes: "all on goals" is not the same as the 1-box MDP's
-        # set of (agent, dir, None) states. Use the canonical terminal key
-        # produced when building the transition model so policy[] matches.
-        if _mdp_canonical_terminal_state is not None:
-            return _mdp_canonical_terminal_state
+    # Keep stable box identities: sorted small box 0 and sorted small box 1.
+    # None means that specific box has reached a goal.
+    box0_pos = small_boxes[0] if len(small_boxes) > 0 else None
+    box1_pos = small_boxes[1] if len(small_boxes) > 1 else None
+    if box0_pos in goals:
         box0_pos = None
-    else:
-        box0_pos = not_on_goal[0]
-    box1_pos   = small_boxes[1] if len(small_boxes) > 1 else None
-    heavy_pos  = heavy_boxes[0] if heavy_boxes else None
+    if box1_pos in goals:
+        box1_pos = None
+
+    if len(heavy_boxes) > 1:
+        raise NotImplementedError(
+            "Part 2 MPI currently supports one heavy box. "
+            "For two heavy boxes, add heavy0_pos/heavy1_pos to the state "
+            "and update get_stochastic_outcomes."
+        )
+
+    # This transition model supports one heavy box.
+    heavy_pos = heavy_boxes[0] if heavy_boxes else None
+    if heavy_pos in goals:
+        heavy_pos = None
+
+    if (
+        _mdp_canonical_terminal_state is not None
+        and box0_pos is None
+        and box1_pos is None
+        and heavy_pos is None
+    ):
+        return _mdp_canonical_terminal_state
 
     return (a0_pos, a0_dir, a1_pos, a1_dir, box0_pos, box1_pos, heavy_pos)
     # return (a0_pos, a0_dir, box0_pos)
@@ -416,21 +433,34 @@ def build_transition_model(env):
     * A state is terminal if all boxes are at their goal positions — you can
       detect this by checking against the goal locations in the PDDL problem.
     """
+    print("Building transition model for MPI...", flush=True)
     env.reset()
     initial_state = get_state(env)
     all_states = set()
-    queue = [initial_state]
+    queue = deque([initial_state])
     transitions = {}
     
     # Define your joint actions here or pass them in
     actions = list(range(env.action_space(env.possible_agents[0]).n))
     joint_actions = list(itertools.product(actions, actions))
 
+    pbar = tqdm(desc="Expanding states", unit="state", disable=not MDP_SHOW_PROGRESS)
     while queue:
-        s = queue.pop(0)
+        if MDP_BUILD_STATE_LIMIT is not None and len(all_states) >= MDP_BUILD_STATE_LIMIT:
+            print(
+                f"Stopped at MDP_BUILD_STATE_LIMIT={MDP_BUILD_STATE_LIMIT}; "
+                "policy is partial and intended for smoke tests only.",
+                flush=True,
+            )
+            break
+
+        s = queue.popleft()
         if s in all_states:
             continue
         all_states.add(s)
+        pbar.update(1)
+        if len(all_states) % 1000 == 0:
+            pbar.set_postfix(states=len(all_states), queued=len(queue))
         
         transitions[s] = {}
         for act in joint_actions:
@@ -440,6 +470,8 @@ def build_transition_model(env):
             for prob, next_s, reward in outcomes:
                 if next_s not in all_states:
                     queue.append(next_s)
+    pbar.close()
+    print(f"Transition model built with {len(all_states)} states.", flush=True)
 
     global _mdp_canonical_terminal_state
     terminals = [k for k in all_states if k[4] is None and k[5] is None and k[6] is None]
@@ -471,6 +503,7 @@ def modified_policy_iteration(
     policy : dict  state -> joint_action
     V      : dict  state -> float
     """
+    print("Running modified policy iteration...", flush=True)
     # Get the model 
     transitions = build_transition_model(env)
     all_states = list(transitions.keys())
@@ -484,12 +517,20 @@ def modified_policy_iteration(
         policy[s] = first_action
 
     # Outer Loop
-    for outer_iter in range(max_outer_iters):
+    outer_range = tqdm(
+        range(max_outer_iters),
+        desc="MPI outer loop",
+        disable=not MDP_SHOW_PROGRESS,
+    )
+    for outer_iter in outer_range:
         
         # Partial policy evaluation
+        eval_sweeps = 0
+        delta = 0.0
         for _ in range(k):
             delta = 0
             new_V = V.copy() 
+            eval_sweeps += 1
             
             for s in all_states:
                 action = policy[s]
@@ -497,7 +538,7 @@ def modified_policy_iteration(
                 
                 # Bellman equation 
                 for prob, next_s, reward in transitions[s][action]:
-                    expected_value += prob * (reward + gamma * V[next_s])
+                    expected_value += prob * (reward + gamma * V.get(next_s, 0.0))
                 
                 new_V[s] = expected_value
                 delta = max(delta, abs(expected_value - V[s]))
@@ -509,6 +550,7 @@ def modified_policy_iteration(
 
         # Policy improvement
         policy_stable = True
+        policy_changes = 0
         
         for s in all_states:
             old_action = policy[s]
@@ -519,7 +561,7 @@ def modified_policy_iteration(
             for a, outcomes in transitions[s].items():
                 val_a = 0.0
                 for prob, next_s, reward in outcomes:
-                    val_a += prob * (reward + gamma * V[next_s])
+                    val_a += prob * (reward + gamma * V.get(next_s, 0.0))
                 
                 if val_a > max_val:
                     max_val = val_a
@@ -530,12 +572,21 @@ def modified_policy_iteration(
             # If the best action changed, our policy is not yet stable
             if best_action != old_action:
                 policy_stable = False
+                policy_changes += 1
+
+        outer_range.set_postfix(
+            states=len(all_states),
+            eval_sweeps=eval_sweeps,
+            delta=f"{delta:.2e}",
+            policy_changes=policy_changes,
+        )
                 
         # Convergence check
         # If no actions changed for any state, we have found the optimal policy
         if policy_stable:
             print(f"MPI converged after {outer_iter + 1} iterations.")
             break
+    outer_range.close()
 
     return policy, V
 
@@ -603,7 +654,7 @@ if __name__ == "__main__":
 
     # Direct evaluation loop for online planning
     online_steps = []
-    for i in range(0):
+    for i in range(10):
         env_ep = StochasticMultiAgentBoxPushEnv(ascii_map=ASCII_MAP, max_steps=200) #500
         steps = run_online_planning(env_ep)
         online_steps.append(steps)

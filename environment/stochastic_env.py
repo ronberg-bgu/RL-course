@@ -42,6 +42,21 @@ class StochasticMultiAgentBoxPushEnv(MultiAgentBoxPushEnv):
     # Internal helpers
     # ------------------------------------------------------------------
 
+    def _gen_grid(self, width, height):
+        super()._gen_grid(width, height)
+        goals = set()
+        n_boxes = 0
+        for y in range(height):
+            for x in range(width):
+                cell = self.core_env.grid.get(x, y)
+                if cell is not None:
+                    if cell.type == "goal":
+                        goals.add((x, y))
+                    elif cell.type == "box":
+                        n_boxes += 1
+        self.goal_positions = frozenset(goals)
+        self.n_boxes = n_boxes
+
     def _sample_move_dir(self, intended_dir):
         """
         Sample the actual travel direction for a *move* action.
@@ -60,7 +75,14 @@ class StochasticMultiAgentBoxPushEnv(MultiAgentBoxPushEnv):
             return (intended_dir + 1) % 4   # 90° right of intended
 
     def _apply_goal_termination(self, rewards, terminations):
-        """Mark all agents as terminated with reward 1."""
+        """Terminate only when every box has reached a goal position."""
+        boxes_on_goals = sum(
+            1 for pos in self.goal_positions
+            if self.core_env.grid.get(*pos) is not None
+            and self.core_env.grid.get(*pos).type == "box"
+        )
+        if boxes_on_goals < self.n_boxes:
+            return
         for a in self.agents:
             rewards[a] = 1.0
             terminations[a] = True

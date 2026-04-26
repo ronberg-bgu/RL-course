@@ -21,7 +21,7 @@ def extract_target_pos(pddl_action):
     elif action_name.startswith('push-heavy') and len(params) >= 5:
         # push-heavy(?a1, ?a2, ?from, ?boxloc, ?toloc, ?h)
         a1, a2 = params[0], params[1]
-        target_loc = params[3] # boxloc is the target for both pushing agents
+        target_loc = params[3]  # ?boxloc: agents step into this cell to push (they are already at ?from)
         
         parts = target_loc.split('_')
         if len(parts) == 3:
