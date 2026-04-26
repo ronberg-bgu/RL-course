@@ -26,8 +26,7 @@ from visualize_plan import extract_target_pos, get_required_actions
 
 class DualLogger:
     def __init__(self):
-        # Safely builds the path: exercises/ex2/output.txt
-        filepath = os.path.join("exercises", "ex2", "output.txt")
+        filepath = os.path.join("exercises", "ex2", "results.txt")
 
         self.terminal = sys.stdout
         # The "w" mode ensures the file is completely reset on every run!
@@ -48,52 +47,13 @@ sys.stdout = DualLogger()
 # ---------------------------------------------------------------------------
 # Maps
 # ---------------------------------------------------------------------------
-# ASCII_MAP = [
-#     "WWWWW",
-#     "WAA W",
-#     "WBCBW",
-#     "WGGGW",
-#     "WWWWW",
-# ]
-
-# ASCII_MAP = [
-#     "WWWWW",
-#     "WAA W",
-#     "WBCBW",
-#     "W   W",
-#     "W   W",
-#     "WGGGW",
-#     "WWWWW",
-# ]
-
-# ASCII_MAP = [
-#     "WWWWW",
-#     "WAA W",
-#     "WBC W",
-#     "W   W",
-#     "W B W",
-#     "WGGGW",
-#     "WWWWW",
-# ]
-
-# ASCII_MAP = [
-#     "WWWWWW",
-#     "W AA W",
-#     "WB C W",
-#     "W    W",
-#     "W  B W",
-#     "WG GGW",
-#     "WWWWWW",
-# ]
-
 ASCII_MAP = [
-    "WWWWWWWW",
-    "W  AA  W",
-    "W B C  W",
-    "W      W",
-    "W   B  W",
-    "W G G GW",
-    "WWWWWWWW",
+    "WWWWWW",
+    "W AA W",
+    "WB C W",
+    "W  B W",
+    "WG GGW",
+    "WWWWWW",
 ]
 
 

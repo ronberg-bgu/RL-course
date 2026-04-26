@@ -65,13 +65,17 @@ Even within physically reachable bounds, the raw state space of a multi-agent gr
 * **Optimization:** We initialized $V_0$ by applying a dynamic penalty based on the total grid distance (horizontal plus vertical steps) between the boxes and their nearest goals. By applying this distance as a negative value, we effectively "tilted" the value table into a funnel. The agents feel a gradient pulling them toward the goals on Iteration 1, significantly speeding up the convergence rate of the outer loops.
 
 ---
+Algorithm                   Mean steps    Std steps
+--------------------------------------------------
+Online Planning                  40.62         8.88
+MPI                              24.59         4.20
 
 ## 4. Comparative Analysis & Benchmarking
 *(Note: Evaluation conducted over 100 episodes on the primary assignment map)*
-* **Online Planning:** [INSERT ONLINE MEAN] Mean Steps (Std: [INSERT ONLINE STD])
-* **MPI:** [INSERT MPI MEAN] Mean Steps (Std: [INSERT MPI STD])
+* **Online Planning:** 40.62 Mean Steps (Std: 8.88)
+* **MPI:** 24.59 Mean Steps (Std: 4.20)
 
 While MPI yielded a lower mean step count, this highlights differences in architecture and theoretical framing:
 * **Sequential vs. Joint Actions:** PDDL is a sequential planner. It forces one agent to move while the other waits, inherently inflating the "step count" clock. MPI utilizes a **Joint Action Space**, allowing both agents to move simultaneously. *(Note on future expansions: If a strictly 1:1 mechanical comparison is ever required, extra future work could involve extending the PDDL domain to support parallel actions, thereby equalizing this discrepancy).*
-* **Stochastic Awareness vs. Determinism:** The core reason MPI outperforms Online Planning in raw speed is its fundamental awareness of the environment's probabilities. MPI's Bellman equations explicitly factor in the 20% slip rate, allowing it to mathematically favor safer, central routes. The Fast Downward planner assumes the world is perfectly deterministic; it is completely blind to risk and only reacts to stochasticity after a failure has already occurred.
+* **Stochastic Awareness vs. Determinism:** The core reason MPI outperforms Online Planning is its fundamental awareness of the environment's probabilities. MPI's Bellman equations explicitly factor in the 20% slip rate, allowing it to mathematically favor safer, central routes. The Fast Downward planner assumes the world is perfectly deterministic; it is completely blind to risk and only reacts to stochasticity after a failure has already occurred.
 * **Variance and Risk Assessment (Standard Deviation):** The standard deviation across runs reveals how each algorithm interacts with map topology. While it is tempting to assume MPI's complete Transition Model yields lower variance, our empirical results show standard deviation fluctuates depending on the map. MPI optimizes strictly for the lowest *expected* step count; therefore, it will willingly execute "risky" maneuvers (e.g., moving near obstacles where slipping causes severe delays) if the mathematical expected value outperforms a longer, safer detour. Conversely, the Online Planner assumes a deterministic world. Its variance is dictated less by calculated risk and more by how aggressively a stochastic slip breaks its "perfect world" sequence, forcing it into localized replanning loops.

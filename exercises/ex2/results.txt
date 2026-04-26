@@ -4,7 +4,7 @@ Part 1 — Online Planning (classical planner on stochastic env)
 
 Evaluating Online Planning (100 episodes)...
 
-Online Planning  →  mean = 17.88  std = 2.85
+Online Planning  →  mean = 40.62  std = 8.88
 
 ============================================================
 Part 2 — Modified Policy Iteration
@@ -12,18 +12,18 @@ Part 2 — Modified Policy Iteration
 
 🧠 Starting Modified Policy Iteration...
 🔍 Building Transition Model...
-✅ Model Complete! Mapped 223 reachable states.
-  ↳ Heuristic initialized: 223 states tilted (Range: -3.0 to 0.0)
+✅ Model Complete! Mapped 160807 reachable states.
+  ↳ Heuristic initialized: 160807 states tilted (Range: -10.0 to 0.0)
   Outer Iteration 1 complete. Max Value Diff: 7.623998
-  Outer Iteration 2 complete. Max Value Diff: 6.300695
-  Outer Iteration 3 complete. Max Value Diff: 9.957325
-  Outer Iteration 4 complete. Max Value Diff: 2.030255
-  Outer Iteration 5 complete. Max Value Diff: 0.979776
-  Outer Iteration 6 complete. Max Value Diff: 0.586628
-  Outer Iteration 7 complete. Max Value Diff: 0.351236
-  Outer Iteration 8 complete. Max Value Diff: 0.210298
-  Outer Iteration 9 complete. Max Value Diff: 0.125913
-  Outer Iteration 10 complete. Max Value Diff: 0.075389
+  Outer Iteration 2 complete. Max Value Diff: 6.336609
+  Outer Iteration 3 complete. Max Value Diff: 9.826964
+  Outer Iteration 4 complete. Max Value Diff: 10.425483
+  Outer Iteration 5 complete. Max Value Diff: 9.171008
+  Outer Iteration 6 complete. Max Value Diff: 7.203176
+  Outer Iteration 7 complete. Max Value Diff: 1.884863
+  Outer Iteration 8 complete. Max Value Diff: 0.792031
+  Outer Iteration 9 complete. Max Value Diff: 0.256015
+  Outer Iteration 10 complete. Max Value Diff: 0.141372
   Outer Iteration 11 complete. Max Value Diff: 0.045138
   Outer Iteration 12 complete. Max Value Diff: 0.027026
   Outer Iteration 13 complete. Max Value Diff: 0.016181
@@ -39,12 +39,12 @@ Part 2 — Modified Policy Iteration
   Outer Iteration 23 complete. Max Value Diff: 0.000096
 🎯 MPI Converged to optimal value after 23 iterations!
 
-MPI              →  mean = 12.79  std = 2.67
+MPI              →  mean = 24.59  std = 4.20
 
 ============================================================
 SUMMARY
 ============================================================
 Algorithm                   Mean steps    Std steps
 --------------------------------------------------
-Online Planning                  17.88         2.85
-MPI                              12.79         2.67
+Online Planning                  40.62         8.88
+MPI                              24.59         4.20
