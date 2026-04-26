@@ -65,10 +65,6 @@ Even within physically reachable bounds, the raw state space of a multi-agent gr
 * **Optimization:** We initialized $V_0$ by applying a dynamic penalty based on the total grid distance (horizontal plus vertical steps) between the boxes and their nearest goals. By applying this distance as a negative value, we effectively "tilted" the value table into a funnel. The agents feel a gradient pulling them toward the goals on Iteration 1, significantly speeding up the convergence rate of the outer loops.
 
 ---
-Algorithm                   Mean steps    Std steps
---------------------------------------------------
-Online Planning                  40.62         8.88
-MPI                              24.59         4.20
 
 ## 4. Comparative Analysis & Benchmarking
 *(Note: Evaluation conducted over 100 episodes on the primary assignment map)*
