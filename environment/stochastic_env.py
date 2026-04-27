@@ -42,6 +42,16 @@ class StochasticMultiAgentBoxPushEnv(MultiAgentBoxPushEnv):
     # Internal helpers
     # ------------------------------------------------------------------
 
+    def _check_success(self):
+        """Return True iff ALL boxes (small + heavy) sit on goal cells."""
+        return self._all_boxes_on_goals()
+
+    def _apply_goal_termination(self, rewards, terminations):
+        """Set reward = 1 and terminate for every agent."""
+        for a in self.agents:
+            rewards[a] = 1.0
+            terminations[a] = True
+
     def _sample_move_dir(self, intended_dir):
         """
         Sample the actual travel direction for a *move* action.
@@ -174,7 +184,8 @@ class StochasticMultiAgentBoxPushEnv(MultiAgentBoxPushEnv):
         if self._all_boxes_on_goals():
             self._apply_goal_termination(rewards, terminations)
 
-        # ── Truncation check ──────────────────────────────────────────
+        # ── Double-check via _check_success (same condition, kept for
+        #    clarity: episode ends ONLY when ALL boxes are on goals) ────
         if self._check_success():
             for a in self.agents:
                 rewards[a] = 1.0
