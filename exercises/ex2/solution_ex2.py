@@ -39,6 +39,8 @@ Code Flow:
 import sys
 import os
 import numpy as np
+import pygame
+import time
 
 # Adjust path to import from the project root
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "../..")))
@@ -147,6 +149,14 @@ def run_online_planning(env, max_replans: int = 300) -> int:
             obs, rewards, terms, truncs, _ = env.step(step_actions)
             total_env_steps += 1
 
+            if env.render_mode == "human":
+                env.core_env.render()
+                for event in pygame.event.get():
+                    if event.type == pygame.QUIT:
+                        pygame.quit()
+                        sys.exit()
+                time.sleep(0.1)
+
             if any(terms.values()) or any(truncs.values()):
                 done = True
                 break
@@ -229,8 +239,10 @@ def build_transition_model(env):
             if c is not None and c.type == "goal":
                 goals.add((x, y))
                 
+    import collections
     init_state = get_state(env)
-    queue = [init_state]
+    queue = collections.deque([init_state])
+    visited = set([init_state])
     transitions = {}
     
     # 0=RIGHT, 1=DOWN, 2=LEFT, 3=UP
@@ -239,15 +251,24 @@ def build_transition_model(env):
     macro_vecs = {0: (1, 0), 1: (0, 1), 2: (-1, 0), 3: (0, -1)}
     
     def is_trans_terminal(state):
+        if state == "FAIL": return False
         # We consider a state terminal if all boxes that exist are on goal cells
         cur_boxes = [b for b in state[2:] if b is not None]
         return len(cur_boxes) > 0 and all(b in goals for b in cur_boxes)
         
     while queue:
-        state = queue.pop(0)
+        state = queue.popleft()
         if state in transitions:
             continue
         transitions[state] = {}
+        
+        if len(transitions) % 1000 == 0:
+            print(f"Processed {len(transitions)} states, queue size: {len(queue)}")
+            
+        if state == "FAIL":
+            for ja in joint_actions:
+                transitions[state][ja] = [(1.0, "FAIL", 0.0)]
+            continue
         
         if is_trans_terminal(state):
             # Terminal states loop back to themselves with 0 reward
@@ -359,15 +380,29 @@ def build_transition_model(env):
                         
                 ns = (na0_p, na1_p, new_b0, new_b1, new_h)
                 
-                # IMPORTANT: Normalize small boxes so state representation is unique
-                # E.g. (b0, b1) is same as (b1, b0)
+                # IMPORTANT: Normalize agents and small boxes so state representation is unique
+                a_list = [na0_p, na1_p]
+                a_list.sort()
+                
                 small_list = []
                 if ns[2]: small_list.append(ns[2])
                 if ns[3]: small_list.append(ns[3])
                 small_list.sort()
                 nb0 = small_list[0] if len(small_list) > 0 else None
                 nb1 = small_list[1] if len(small_list) > 1 else None
-                ns = (ns[0], ns[1], nb0, nb1, ns[4])
+                
+                # Prune Dead Ends: If any box is against the top wall (y=1) or left wall (x=1),
+                # it can NEVER reach a goal because an agent cannot get behind it to push it.
+                is_dead = False
+                for bx in [nb0, nb1, ns[4]]:
+                    if bx is not None and (bx[0] == 1 or bx[1] == 1):
+                        is_dead = True
+                        break
+                
+                if is_dead:
+                    ns = "FAIL"
+                else:
+                    ns = (a_list[0], a_list[1], nb0, nb1, ns[4])
                 
                 outcomes[ns] = outcomes.get(ns, 0.0) + prob
                 
@@ -375,7 +410,8 @@ def build_transition_model(env):
             for ns, prob in outcomes.items():
                 rew = 1.0 if is_trans_terminal(ns) else 0.0
                 res_list.append((prob, ns, rew))
-                if ns not in transitions: 
+                if ns not in visited: 
+                    visited.add(ns)
                     queue.append(ns)
                     
             transitions[state][ja] = res_list

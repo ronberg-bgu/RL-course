@@ -83,8 +83,7 @@ class StochasticMultiAgentBoxPushEnv(MultiAgentBoxPushEnv):
         infos        = {agent: {} for agent in self.agents}
 
         if not actions:
-            self.agents = []
-            return {}, {}, {}, {}, {}
+            actions = {}
 
         # ── Clear agent sprites from the grid ─────────────────────────
         for agent in self.agents:
@@ -200,12 +199,11 @@ class StochasticMultiAgentBoxPushEnv(MultiAgentBoxPushEnv):
 
         # ── Generate observations ─────────────────────────────────────
         for agent in self.possible_agents:
-            if agent in actions:
-                pos = self.agent_positions[agent]
-                self.core_env.agent_pos = pos
-                self.core_env.agent_dir = self.agent_dirs[agent]
-                self.core_env.grid.set(*pos, None)
-                observations[agent] = self.core_env.gen_obs()
-                self.core_env.grid.set(*pos, self.agent_objects[agent])
+            pos = self.agent_positions[agent]
+            self.core_env.agent_pos = pos
+            self.core_env.agent_dir = self.agent_dirs[agent]
+            self.core_env.grid.set(*pos, None)
+            observations[agent] = self.core_env.gen_obs()
+            self.core_env.grid.set(*pos, self.agent_objects[agent])
 
         return observations, rewards, terminations, truncations, infos
