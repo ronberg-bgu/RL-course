@@ -134,8 +134,8 @@ class StochasticMultiAgentBoxPushEnv(MultiAgentBoxPushEnv):
                             self.core_env.grid.set(nx, ny, box_obj)
                             for agent, _ in pushers:
                                 self.agent_positions[agent] = box_pos
-                            if n_cell is not None and n_cell.type == "goal":
-                                self._apply_goal_termination(rewards, terminations)
+                            # Goal termination handled globally below — a single
+                            # box landing on a goal cell does NOT end the episode.
                         # push fails → agents stay, world unchanged
 
                 # Either way, these agents' intents are consumed
@@ -162,8 +162,7 @@ class StochasticMultiAgentBoxPushEnv(MultiAgentBoxPushEnv):
                         self.core_env.grid.set(*fwd_fwd_pos, fwd_cell)
                         self.core_env.grid.set(*fwd_pos, None)
                         self.agent_positions[agent] = fwd_pos
-                        if fwd_fwd_cell is not None and fwd_fwd_cell.type == "goal":
-                            self._apply_goal_termination(rewards, terminations)
+                        # Goal termination handled globally below.
                     # push fails → agent stays, world unchanged
 
             elif fwd_cell is None or fwd_cell.can_overlap():
@@ -176,11 +175,30 @@ class StochasticMultiAgentBoxPushEnv(MultiAgentBoxPushEnv):
 
                 if actual_fwd_cell is None or actual_fwd_cell.can_overlap():
                     self.agent_positions[agent] = actual_fwd_pos
-                    if actual_fwd_cell is not None and actual_fwd_cell.type == "goal":
-                        self._apply_goal_termination(rewards, terminations)
+                    # Goal termination handled globally below — agents walking
+                    # over goal tiles is fine and does not end the episode.
                 # else: deviated into obstacle → agent stays, no error
 
             # else: intended cell is a wall / other obstacle → no-op
+
+        # ── Global goal check ─────────────────────────────────────────
+        # The episode terminates only when every goal tile is currently
+        # occupied by a box. Walking an agent across a goal, or landing
+        # one box on a goal while others are still in transit, is not a win.
+        goal_positions = []
+        for y, row in enumerate(self.ascii_map):
+            for x, char in enumerate(row):
+                if char == "G":
+                    goal_positions.append((x, y))
+
+        if goal_positions:
+            boxes_on_goals = 0
+            for gx, gy in goal_positions:
+                cell = self.core_env.grid.get(gx, gy)
+                if cell is not None and getattr(cell, "type", "") == "box":
+                    boxes_on_goals += 1
+            if boxes_on_goals == len(goal_positions):
+                self._apply_goal_termination(rewards, terminations)
 
         # ── Truncation check ──────────────────────────────────────────
         if self.steps >= self.max_steps:

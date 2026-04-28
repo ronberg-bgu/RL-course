@@ -10,17 +10,28 @@ def generate_domain(domain_path):
     (heavybox-at ?h - heavybox ?loc - location)
     (clear ?loc - location)
     (adj ?l1 - location ?l2 - location)
+    ; True only when ?from -> ?via -> ?to is a straight line in the grid.
+    ; Required for pushes because the env always pushes a box in the agent's
+    ; current facing direction; "L-shape" pushes are physically impossible.
+    (aligned ?from - location ?via - location ?to - location)
   )
 
   (:action move
     :parameters (?a - agent ?from - location ?to - location)
-    :precondition (and (agent-at ?a ?from) (adj ?from ?to))
+    :precondition (and (agent-at ?a ?from) (adj ?from ?to) (clear ?to))
     :effect (and (agent-at ?a ?to) (not (agent-at ?a ?from)))
   )
 
   (:action push-small
     :parameters (?a - agent ?from - location ?boxloc - location ?toloc - location ?b - box)
-    :precondition (and (agent-at ?a ?from) (adj ?from ?boxloc) (box-at ?b ?boxloc) (adj ?boxloc ?toloc) (clear ?toloc))
+    :precondition (and
+        (agent-at ?a ?from)
+        (adj ?from ?boxloc)
+        (box-at ?b ?boxloc)
+        (adj ?boxloc ?toloc)
+        (clear ?toloc)
+        (aligned ?from ?boxloc ?toloc)
+    )
     :effect (and (agent-at ?a ?boxloc) (not (agent-at ?a ?from)) (clear ?from) (box-at ?b ?toloc) (not (box-at ?b ?boxloc)) (not (clear ?toloc)))
   )
 
@@ -34,6 +45,7 @@ def generate_domain(domain_path):
         (heavybox-at ?h ?boxloc)
         (adj ?boxloc ?toloc)
         (clear ?toloc)
+        (aligned ?from ?boxloc ?toloc)
     )
     :effect (and
         (agent-at ?a1 ?boxloc)
@@ -56,6 +68,7 @@ def generate_problem(env, problem_path):
     w, h = env.width, env.height
     
     locations = []
+    location_coords = {}     # loc_name -> (x, y), for alignment computation
     adjacencies = []
     agents = env.agents
     boxes = []
@@ -69,6 +82,7 @@ def generate_problem(env, problem_path):
             if cell is None or cell.type != 'wall':
                 loc = f"loc_{x}_{y}"
                 locations.append(loc)
+                location_coords[loc] = (x, y)
 
                 # Check adjacencies (undirected)
                 if x < w - 1:
@@ -104,6 +118,20 @@ def generate_problem(env, problem_path):
     for _, loc in heavyboxes:
         clear_set.discard(loc)
 
+    # Compute alignment facts: (aligned from via to) holds iff from->via->to
+    # is a straight line on the grid (same direction step from both pairs).
+    # This rules out "L-shape" pushes that the env cannot execute.
+    aligned_facts = []
+    coord_set = set(location_coords.values())
+    for via_name, (vx, vy) in location_coords.items():
+        for dx, dy in [(0, 1), (0, -1), (1, 0), (-1, 0)]:
+            fr_coord = (vx - dx, vy - dy)
+            to_coord = (vx + dx, vy + dy)
+            if fr_coord in coord_set and to_coord in coord_set:
+                fr_name = f"loc_{fr_coord[0]}_{fr_coord[1]}"
+                to_name = f"loc_{to_coord[0]}_{to_coord[1]}"
+                aligned_facts.append((fr_name, via_name, to_name))
+
     obj_str = "    " + " ".join(locations) + " - location\n"
     if agents:
         obj_str += "    " + " ".join(agents) + " - agent\n"
@@ -123,6 +151,8 @@ def generate_problem(env, problem_path):
         init_str += f"    (heavybox-at {h} {loc})\n"
     for l1, l2 in adjacencies:
         init_str += f"    (adj {l1} {l2})\n"
+    for fr, via, to in aligned_facts:
+        init_str += f"    (aligned {fr} {via} {to})\n"
 
     # Pair boxes then heavyboxes with goal locations (scan order: row by row, left to right)
     goal_conditions = []
