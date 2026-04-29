@@ -194,8 +194,13 @@ class StochasticMultiAgentBoxPushEnv(MultiAgentBoxPushEnv):
                 pos = self.agent_positions[agent]
                 self.core_env.agent_pos = pos
                 self.core_env.agent_dir = self.agent_dirs[agent]
+                # Preserve a box just pushed onto this cell instead of overwriting it.
+                saved = self.core_env.grid.get(*pos)
                 self.core_env.grid.set(*pos, None)
                 observations[agent] = self.core_env.gen_obs()
-                self.core_env.grid.set(*pos, self.agent_objects[agent])
+                if saved is not None and getattr(saved, "type", None) == "box":
+                    self.core_env.grid.set(*pos, saved)
+                else:
+                    self.core_env.grid.set(*pos, self.agent_objects[agent])
 
         return observations, rewards, terminations, truncations, infos
