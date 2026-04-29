@@ -42,6 +42,16 @@ class StochasticMultiAgentBoxPushEnv(MultiAgentBoxPushEnv):
     # Internal helpers
     # ------------------------------------------------------------------
 
+    def _check_success(self):
+        """Return True iff ALL boxes (small + heavy) sit on goal cells."""
+        return self._all_boxes_on_goals()
+
+    def _apply_goal_termination(self, rewards, terminations):
+        """Set reward = 1 and terminate for every agent."""
+        for a in self.agents:
+            rewards[a] = 1.0
+            terminations[a] = True
+
     def _sample_move_dir(self, intended_dir):
         """
         Sample the actual travel direction for a *move* action.
@@ -59,12 +69,6 @@ class StochasticMultiAgentBoxPushEnv(MultiAgentBoxPushEnv):
         else:
             return (intended_dir + 1) % 4   # 90° right of intended
 
-    def _apply_goal_termination(self, rewards, terminations):
-        """Mark all agents as terminated with reward 1."""
-        for a in self.agents:
-            rewards[a] = 1.0
-            terminations[a] = True
-
     # ------------------------------------------------------------------
     # Core step override
     # ------------------------------------------------------------------
@@ -79,8 +83,7 @@ class StochasticMultiAgentBoxPushEnv(MultiAgentBoxPushEnv):
         infos        = {agent: {} for agent in self.agents}
 
         if not actions:
-            self.agents = []
-            return {}, {}, {}, {}, {}
+            actions = {}
 
         # ── Clear agent sprites from the grid ─────────────────────────
         for agent in self.agents:
@@ -180,7 +183,13 @@ class StochasticMultiAgentBoxPushEnv(MultiAgentBoxPushEnv):
         if self._all_boxes_on_goals():
             self._apply_goal_termination(rewards, terminations)
 
-        # ── Truncation check ──────────────────────────────────────────
+        # ── Double-check via _check_success (same condition, kept for
+        #    clarity: episode ends ONLY when ALL boxes are on goals) ────
+        if self._check_success():
+            for a in self.agents:
+                rewards[a] = 1.0
+                terminations[a] = True
+                
         if self.steps >= self.max_steps:
             for a in self.agents:
                 truncations[a] = True
@@ -190,12 +199,11 @@ class StochasticMultiAgentBoxPushEnv(MultiAgentBoxPushEnv):
 
         # ── Generate observations ─────────────────────────────────────
         for agent in self.possible_agents:
-            if agent in actions:
-                pos = self.agent_positions[agent]
-                self.core_env.agent_pos = pos
-                self.core_env.agent_dir = self.agent_dirs[agent]
-                self.core_env.grid.set(*pos, None)
-                observations[agent] = self.core_env.gen_obs()
-                self.core_env.grid.set(*pos, self.agent_objects[agent])
+            pos = self.agent_positions[agent]
+            self.core_env.agent_pos = pos
+            self.core_env.agent_dir = self.agent_dirs[agent]
+            self.core_env.grid.set(*pos, None)
+            observations[agent] = self.core_env.gen_obs()
+            self.core_env.grid.set(*pos, self.agent_objects[agent])
 
         return observations, rewards, terminations, truncations, infos
