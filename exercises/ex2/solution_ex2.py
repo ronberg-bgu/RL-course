@@ -65,25 +65,10 @@ def run_online_planning(env, max_replans: int = 300) -> int:
     total_env_steps = 0
     done = False
     
-    # Tracking for deadlock detection
-    last_obs_str = None
-    consecutive_failures = 0
 
     for _ in range(max_replans):
         if done:
             break
-
-        # ── Deadlock Detection ───────────────────────────────────────
-        current_obs_str = str(obs)
-        if current_obs_str == last_obs_str:
-            consecutive_failures += 1
-            # If the state hasn't changed in 5 replans, we are deadlocked.
-            # (Allows for a few standard 0.2 stochastic failures before aborting)
-            if consecutive_failures >= 5:
-                break 
-        else:
-            consecutive_failures = 0
-            last_obs_str = current_obs_str
 
         # ── 1. Export current state ──────────────────────────────────
         domain_path, problem_path = generate_pddl_for_env(env)
@@ -130,7 +115,6 @@ def run_online_planning(env, max_replans: int = 300) -> int:
                 done = True
                 break
 
-    # If we aborted due to deadlock or ran out of replans, apply the penalty
     if not done:
         return max_replans * 3
         
