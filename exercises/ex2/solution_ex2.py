@@ -44,66 +44,77 @@ ASCII_MAP = [
 # Part 1 — Online Planning
 # ===========================================================================
 
-# Global cache to store plans across runs
-PLAN_CACHE = {}
-
-import contextlib
-import io
-
-# Global cache to store plans across runs
-PLAN_CACHE = {}
+import unified_planning as up
 
 def run_online_planning(env, max_replans: int = 300) -> int:
-    global PLAN_CACHE
-    
+    """
+    Execute one episode using online planning:
+      replan from the current state → execute only the first PDDL action → repeat.
+
+    Returns
+    -------
+    int
+        Number of *env* steps taken (counting each rotate/forward individually).
+        Returns max_replans * <average_actions_per_plan_step> as a large sentinel
+        if the goal was never reached within max_replans replanning calls.
+    """
+    # Silence the Fast Downward credits stream to clean up the console
+    up.shortcuts.get_environment().credits_stream = None
+
     obs, _ = env.reset()
     total_env_steps = 0
     done = False
     
-    cached_plan_actions = []
+    # Tracking for deadlock detection
+    last_obs_str = None
+    consecutive_failures = 0
 
     for _ in range(max_replans):
         if done:
             break
 
-        current_state = get_state(env)
+        # ── Deadlock Detection ───────────────────────────────────────
+        current_obs_str = str(obs)
+        if current_obs_str == last_obs_str:
+            consecutive_failures += 1
+            # If the state hasn't changed in 5 replans, we are deadlocked.
+            # (Allows for a few standard 0.2 stochastic failures before aborting)
+            if consecutive_failures >= 5:
+                break 
+        else:
+            consecutive_failures = 0
+            last_obs_str = current_obs_str
 
-        # 1. Plan Retrieval
-        if not cached_plan_actions:
-            if current_state in PLAN_CACHE:
-                cached_plan_actions = PLAN_CACHE[current_state].copy()
-            else:
-                domain_path, problem_path = generate_pddl_for_env(env)
+        # ── 1. Export current state ──────────────────────────────────
+        domain_path, problem_path = generate_pddl_for_env(env)
 
-                # Suppress Fast Downward terminal output
-                with contextlib.redirect_stdout(io.StringIO()):
-                    plan = solve_pddl(domain_path, problem_path)
+        # ── 2. Plan ──────────────────────────────────────────────────
+        plan = solve_pddl(domain_path, problem_path)
+        if not plan or len(plan.actions) == 0:
+            break  # goal already reached (planner returns empty plan)
 
-                if not plan or len(plan.actions) == 0:
-                    break
-
-                PLAN_CACHE[current_state] = plan.actions.copy()
-                cached_plan_actions = plan.actions.copy()
-
-        # 2. Action Execution
-        pddl_action = cached_plan_actions.pop(0)
+        # ── 3. Execute the first PDDL action ─────────────────────────
+        pddl_action   = plan.actions[0]
         agent_targets = extract_target_pos(pddl_action)
-        
-        if not agent_targets:
-            cached_plan_actions = []
-            continue
 
+        if not agent_targets:
+            break
+
+        # Build per-agent action queues (rotations + forward)
         agents_in_action = list(agent_targets.keys())
         action_queues = {
             a: get_required_actions(env, a, agent_targets[a])
             for a in agents_in_action
         }
 
-        # Sync agent movement
+        # Pad shorter queues so all agents execute their final forward together
         max_len = max(len(q) for q in action_queues.values())
         for a in agents_in_action:
-            action_queues[a] = [None] * (max_len - len(action_queues[a])) + action_queues[a]
+            action_queues[a] = (
+                [None] * (max_len - len(action_queues[a])) + action_queues[a]
+            )
 
+        # Step through the queue
         while any(len(q) > 0 for q in action_queues.values()):
             step_actions = {}
             for a in agents_in_action:
@@ -119,14 +130,11 @@ def run_online_planning(env, max_replans: int = 300) -> int:
                 done = True
                 break
 
-        # 3. Stochastic Verification
-        # Reset plan queue if the agent did not land in the expected cell
-        for a, target in agent_targets.items():
-            if env.agent_positions[a] != target:
-                cached_plan_actions = []
-                break
-
-    return total_env_steps if done else env.max_steps
+    # If we aborted due to deadlock or ran out of replans, apply the penalty
+    if not done:
+        return max_replans * 3
+        
+    return total_env_steps
 
 # ===========================================================================
 # Part 2 — Modified Policy Iteration
