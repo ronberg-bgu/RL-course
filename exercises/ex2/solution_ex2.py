@@ -8,18 +8,15 @@ Fill in the three TODO sections below:
 
 Do NOT modify evaluate_policy or the __main__ block.
 """
-
+import re
 import sys
 import os
-import re
-import itertools
 from collections import deque
 from tqdm import tqdm
 
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "../..")))
 
 import numpy as np
-from minigrid.core.constants import DIR_TO_VEC
 from environment.stochastic_env import StochasticMultiAgentBoxPushEnv
 from environment.pddl_extractor import generate_pddl_for_env
 from planner.pddl_solver import solve_pddl
@@ -28,23 +25,32 @@ from visualize_plan import extract_target_pos, get_required_actions
 # ---------------------------------------------------------------------------
 # Map used in both parts (same as Assignment 1)
 # ---------------------------------------------------------------------------
+# ASCII_MAP = [
+#     "WWWWWWWW",
+#     "W  AA  W",
+#     "W B  C W",
+#     "W      W",
+#     "W   B  W",
+#     "W G G GW",
+#     "WWWWWWWW",
+# ]
 ASCII_MAP = [
-    "WWWWW",
-    "WAA W",
-    "WBBCW",
-    "WGGGW",
-    "WWWWW",
+    "WWWWWWW",
+    "WA  A W",
+    "W BB CW",
+    "W     W",
+    "WGG  GW",
+    "WWWWWWW",
 ]
+# ASCII_MAP = [
+#     "WWWWW",
+#     "W AAW",
+#     "WB CW",
+#     "W B W",
+#     "WGGGW",
+#     "WWWWW",
+# ]
 
-# Part 2 runtime knobs.  The full explicit MDP can be large; keep the default
-# exact, and set MDP_BUILD_STATE_LIMIT to a small number for quick smoke tests.
-MDP_BUILD_STATE_LIMIT = None
-MDP_SHOW_PROGRESS = True
-
-
-# ===========================================================================
-# Part 1 — Online Planning
-# ===========================================================================
 
 def parse_pddl_to_map(domain_file, problem_file):
     with open(problem_file, 'r') as f:
@@ -90,6 +96,10 @@ def parse_pddl_to_map(domain_file, problem_file):
 
     return ascii_map
 
+# ===========================================================================
+# Part 1 — Online Planning
+# ===========================================================================
+
 def run_online_planning(env, max_replans: int = 300) -> int:
     """
     Execute one episode using online planning:
@@ -112,12 +122,12 @@ def run_online_planning(env, max_replans: int = 300) -> int:
 
         # ── 1. Export current state ──────────────────────────────────
         domain_path, problem_path = generate_pddl_for_env(env)
-        x = parse_pddl_to_map(domain_path, problem_path)
+        # x = parse_pddl_to_map(domain_path, problem_path)
 
-        print("\nReconstructed ASCII Map:")
-        for row in x:
-            print(row)
-        print("\n")
+        # print("\nReconstructed ASCII Map:")
+        # for row in x:
+        #     print(row)
+        # print("\n")
 
         # ── 2. Plan ──────────────────────────────────────────────────
         plan = solve_pddl(domain_path, problem_path)
@@ -172,23 +182,47 @@ def run_online_planning(env, max_replans: int = 300) -> int:
 # State representation
 # ---------------------------------------------------------------------------
 # A state is a tuple:
-#   (agent0_pos, agent0_dir, agent1_pos, agent1_dir,
-#    box0_pos,   box1_pos,   heavy_pos)
+#   (agent0_pos, agent1_pos, box0_pos, box1_pos, heavy_pos)
 #
-# where positions are (col, row) tuples and directions are 0-3.
+# where positions are (col, row) tuples.
 #
-# Feel free to simplify (e.g. drop agent directions if you argue they are
-# irrelevant) as long as you justify it in your live demo.
+# Agent directions are excluded: rotations are deterministic, carry no reward,
+# and can always be performed for free before any move/push. Therefore the
+# optimal value of a state is independent of which direction agents currently
+# face, reducing the state space significantly.
+
+# ---------------------------------------------------------------------------
+# MPI action space (5 abstract actions per agent, direction-free)
+# ---------------------------------------------------------------------------
+# Actions match the sequential PDDL semantics: one agent acts per step,
+# except for the coordinated heavy-box push (both agents together).
+#
+# MiniGrid direction convention: 0=right, 1=down, 2=left, 3=up
+# Grid coordinates: (x, y) where (0,0) is top-left, x=col, y=row
+
+NOOP  = 0
+NORTH = 1   # MiniGrid dir=3, vec=(0,-1)
+EAST  = 2   # MiniGrid dir=0, vec=(+1, 0)
+SOUTH = 3   # MiniGrid dir=1, vec=(0,+1)
+WEST  = 4   # MiniGrid dir=2, vec=(-1, 0)
+
+ACTION_TO_DIR  = {NORTH: 3, EAST: 0, SOUTH: 1, WEST: 2}
+MPI_DIR_TO_VEC = {0: (1, 0), 1: (0, 1), 2: (-1, 0), 3: (0, -1)}
+DIRS = [NORTH, EAST, SOUTH, WEST]
+
+# 13 joint actions: sequential moves + coordinated heavy push
+JOINT_ACTIONS = (
+    [(d, NOOP) for d in DIRS] +   # only agent 0 acts
+    [(NOOP, d) for d in DIRS] +   # only agent 1 acts
+    [(NOOP, NOOP)]             +   # both idle
+    [(d, d)    for d in DIRS]      # coordinated heavy-box push
+)
 
 def get_state(env) -> tuple:
     """Extract the current state tuple from a live environment."""
     agents = env.possible_agents
-    x = env.agent_positions[agents[0]]
-    y = env.agent_positions[agents[1]]
-    a0_pos = (int(x[0]), int(x[1]))
-    a0_dir = int(env.agent_dirs[agents[0]])
-    a1_pos = (int(y[0]), int(y[1]))
-    a1_dir = int(env.agent_dirs[agents[1]])
+    a0_pos = env.agent_positions[agents[0]]
+    a1_pos = env.agent_positions[agents[1]]
 
     # Collect box positions by scanning the grid
     small_boxes = []
@@ -206,278 +240,170 @@ def get_state(env) -> tuple:
     small_boxes.sort()
     heavy_boxes.sort()
 
-    _, goals = _get_static_grid(env)
-
-    # Keep stable box identities: sorted small box 0 and sorted small box 1.
-    # None means that specific box has reached a goal.
-    box0_pos = small_boxes[0] if len(small_boxes) > 0 else None
-    box1_pos = small_boxes[1] if len(small_boxes) > 1 else None
-    if box0_pos in goals:
-        box0_pos = None
-    if box1_pos in goals:
-        box1_pos = None
-
-    if len(heavy_boxes) > 1:
-        raise NotImplementedError(
-            "Part 2 MPI currently supports one heavy box. "
-            "For two heavy boxes, add heavy0_pos/heavy1_pos to the state "
-            "and update get_stochastic_outcomes."
-        )
-
-    # This transition model supports one heavy box.
+    box0_pos  = small_boxes[0] if len(small_boxes) > 0 else None
+    box1_pos  = small_boxes[1] if len(small_boxes) > 1 else None
     heavy_pos = heavy_boxes[0] if heavy_boxes else None
-    if heavy_pos in goals:
-        heavy_pos = None
 
-    if (
-        _mdp_canonical_terminal_state is not None
-        and box0_pos is None
-        and box1_pos is None
-        and heavy_pos is None
-    ):
-        return _mdp_canonical_terminal_state
-
-    return (a0_pos, a0_dir, a1_pos, a1_dir, box0_pos, box1_pos, heavy_pos)
-    # return (a0_pos, a0_dir, box0_pos)
-
-_static_grid_cache = None
-# Filled in build_transition_model: one representative state with box_pos is None
-_mdp_canonical_terminal_state = None
-
-def _get_static_grid(env):
-    """Scan env grid once and cache wall/goal positions (they never change)."""
-    global _static_grid_cache
-    if _static_grid_cache is not None:
-        return _static_grid_cache
-    walls = set()
-    goals = set()
-    for y in range(env.height):
-        for x in range(env.width):
-            cell = env.core_env.grid.get(x, y)
-            if cell is not None:
-                if cell.type == "wall":
-                    walls.add((x, y))
-                elif cell.type == "goal":
-                    goals.add((x, y))
-    _static_grid_cache = (frozenset(walls), frozenset(goals))
-    return _static_grid_cache
+    return (a0_pos, a1_pos, box0_pos, box1_pos, heavy_pos)
 
 
-def get_stochastic_outcomes(env, s, joint_act) -> list:
+def get_stochastic_outcomes(env, state, joint_action) -> list[tuple[float, tuple, float]]:
     """
-    Analytical transition for 2 agents, 2 small boxes, 1 heavy box.
-    s = (a0_pos, a0_dir, a1_pos, a1_dir, box0_pos, box1_pos, heavy_pos)
-      *_pos = None means that box is on a goal.
-    joint_act = (act0, act1), 0=rotate-left, 1=rotate-right, 2=forward
+    Return the stochastic outcomes of applying *joint_action* in *state*.
 
-    Physics from stochastic_env.py:
-      - Direction stochasticity applies only to free movement, not pushes.
-      - Heavy box: both agents must be at the same cell, same direction, both
-        moving forward into the heavy box.
-      - Reward 1.0 only when ALL boxes are on goals (terminal transition).
+    Parameters
+    ----------
+    env          : StochasticMultiAgentBoxPushEnv
+    state        : tuple  — as returned by get_state()
+    joint_action : tuple  — (action_agent0, action_agent1) from JOINT_ACTIONS
+
+    Returns
+    -------
+    list of (probability, next_state, reward) triples
     """
-    a0_pos, a0_dir, a1_pos, a1_dir, box0_pos, box1_pos, heavy_pos = s
-    act0, act1 = joint_act
-    move_p = env.move_success_prob
-    push_p = env.push_success_prob
-    side_p = (1.0 - move_p) / 2.0
-    walls, goals = _get_static_grid(env)
+    a0_pos, a1_pos, box0_pos, box1_pos, heavy_pos = state
+    a0_act, a1_act = joint_action
 
-    # Terminal — all boxes on goals; self-loop, no reward
-    if box0_pos is None and box1_pos is None and heavy_pos is None:
-        return [(1.0, s, 0.0)]
+    walls  = frozenset(
+        (x, y)
+        for y, row in enumerate(env.ascii_map)
+        for x, ch in enumerate(row)
+        if ch == 'W'
+    )
+    goals    = frozenset(env.goal_positions)
+    move_p   = env.move_success_prob
+    push_p   = env.push_success_prob
+    side_p   = (1.0 - move_p) / 2.0
 
-    def rot(d, act):
-        if act == 0: return (d - 1) % 4
-        if act == 1: return (d + 1) % 4
-        return d
+    def blocked(pos, sboxes, hpos):
+        """True if pos is a wall, small box, or heavy box (goals are free)."""
+        return pos in walls or pos in sboxes or pos == hpos
 
-    a0_dir_out = rot(a0_dir, act0)
-    a1_dir_out = rot(a1_dir, act1)
+    def reward(sb0, sb1, hp):
+        box_set = {p for p in (sb0, sb1, hp) if p is not None}
+        return 1.0 if goals <= box_set else 0.0
 
-    # Neither agent moves forward — purely deterministic
-    if act0 != 2 and act1 != 2:
-        ns = (a0_pos, a0_dir_out, a1_pos, a1_dir_out, box0_pos, box1_pos, heavy_pos)
-        return [(1.0, ns, 0.0)]
+    def single_outcomes(agent_pos, action, sb0, sb1, hp):
+        """Outcomes for one agent acting; returns [(prob, new_pos, sb0, sb1, hp)]."""
+        if action == NOOP:
+            return [(1.0, agent_pos, sb0, sb1, hp)]
 
-    def fwd_of(pos, d):
-        v = DIR_TO_VEC[d]
-        return (pos[0] + int(v[0]), pos[1] + int(v[1]))
+        sboxes = frozenset(p for p in (sb0, sb1) if p is not None)
+        mdir   = ACTION_TO_DIR[action]
+        vec    = MPI_DIR_TO_VEC[mdir]
+        target = (agent_pos[0] + vec[0], agent_pos[1] + vec[1])
 
-    fwd0 = fwd_of(a0_pos, a0_dir) if act0 == 2 else None
-    fwd1 = fwd_of(a1_pos, a1_dir) if act1 == 2 else None
+        if target in walls or target == hp:
+            # Wall or heavy box → single agent can't push heavy → no-op
+            return [(1.0, agent_pos, sb0, sb1, hp)]
 
-    # ── Heavy-box push: both agents same cell + dir + both forward ───────
-    # Resolved first (Pass 2 in env), consumes both agents' forward intents.
-    if (act0 == 2 and act1 == 2
-            and a0_pos == a1_pos and a0_dir == a1_dir
-            and heavy_pos is not None and fwd0 == heavy_pos):
-        dest = fwd_of(heavy_pos, a0_dir)
-        if dest in walls:
-            return [(1.0, (a0_pos, a0_dir_out, a1_pos, a1_dir_out,
-                           box0_pos, box1_pos, heavy_pos), 0.0)]
-        new_h = None if dest in goals else dest
-        all_done = box0_pos is None and box1_pos is None and new_h is None
-        r = 1.0 if all_done else 0.0
-        ns_ok   = (heavy_pos, a0_dir_out, heavy_pos, a1_dir_out,
-                   box0_pos, box1_pos, new_h)
-        ns_fail = (a0_pos, a0_dir_out, a1_pos, a1_dir_out,
-                   box0_pos, box1_pos, heavy_pos)
+        if target in sboxes:
+            # Small-box push attempt
+            behind = (target[0] + vec[0], target[1] + vec[1])
+            if blocked(behind, sboxes, hp):
+                # Destination blocked → precondition not met → deterministic no-op
+                return [(1.0, agent_pos, sb0, sb1, hp)]
+            new_sb0 = behind if sb0 == target else sb0
+            new_sb1 = behind if sb1 == target else sb1
+            return [
+                (push_p,       target,    new_sb0, new_sb1, hp),
+                (1.0 - push_p, agent_pos, sb0,     sb1,     hp),
+            ]
+
+        # Move to free / goal cell — apply directional stochasticity
+        dest_probs: dict = {}
+        for p, d in [(move_p, mdir),
+                     (side_p, (mdir - 1) % 4),
+                     (side_p, (mdir + 1) % 4)]:
+            v    = MPI_DIR_TO_VEC[d]
+            dest = (agent_pos[0] + v[0], agent_pos[1] + v[1])
+            if blocked(dest, sboxes, hp):
+                dest = agent_pos  # deviated into obstacle → stay
+            dest_probs[dest] = dest_probs.get(dest, 0.0) + p
+
+        return [(p, dest, sb0, sb1, hp) for dest, p in dest_probs.items()]
+
+    # ── (NOOP, NOOP) ─────────────────────────────────────────────────────
+    if a0_act == NOOP and a1_act == NOOP:
+        return [(1.0, state, reward(box0_pos, box1_pos, heavy_pos))]
+
+    # ── (dir, dir) — coordinated heavy-box push ───────────────────────────
+    if a0_act != NOOP and a1_act != NOOP:
+        if heavy_pos is None:
+            return [(1.0, state, reward(box0_pos, box1_pos, heavy_pos))]
+
+        mdir = ACTION_TO_DIR[a0_act]
+        vec  = MPI_DIR_TO_VEC[mdir]
+        # Both agents must be at the cell directly behind the heavy box
+        required = (heavy_pos[0] - vec[0], heavy_pos[1] - vec[1])
+        if a0_pos != required or a1_pos != required:
+            return [(1.0, state, reward(box0_pos, box1_pos, heavy_pos))]
+
+        new_hp  = (heavy_pos[0] + vec[0], heavy_pos[1] + vec[1])
+        sboxes  = frozenset(p for p in (box0_pos, box1_pos) if p is not None)
+        if blocked(new_hp, sboxes, None):
+            return [(1.0, state, reward(box0_pos, box1_pos, heavy_pos))]
+
+        # On success both agents advance to the old heavy-box cell
+        success = (heavy_pos, heavy_pos, box0_pos, box1_pos, new_hp)
         return [
-            (push_p,       ns_ok,   r),
-            (1.0 - push_p, ns_fail, 0.0),
+            (push_p,       success, reward(box0_pos, box1_pos, new_hp)),
+            (1.0 - push_p, state,   reward(box0_pos, box1_pos, heavy_pos)),
         ]
 
-    # ── Individual forward actions (Pass 3 in env) ───────────────────────
-    # Agents are processed independently; boxes can be updated by agent 0
-    # before agent 1 acts (sequential within the same step).
+    # ── Exactly one agent acts ────────────────────────────────────────────
+    if a0_act != NOOP:
+        raw = single_outcomes(a0_pos, a0_act, box0_pos, box1_pos, heavy_pos)
+        return [
+            (p, (np_, a1_pos, s0, s1, hp), reward(s0, s1, hp))
+            for p, np_, s0, s1, hp in raw
+        ]
+    else:
+        raw = single_outcomes(a1_pos, a1_act, box0_pos, box1_pos, heavy_pos)
+        return [
+            (p, (a0_pos, np_, s0, s1, hp), reward(s0, s1, hp))
+            for p, np_, s0, s1, hp in raw
+        ]
 
-    def agent_outcomes(pos, orig_dir, fwd, b0, b1, h):
-        """
-        Returns [(prob, new_pos, new_b0, new_b1, new_h), ...]
-        If fwd is None (rotating agent) returns a single no-op outcome.
-        Push stochasticity is deterministic in direction (no slip on push).
-        Free movement applies directional stochasticity.
-        """
-        if fwd is None:
-            return [(1.0, pos, b0, b1, h)]
-
-        # Push small box 0
-        if b0 is not None and fwd == b0:
-            v = DIR_TO_VEC[orig_dir]
-            dest = (b0[0] + int(v[0]), b0[1] + int(v[1]))
-            if dest in walls:
-                return [(1.0, pos, b0, b1, h)]
-            new_b0 = None if dest in goals else dest
-            return [
-                (push_p,       fwd,  new_b0, b1, h),
-                (1.0 - push_p, pos,  b0,     b1, h),
-            ]
-
-        # Push small box 1
-        if b1 is not None and fwd == b1:
-            v = DIR_TO_VEC[orig_dir]
-            dest = (b1[0] + int(v[0]), b1[1] + int(v[1]))
-            if dest in walls:
-                return [(1.0, pos, b0, b1, h)]
-            new_b1 = None if dest in goals else dest
-            return [
-                (push_p,       fwd,  b0, new_b1, h),
-                (1.0 - push_p, pos,  b0, b1,     h),
-            ]
-
-        # Single agent cannot push the heavy box — no-op
-        if h is not None and fwd == h:
-            return [(1.0, pos, b0, b1, h)]
-
-        # Wall ahead — no-op
-        if fwd in walls:
-            return [(1.0, pos, b0, b1, h)]
-
-        # Free cell — stochastic direction (slip left/right possible)
-        prob_map = {}
-        for actual_dir, prob in [
-            (orig_dir,            move_p),
-            ((orig_dir - 1) % 4, side_p),
-            ((orig_dir + 1) % 4, side_p),
-        ]:
-            v  = DIR_TO_VEC[actual_dir]
-            af = (pos[0] + int(v[0]), pos[1] + int(v[1]))
-            if af in walls or af == b0 or af == b1 or af == h:
-                af = pos  # deviated into obstacle — stay
-            key = (af, b0, b1, h)
-            prob_map[key] = prob_map.get(key, 0.0) + prob
-        return [(p, *k) for k, p in prob_map.items()]
-
-    # Compose: agent 0 acts first, then agent 1 on the resulting box state
-    a0_outs = agent_outcomes(a0_pos, a0_dir, fwd0, box0_pos, box1_pos, heavy_pos)
-
-    prob_map = {}
-    for p0, na0, b0_mid, b1_mid, h_mid in a0_outs:
-        a1_outs = agent_outcomes(a1_pos, a1_dir, fwd1, b0_mid, b1_mid, h_mid)
-        for p1, na1, fb0, fb1, fh in a1_outs:
-            p = p0 * p1
-            if p < 1e-12:
-                continue
-            all_done = fb0 is None and fb1 is None and fh is None
-            reward = 1.0 if all_done else 0.0
-            ns = (na0, a0_dir_out, na1, a1_dir_out, fb0, fb1, fh)
-            if ns in prob_map:
-                prev_p, prev_r = prob_map[ns]
-                prob_map[ns] = (prev_p + p, prev_r + p * reward)
-            else:
-                prob_map[ns] = (p, p * reward)
-
-    return [(p, ns, r / p) for ns, (p, r) in prob_map.items() if p > 1e-12]
 
 def build_transition_model(env):
     """
-    TODO — Build the full MDP transition model analytically.
+    Build the full MDP transition model by BFS over all reachable states.
 
-    This function should enumerate every reachable state and, for every state
-    and every joint action, return the list of (probability, next_state, reward)
-    triples that follow from the stochastic transition rules.
-
-    Suggested signature of the returned data structure:
-
+    Returns
+    -------
+    transitions : dict
         transitions[state][joint_action] = [(prob, next_state, reward), ...]
-
-    where joint_action is a tuple of per-agent actions, e.g. (2, 2) means
-    both agents move forward simultaneously.
-
-    Tips
-    ----
-    * Start with a *single*-agent, *single*-box toy map to validate your model
-      before scaling to the full assignment map.
-    * Use env.move_success_prob and env.push_success_prob for the probabilities.
-    * A state is terminal if all boxes are at their goal positions — you can
-      detect this by checking against the goal locations in the PDDL problem.
     """
-    print("Building transition model for MPI...", flush=True)
-    env.reset()
-    initial_state = get_state(env)
-    all_states = set()
-    queue = deque([initial_state])
     transitions = {}
-    
-    # Define your joint actions here or pass them in
-    actions = list(range(env.action_space(env.possible_agents[0]).n))
-    joint_actions = list(itertools.product(actions, actions))
 
-    pbar = tqdm(desc="Expanding states", unit="state", disable=not MDP_SHOW_PROGRESS)
+    env.reset()
+    start = get_state(env)
+
+    queue   = deque([start])
+    visited = {start}
+
+    print("Building transition model via BFS...")
+    expanded = 0
     while queue:
-        if MDP_BUILD_STATE_LIMIT is not None and len(all_states) >= MDP_BUILD_STATE_LIMIT:
-            print(
-                f"Stopped at MDP_BUILD_STATE_LIMIT={MDP_BUILD_STATE_LIMIT}; "
-                "policy is partial and intended for smoke tests only.",
-                flush=True,
-            )
-            break
+        state = queue.popleft()
+        transitions[state] = {}
+        expanded += 1
 
-        s = queue.popleft()
-        if s in all_states:
-            continue
-        all_states.add(s)
-        pbar.update(1)
-        if len(all_states) % 1000 == 0:
-            pbar.set_postfix(states=len(all_states), queued=len(queue))
-        
-        transitions[s] = {}
-        for act in joint_actions:
-            outcomes = get_stochastic_outcomes(env, s, act)
-            transitions[s][act] = outcomes
-            
-            for prob, next_s, reward in outcomes:
-                if next_s not in all_states:
-                    queue.append(next_s)
-    pbar.close()
-    print(f"Transition model built with {len(all_states)} states.", flush=True)
+        for joint_action in JOINT_ACTIONS:
+            outcomes = get_stochastic_outcomes(env, state, tuple(joint_action))
+            transitions[state][tuple(joint_action)] = outcomes
 
-    global _mdp_canonical_terminal_state
-    terminals = [k for k in all_states if k[4] is None and k[5] is None and k[6] is None]
-    _mdp_canonical_terminal_state = min(terminals) if terminals else None
+            for _prob, next_state, _reward in outcomes:
+                if next_state not in visited:
+                    visited.add(next_state)
+                    queue.append(next_state)
 
-    return transitions # Crucial return for MPI to work
+        if expanded % 500 == 0:
+            print(f"  expanded={expanded}  queue={len(queue)}  visited={len(visited)}")
+
+    print(f"Done. Total states: {len(transitions)}")
+    return transitions
 
 
 def modified_policy_iteration(
@@ -488,7 +414,7 @@ def modified_policy_iteration(
     max_outer_iters: int = 500,
 ):
     """
-    TODO — Modified Policy Iteration.
+    Modified Policy Iteration.
 
     Parameters
     ----------
@@ -503,90 +429,41 @@ def modified_policy_iteration(
     policy : dict  state -> joint_action
     V      : dict  state -> float
     """
-    print("Running modified policy iteration...", flush=True)
-    # Get the model 
     transitions = build_transition_model(env)
-    all_states = list(transitions.keys())
-    
-    # Intialize according to Readme
-    V = {s: 0.0 for s in all_states}
-    policy = {}
-    for s in all_states:
-        # First aritrary action
-        first_action = next(iter(transitions[s].keys()))
-        policy[s] = first_action
+    states = list(transitions.keys())
+    print(f"Running MPI on {len(states)} states  (k={k}, gamma={gamma})")
 
-    # Outer Loop
-    outer_range = tqdm(
-        range(max_outer_iters),
-        desc="MPI outer loop",
-        disable=not MDP_SHOW_PROGRESS,
-    )
-    for outer_iter in outer_range:
-        
-        # Partial policy evaluation
-        eval_sweeps = 0
-        delta = 0.0
+    V      = {s: 0.0 for s in states}
+    policy = {s: JOINT_ACTIONS[0] for s in states}
+
+    def q_value(s, ja):
+        return sum(
+            p * (r + gamma * V[ns])
+            for p, ns, r in transitions[s][tuple(ja)]
+        )
+
+    pbar = tqdm(range(max_outer_iters), desc="MPI outer", unit="iter")
+    for outer_iter in pbar:
+        # Partial policy evaluation (k in-place sweeps)
         for _ in range(k):
-            delta = 0
-            new_V = V.copy() 
-            eval_sweeps += 1
-            
-            for s in all_states:
-                action = policy[s]
-                expected_value = 0.0
-                
-                # Bellman equation 
-                for prob, next_s, reward in transitions[s][action]:
-                    expected_value += prob * (reward + gamma * V.get(next_s, 0.0))
-                
-                new_V[s] = expected_value
-                delta = max(delta, abs(expected_value - V[s]))
-            
-            V = new_V
-            
-            if delta < theta:
-                break
+            for s in states:
+                V[s] = q_value(s, policy[s])
 
         # Policy improvement
         policy_stable = True
-        policy_changes = 0
-        
-        for s in all_states:
-            old_action = policy[s]
-            best_action = None
-            max_val = -float('inf')
-            
-            # Find the action that maximizes expected return: argmax_a Σ P * (R + γ * V(s'))
-            for a, outcomes in transitions[s].items():
-                val_a = 0.0
-                for prob, next_s, reward in outcomes:
-                    val_a += prob * (reward + gamma * V.get(next_s, 0.0))
-                
-                if val_a > max_val:
-                    max_val = val_a
-                    best_action = a
-            
-            policy[s] = best_action
-            
-            # If the best action changed, our policy is not yet stable
-            if best_action != old_action:
+        changes = 0
+        for s in states:
+            best = max(JOINT_ACTIONS, key=lambda ja: q_value(s, ja))
+            if tuple(best) != tuple(policy[s]):
+                policy[s]    = best
                 policy_stable = False
-                policy_changes += 1
+                changes += 1
 
-        outer_range.set_postfix(
-            states=len(all_states),
-            eval_sweeps=eval_sweeps,
-            delta=f"{delta:.2e}",
-            policy_changes=policy_changes,
-        )
-                
-        # Convergence check
-        # If no actions changed for any state, we have found the optimal policy
+        pbar.set_postfix(changes=changes)
+
         if policy_stable:
-            print(f"MPI converged after {outer_iter + 1} iterations.")
+            pbar.write(f"Converged after {outer_iter + 1} iterations.")
             break
-    outer_range.close()
 
     return policy, V
 
@@ -608,7 +485,7 @@ def evaluate_policy(policy_fn, env, n_runs: int = 100, max_steps: int = 500):
     """
     steps_per_run = []
 
-    for _ in tqdm(range(n_runs)):
+    for _ in range(n_runs):
         obs, _ = env.reset()
         steps  = 0
         done   = False
@@ -654,8 +531,8 @@ if __name__ == "__main__":
 
     # Direct evaluation loop for online planning
     online_steps = []
-    for i in range(10):
-        env_ep = StochasticMultiAgentBoxPushEnv(ascii_map=ASCII_MAP, max_steps=200) #500
+    for i in range(1):
+        env_ep = StochasticMultiAgentBoxPushEnv(ascii_map=ASCII_MAP, max_steps=500)
         steps = run_online_planning(env_ep)
         online_steps.append(steps)
         if (i + 1) % 10 == 0:
@@ -673,14 +550,27 @@ if __name__ == "__main__":
     policy, V = modified_policy_iteration(env_mpi)
 
     def mpi_policy_fn(env, obs):
-        """Convert current env state to a joint action using the MPI policy."""
+        """Convert abstract MPI joint action to one real env step per agent."""
         state = get_state(env)
+        if state not in policy:
+            return {}
         joint_action = policy[state]
-        # joint_action is a tuple (action_agent0, action_agent1)
         agents = env.possible_agents
-        return {agents[0]: joint_action[0], agents[1]: joint_action[1]}
+        step_actions = {}
+        for i, agent in enumerate(agents):
+            abstract_act = joint_action[i]
+            if abstract_act == NOOP:
+                continue
+            target_minidir = ACTION_TO_DIR[abstract_act]
+            current_dir    = env.agent_dirs[agent]
+            if current_dir == target_minidir:
+                step_actions[agent] = 2  # forward / push
+            else:
+                diff = (target_minidir - current_dir) % 4
+                step_actions[agent] = 0 if diff == 3 else 1  # rotate left or right
+        return step_actions
 
-    mean_mpi, std_mpi = evaluate_policy(mpi_policy_fn, env_mpi, n_runs=10)
+    mean_mpi, std_mpi = evaluate_policy(mpi_policy_fn, env_mpi, n_runs=100)
     print(f"\nMPI              →  mean = {mean_mpi:.2f}  std = {std_mpi:.2f}\n")
 
     # ── Summary ──────────────────────────────────────────────────────────────
