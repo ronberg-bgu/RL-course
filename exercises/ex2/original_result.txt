@@ -1,0 +1,171 @@
+============================================================
+Part 2 — Modified Policy Iteration
+============================================================
+New Closest State (h=9): ((3, 1), 0, (4, 1), 0, (2, 2), (4, 4), (4, 2))
+New Closest State (h=8): ((2, 2), 1, (2, 1), 1, (2, 3), (4, 4), (4, 2))
+New Closest State (h=7): ((2, 3), 1, (1, 1), 1, (2, 4), (4, 4), (4, 2))
+New Closest State (h=6): ((2, 4), 1, (1, 1), 0, (2, 5), (4, 4), (4, 2))
+New Closest State (h=5): ((5, 4), 0, (2, 3), 1, (2, 4), (6, 4), (4, 2))
+New Closest State (h=4): ((5, 4), 3, (2, 4), 1, (2, 5), (6, 4), (4, 2))
+New Closest State (h=3): ((5, 4), 0, (6, 4), 1, (2, 5), (6, 5), (4, 2))
+# of states: 10000
+# of states: 20000
+# of states: 30000
+# of states: 40000
+# of states: 50000
+# of states: 60000
+# of states: 70000
+# of states: 80000
+# of states: 90000
+# of states: 100000
+# of states: 110000
+# of states: 120000
+# of states: 130000
+# of states: 140000
+# of states: 150000
+# of states: 160000
+# of states: 170000
+# of states: 180000
+# of states: 190000
+# of states: 200000
+# of states: 210000
+New Closest State (h=2): ((4, 4), 1, (4, 4), 1, (2, 4), (6, 4), (4, 5))
+# of states: 220000
+# of states: 230000
+# of states: 240000
+# of states: 250000
+# of states: 260000
+# of states: 270000
+# of states: 280000
+# of states: 290000
+# of states: 300000
+# of states: 310000
+# of states: 320000
+# of states: 330000
+# of states: 340000
+New Closest State (h=1): ((4, 4), 1, (4, 4), 1, (2, 5), (6, 4), (4, 5))
+# of states: 350000
+# of states: 360000
+# of states: 370000
+# of states: 380000
+# of states: 390000
+# of states: 400000
+# of states: 410000
+# of states: 420000
+# of states: 430000
+# of states: 440000
+# of states: 450000
+# of states: 460000
+# of states: 470000
+# of states: 480000
+# of states: 490000
+# of states: 500000
+# of states: 510000
+# of states: 520000
+# of states: 530000
+# of states: 540000
+# of states: 550000
+# of states: 560000
+# of states: 570000
+# of states: 580000
+# of states: 590000
+# of states: 600000
+# of states: 610000
+# of states: 620000
+# of states: 630000
+# of states: 640000
+# of states: 650000
+# of states: 660000
+# of states: 670000
+# of states: 680000
+# of states: 690000
+# of states: 700000
+# of states: 710000
+# of states: 720000
+# of states: 730000
+# of states: 740000
+# of states: 750000
+# of states: 760000
+# of states: 770000
+# of states: 780000
+# of states: 790000
+# of states: 800000
+# of states: 810000
+New Closest State (h=0): ((4, 4), 1, (4, 4), 1, (2, 5), (6, 5), (4, 5))
+GOAL REACHED! Total goals mapped: 1
+# of states: 820000
+# of states: 830000
+# of states: 840000
+# of states: 850000
+# of states: 860000
+# of states: 870000
+# of states: 880000
+# of states: 890000
+# of states: 900000
+# of states: 910000
+# of states: 920000
+# of states: 930000
+# of states: 940000
+# of states: 950000
+# of states: 960000
+# of states: 970000
+# of states: 980000
+# of states: 990000
+# of states: 1000000
+# of states: 1010000
+# of states: 1020000
+# of states: 1030000
+# of states: 1040000
+# of states: 1050000
+# of states: 1060000
+# of states: 1070000
+# of states: 1080000
+# of states: 1090000
+# of states: 1100000
+# of states: 1110000
+# of states: 1120000
+# of states: 1130000
+# of states: 1140000
+# of states: 1150000
+# of states: 1160000
+# of states: 1170000
+# of states: 1180000
+# of states: 1190000
+# of states: 1200000
+# of states: 1210000
+# of states: 1220000
+GOAL REACHED! Total goals mapped: 2
+# of states: 1230000
+# of states: 1240000
+# of states: 1250000
+# of states: 1260000
+# of states: 1270000
+# of states: 1280000
+# of states: 1290000
+# of states: 1300000
+# of states: 1310000
+# of states: 1320000
+# of states: 1330000
+# of states: 1340000
+# of states: 1350000
+# of states: 1360000
+# of states: 1370000
+# of states: 1380000
+# of states: 1390000
+# of states: 1400000
+# of states: 1410000
+# of states: 1420000
+# of states: 1430000
+# of states: 1440000
+# of states: 1450000
+# of states: 1460000
+# of states: 1470000
+# of states: 1480000
+# of states: 1490000
+# of states: 1500000
+Reached max state cap: 1500000. Stopping A* exploration.
+Starting MPI with 1500000 states...
+Iteration 0: V(start) = 0.00, Policy(start) = None
+
+
+I assume it happens because it ran out of RAM
