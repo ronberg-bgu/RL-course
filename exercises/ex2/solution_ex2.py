@@ -1,10 +1,10 @@
 """
-Assignment 2 — Probabilistic Box Pushing
+Assignment 2 - Probabilistic Box Pushing
 =========================================
 Fill in the three TODO sections below:
-  1. run_online_planning  — online replanning loop
-  2. build_transition_model — MDP transition model (used by MPI)
-  3. modified_policy_iteration — MPI algorithm
+  1. run_online_planning  - online replanning loop
+  2. build_transition_model - MDP transition model (used by MPI)
+  3. modified_policy_iteration - MPI algorithm
 
 Do NOT modify evaluate_policy or the __main__ block.
 """
@@ -23,8 +23,13 @@ from environment.stochastic_env import StochasticMultiAgentBoxPushEnv
 from environment.pddl_extractor import generate_pddl_for_env
 from planner.pddl_solver import solve_pddl
 from visualize_plan import extract_target_pos, get_required_actions
+from collections import deque
 from minigrid.core.constants import DIR_TO_VEC
-
+try:
+    import unified_planning as up
+    up.shortcuts.get_environment().credits_stream = None
+except ImportError:
+    pass
 
 # ---------------------------------------------------------------------------
 # Map used in both parts (same as Assignment 1)
@@ -38,103 +43,214 @@ ASCII_MAP = [
     "W G G GW",
     "WWWWWWWW",
 ]
+class BoxPushPhysicsEngine:
+    """Handles all state transitions, probabilities, and physical rules of the environment."""
+    
+    def _init_(self, env):
+        self.move_prob = getattr(env, "move_success_prob", 0.8)
+        self.push_prob = getattr(env, "push_success_prob", 0.8)
+        self.slip_prob = (1.0 - self.move_prob) / 2.0
+        
+        self.walkable = set()
+        self.goals = set()
+        self.vectors = {0: (1, 0), 1: (0, 1), 2: (-1, 0), 3: (0, -1)}
+        
+        for y in range(env.height):
+            for x in range(env.width):
+                cell = env.core_env.grid.get(x, y)
+                if cell is None or cell.type != "wall":
+                    self.walkable.add((x, y))
+                if cell and cell.type == "goal":
+                    self.goals.add((x, y))
 
+    def extract_start_state(self, env) -> tuple:
+        agents = tuple(sorted(tuple(env.agent_positions[a]) for a in env.possible_agents))
+        smalls = []
+        heavy = None
+        
+        for y in range(env.height):
+            for x in range(env.width):
+                c = env.core_env.grid.get(x, y)
+                if c and c.type == "box":
+                    if getattr(c, "box_size", "") == "heavy":
+                        heavy = (x, y)
+                    else:
+                        smalls.append((x, y))
+                        
+        return (agents, frozenset(smalls), heavy)
+
+    def is_victory(self, state) -> bool:
+        if state == "DEAD_END": return False
+        agents, smalls, heavy = state
+        boxes = list(smalls) + ([heavy] if heavy else [])
+        return len(boxes) > 0 and all(b in self.goals for b in boxes)
+
+    def is_doomed(self, state) -> bool:
+        if state == "DEAD_END": return True
+        agents, smalls, heavy = state
+        boxes = list(smalls) + ([heavy] if heavy else [])
+        for box in boxes:
+            if box[0] == 1 or box[1] == 1:
+                return True
+        return False
+
+    def _resolve_single_agent(self, pos, action_dir, current_smalls, heavy_pos):
+        """Resolves physical branching for a single agent."""
+        tgt = (pos[0] + self.vectors[action_dir][0], pos[1] + self.vectors[action_dir][1])
+        
+        def evaluate(intent_tgt, intent_dir, is_push_intent):
+            if intent_tgt not in self.walkable or intent_tgt == heavy_pos:
+                return [(1.0 if is_push_intent else self.slip_prob, pos, current_smalls)]
+                
+            if intent_tgt in current_smalls:
+                if not is_push_intent:
+                    return [(self.slip_prob, pos, current_smalls)]
+                
+                push_tgt = (intent_tgt[0] + self.vectors[intent_dir][0], intent_tgt[1] + self.vectors[intent_dir][1])
+                if push_tgt in self.walkable and push_tgt != heavy_pos and push_tgt not in current_smalls:
+                    new_smalls = set(current_smalls)
+                    new_smalls.remove(intent_tgt)
+                    new_smalls.add(push_tgt)
+                    return [
+                        (self.push_prob, intent_tgt, frozenset(new_smalls)),
+                        (1.0 - self.push_prob, pos, current_smalls)
+                    ]
+                else:
+                    return [(1.0, pos, current_smalls)]
+                    
+            p = self.move_prob if is_push_intent else self.slip_prob
+            return [(p, intent_tgt, current_smalls)]
+
+        branches = []
+        branches.extend(evaluate(tgt, action_dir, True))
+        
+        l_dir = (action_dir - 1) % 4
+        l_tgt = (pos[0] + self.vectors[l_dir][0], pos[1] + self.vectors[l_dir][1])
+        branches.extend(evaluate(l_tgt, l_dir, False))
+        
+        r_dir = (action_dir + 1) % 4
+        r_tgt = (pos[0] + self.vectors[r_dir][0], pos[1] + self.vectors[r_dir][1])
+        branches.extend(evaluate(r_tgt, r_dir, False))
+        
+        # Consolidate duplicate physical outcomes
+        consolidated = {}
+        for p, n_pos, n_smalls in branches:
+            k = (n_pos, n_smalls)
+            consolidated[k] = consolidated.get(k, 0.0) + p
+            
+        return [(p, k[0], k[1]) for k, p in consolidated.items()]
+
+    def get_successors(self, state, joint_action):
+        """Core physics engine utilizing Sequential Resolution."""
+        if state == "DEAD_END":
+            return [(1.0, "DEAD_END", 0.0)]
+            
+        agents, smalls, heavy = state
+        
+        a0, a1 = agents
+        cmd0, cmd1 = joint_action
+        
+        tgt0 = (a0[0] + self.vectors[cmd0][0], a0[1] + self.vectors[cmd0][1])
+        tgt1 = (a1[0] + self.vectors[cmd1][0], a1[1] + self.vectors[cmd1][1])
+        
+        is_joint_heavy = (tgt0 == tgt1 and tgt0 == heavy and a0 == a1 and cmd0 == cmd1)
+        
+        successors = {}
+        
+        if is_joint_heavy:
+            push_dest = (tgt0[0] + self.vectors[cmd0][0], tgt0[1] + self.vectors[cmd0][1])
+            if push_dest in self.walkable and push_dest not in smalls:
+                succ_state = ((tgt0, tgt0), smalls, push_dest)
+                fail_state = (agents, smalls, heavy)
+                
+                successors[succ_state if not self.is_doomed(succ_state) else "DEAD_END"] = self.push_prob
+                successors[fail_state if not self.is_doomed(fail_state) else "DEAD_END"] = 1.0 - self.push_prob
+            else:
+                successors[state] = 1.0
+        else:
+            # Sequential Branching Strategy
+            intermediate_states = self._resolve_single_agent(a0, cmd0, smalls, heavy)
+            
+            for p0, inter_a0, inter_smalls in intermediate_states:
+                final_branches = self._resolve_single_agent(a1, cmd1, inter_smalls, heavy)
+                
+                for p1, final_a1, final_smalls in final_branches:
+                    n_state = (tuple(sorted([inter_a0, final_a1])), final_smalls, heavy)
+                    
+                    if self.is_doomed(n_state):
+                        n_state = "DEAD_END"
+                        
+                    successors[n_state] = successors.get(n_state, 0.0) + (p0 * p1)
+                    
+        return [(prob, s, 1.0 if self.is_victory(s) else 0.0) for s, prob in successors.items()]
 
 # ===========================================================================
-# Part 1 — Online Planning
+# Part 1 - Online Planning
 # ===========================================================================
 
 import unified_planning as up
 
 def run_online_planning(env, max_replans: int = 300) -> int:
-    """
-    Execute one episode using online planning:
-      replan from the current state → execute only the first PDDL action → repeat.
-
-    Returns
-    -------
-    int
-        Number of *env* steps taken (counting each rotate/forward individually).
-        Returns max_replans * <average_actions_per_plan_step> as a large sentinel
-        if the goal was never reached within max_replans replanning calls.
-    """
-    # Silence the Fast Downward credits stream to clean up the console
-    up.shortcuts.get_environment().credits_stream = None
-
     obs, _ = env.reset()
-    total_env_steps = 0
-    done = False
-    
+    steps_taken = 0
+    is_terminal = False
 
     for _ in range(max_replans):
-        if done:
+        if is_terminal:
             break
 
-        # ── 1. Export current state ──────────────────────────────────
         domain_path, problem_path = generate_pddl_for_env(env)
 
-        # ── 2. Plan ──────────────────────────────────────────────────
-        plan = solve_pddl(domain_path, problem_path)
-        if not plan or len(plan.actions) == 0:
-            break  # goal already reached (planner returns empty plan)
-
-        # ── 3. Execute the first PDDL action ─────────────────────────
-        pddl_action   = plan.actions[0]
-        agent_targets = extract_target_pos(pddl_action)
-
-        if not agent_targets:
+        with contextlib.redirect_stdout(io.StringIO()):
+            active_plan = solve_pddl(domain_path, problem_path)
+        
+        if not active_plan or len(active_plan.actions) == 0:
             break
 
-        # Build per-agent action queues (rotations + forward)
-        agents_in_action = list(agent_targets.keys())
-        action_queues = {
-            a: get_required_actions(env, a, agent_targets[a])
-            for a in agents_in_action
-        }
+        first_action = active_plan.actions[0]
+        target_positions = extract_target_pos(first_action)
 
-        # Pad shorter queues so all agents execute their final forward together
-        max_len = max(len(q) for q in action_queues.values())
-        for a in agents_in_action:
-            action_queues[a] = (
-                [None] * (max_len - len(action_queues[a])) + action_queues[a]
-            )
+        if not target_positions:
+            break
 
-        # Step through the queue
-        while any(len(q) > 0 for q in action_queues.values()):
-            step_actions = {}
-            for a in agents_in_action:
-                if action_queues[a]:
-                    act = action_queues[a].pop(0)
-                    if act is not None:
-                        step_actions[a] = act
+        active_agents = list(target_positions.keys())
+        try:
+            action_buffers = {
+                agent: get_required_actions(env, agent, target_positions[agent])
+                for agent in active_agents
+            }
+        except ValueError:
+            obs, rewards, terms, truncs, _ = env.step({})
+            steps_taken += 1
+            if any(terms.values()) or any(truncs.values()):
+                is_terminal = True
+            continue
 
-            obs, rewards, terms, truncs, _ = env.step(step_actions)
-            total_env_steps += 1
+        longest_sequence = max(len(queue) for queue in action_buffers.values())
+        for agent in active_agents:
+            padding = [None] * (longest_sequence - len(action_buffers[agent]))
+            action_buffers[agent] = padding + action_buffers[agent]
+
+        while any(len(queue) > 0 for queue in action_buffers.values()):
+            current_step_commands = {}
+            for agent in active_agents:
+                if action_buffers[agent]:
+                    cmd = action_buffers[agent].pop(0)
+                    if cmd is not None:
+                        current_step_commands[agent] = cmd
+
+            obs, rewards, terms, truncs, _ = env.step(current_step_commands)
+            steps_taken += 1
 
             if any(terms.values()) or any(truncs.values()):
-                done = True
+                is_terminal = True
                 break
 
-    if not done:
-        return max_replans * 3
-        
-    return total_env_steps
+    return steps_taken
 
 # ===========================================================================
-# Part 2 — Modified Policy Iteration
+# Part 2 - Modified Policy Iteration
 # ===========================================================================
-
-# ---------------------------------------------------------------------------
-# State representation
-# ---------------------------------------------------------------------------
-# A state is a tuple:
-#   (agent0_pos, agent0_dir, agent1_pos, agent1_dir,
-#    box0_pos,   box1_pos,   heavy_pos)
-#
-# where positions are (col, row) tuples and directions are 0-3.
-#
-# Feel free to simplify (e.g. drop agent directions if you argue they are
-# irrelevant) as long as you justify it in your live demo.
 
 def get_state(env) -> tuple:
     """Extract the current state tuple from a live environment."""
@@ -166,353 +282,87 @@ def get_state(env) -> tuple:
 
     return (a0_pos, a0_dir, a1_pos, a1_dir, box0_pos, box1_pos, heavy_pos)
 
-def get_canonical_state(env) -> tuple:
-    """Extract the current state tuple containing ONLY sorted coordinates."""
-    agents = env.possible_agents
-    
-    # 1. Get raw positions (NO DIRECTION!) and safely cast to tuple
-    agent_positions = [
-        tuple(env.agent_positions[agents[0]]), 
-        tuple(env.agent_positions[agents[1]])
-    ]
-    
-    # Sort them to make the agents interchangeable
-    agents_tuple = tuple(sorted(agent_positions))
-
-    # 2. Collect box positions
-    small_boxes = []
-    heavy_pos = None
-    for y in range(env.height):
-        for x in range(env.width):
-            cell = env.core_env.grid.get(x, y)
-            if cell is not None and cell.type == "box":
-                if getattr(cell, "box_size", "") == "heavy":
-                    heavy_pos = (x, y)
-                else:
-                    small_boxes.append((x, y))
-
-    # 3. Sort small boxes
-    small_boxes.sort()
-    boxes_tuple = tuple(small_boxes)
-
-    # State is now incredibly compact!
-    return (agents_tuple, boxes_tuple, heavy_pos)
-
-def get_single_agent_intents(state, agent_index, action, env):
-    """
-    action is now an intended cardinal direction: 
-    0: Right, 1: Down, 2: Left, 3: Up
-    """
-    agents_tuple, boxes_tuple, heavy_pos = state
-    agent_pos = agents_tuple[agent_index]
-    
-    # The action IS the direction!
-    target_vec = DIR_TO_VEC[action]
-    target_pos = (agent_pos[0] + target_vec[0], agent_pos[1] + target_vec[1])
-
-    # Build collision array
-    box_positions = [pos for pos in boxes_tuple if pos is not None]
-    if heavy_pos is not None:
-        box_positions.append(heavy_pos)
-
-    target_cell = env.core_env.grid.get(target_pos[0], target_pos[1])
-    target_is_wall = (target_cell is not None and target_cell.type == "wall")
-
-    # Case A: Wall
-    if target_is_wall:
-        return [(1.0, "stay")]
-    
-    # Case B: Box Interaction
-    elif target_pos in box_positions:
-        push_target_pos = (target_pos[0] + target_vec[0], target_pos[1] + target_vec[1])
-        push_cell = env.core_env.grid.get(push_target_pos[0], push_target_pos[1])
-        push_is_wall = (push_cell is not None and push_cell.type == "wall")
-
-        if not (push_is_wall or (push_target_pos in box_positions)):
-            # We must track the specific push direction for joint heavy pushes later
-            return [(0.8, f"push_{action}"), (0.2, "stay")]
-        else:
-            return [(1.0, "stay")]
-        
-    # Case C: Move to Empty Space (The 0.8 / 0.1 / 0.1 logic)
-    else:
-        slip_left = (action - 1) % 4
-        slip_right = (action + 1) % 4
-        return [
-            (0.8, f"move_{action}"), 
-            (0.1, f"move_{slip_left}"), 
-            (0.1, f"move_{slip_right}")
-        ]
-    
-from minigrid.core.constants import DIR_TO_VEC
-
-
-def simulate_joint_intents(state, joint_intent, env):
-    # 1. Unpack the canonical state
-    agents_tuple, boxes_tuple, heavy_pos = state
-    a0_pos = agents_tuple[0]
-    a1_pos = agents_tuple[1]
-
-    # Helper function to decode the new action strings AND prevent wall/box clipping
-    def parse_intent(pos, intent_str):
-        if intent_str == "stay":
-            return pos, None
-        
-        parts = intent_str.split("_")
-        action_type = parts[0]
-        direction = int(parts[1])
-        
-        vec = DIR_TO_VEC[direction]
-        new_pos = (pos[0] + vec[0], pos[1] + vec[1])
-        
-        # SAFETY CHECK 1: Out of bounds (just in case)
-        if not (0 <= new_pos[0] < env.width and 0 <= new_pos[1] < env.height):
-            return pos, None
-            
-        # SAFETY CHECK 2: Prevent slipping/walking into a wall
-        cell = env.core_env.grid.get(new_pos[0], new_pos[1])
-        if cell is not None and cell.type == "wall":
-            return pos, None
-            
-        # SAFETY CHECK 3: Prevent slipping into a box
-        if action_type == "move" and (new_pos in boxes_tuple or new_pos == heavy_pos):
-            return pos, None
-            
-        push_target = None
-        if action_type == "push":
-            push_target = (new_pos[0] + vec[0], new_pos[1] + vec[1])
-            
-        return new_pos, push_target
-
-    # 2. Calculate tentative moves
-    new_a0_pos, a0_push_target = parse_intent(a0_pos, joint_intent[0])
-    new_a1_pos, a1_push_target = parse_intent(a1_pos, joint_intent[1])
-
-    new_heavy_pos = heavy_pos
-    new_boxes = list(boxes_tuple) 
-
-    # 3. Resolve Heavy Box Pushes
-    if new_a0_pos == heavy_pos and new_a1_pos == heavy_pos:
-        if a0_push_target == a1_push_target and a0_push_target is not None:
-            new_heavy_pos = a0_push_target
-        else:
-            new_a0_pos, new_a1_pos = a0_pos, a1_pos 
-            
-    elif new_a0_pos == heavy_pos:
-        new_a0_pos = a0_pos 
-    elif new_a1_pos == heavy_pos:
-        new_a1_pos = a1_pos 
-
-    # 4. Resolve Small Box Pushes
-    for i, b_pos in enumerate(boxes_tuple):
-        if new_a0_pos == b_pos:
-            new_boxes[i] = a0_push_target
-        if new_a1_pos == b_pos:
-            new_boxes[i] = a1_push_target
-
-    # 5. Agent Collision Checks
-    swapped = (new_a0_pos == a1_pos and new_a1_pos == a0_pos)
-    same_cell = (new_a0_pos == new_a1_pos)
-    box_hit_agent = (a0_push_target == new_a1_pos) or (a1_push_target == new_a0_pos)
-    
-    if swapped or same_cell or box_hit_agent:
-        new_a0_pos, new_a1_pos = a0_pos, a1_pos
-        new_boxes = list(boxes_tuple) 
-        new_heavy_pos = heavy_pos     
-
-    # 6. Box Collision Check
-    if (a0_push_target is not None and a1_push_target is not None) and (a0_push_target == a1_push_target) and (new_heavy_pos == heavy_pos):
-        new_a0_pos, new_a1_pos = a0_pos, a1_pos
-        new_boxes = list(boxes_tuple)
-
-    # 7. Package back into Canonical State
-    final_agents = tuple(sorted([new_a0_pos, new_a1_pos]))
-    final_boxes = tuple(sorted([b for b in new_boxes if b is not None]))
-    final_state = (final_agents, final_boxes, new_heavy_pos)
-    
-    # 8. GOAL CHECK & REWARD ASSIGNMENT
-    all_simulated_box_positions = list(final_boxes)
-    if new_heavy_pos is not None:
-        all_simulated_box_positions.append(new_heavy_pos)
-        
-    if set(all_simulated_box_positions) == set(env.goal_positions):
-        reward = 1.0   
-    else:
-        reward = -1.0  
-
-    return final_state, reward
-
-
-import itertools
-
 def build_transition_model(env):
     env.reset()
-
-    transitions = {}
+    physics = BoxPushPhysicsEngine(env)
     
-    # 1. Use our new directionless, sorted state extractor
-    start_state = get_canonical_state(env)
-
-    queue = [start_state]
+    start_state = physics.extract_start_state(env)
+    queue = deque([start_state])
     visited = set([start_state])
-
-    # 2. Update to the Cardinal Direction action space!
-    # 0: Right, 1: Down, 2: Left, 3: Up
-    single_agent_actions = [0, 1, 2, 3]  
+    mdp_graph = {}
     
-    # This generates 16 possible joint actions: (0,0), (0,1) ... (3,3)
-    joint_actions = list(itertools.product(single_agent_actions, repeat=2))  
+    all_joint_actions = list(itertools.product(range(4), repeat=2))
     
     while queue:
-        current_state = queue.pop(0)
-        transitions[current_state] = {}
-
-        for joint_action in joint_actions:
-            # joint_action[0] is the direction Agent 0 wants to go
-            # joint_action[1] is the direction Agent 1 wants to go
-            agent0_intents = get_single_agent_intents(current_state, 0, joint_action[0], env)
-            agent1_intents = get_single_agent_intents(current_state, 1, joint_action[1], env)
-
-            # Combine intents to get joint outcomes
-            joint_outcomes = []
+        current = queue.popleft()
+        mdp_graph[current] = {}
+        
+        if len(mdp_graph) % 1000 == 0:
+            print(f"Processed {len(mdp_graph)} states | Queue size: {len(queue)}")
             
-            for prob0, intent0 in agent0_intents:
-                for prob1, intent1 in agent1_intents:
-                    joint_prob = prob0 * prob1
-                    joint_intent = (intent0, intent1)
-                    
-                    # 3. Simulate the physics (which now handles the "move_1", "stay", "push_3" strings)
-                    # and returns the next_state already neatly sorted and canonical!
-                    next_state, reward = simulate_joint_intents(current_state, joint_intent, env)
-                    
-                    joint_outcomes.append((joint_prob, next_state, reward))
-
-            # 4. Collapse outcomes
-            # Because of the 0.1 slip probabilities, it's possible for two entirely different 
-            # combinations of slips to end up resulting in the exact same physical grid state.
-            # We must sum their probabilities together so we don't have duplicate edges in our graph.
-            collapsed_outcomes = {}
-            for prob, next_state, reward in joint_outcomes:
-                if next_state not in collapsed_outcomes:
-                    collapsed_outcomes[next_state] = [0.0, reward]
-                collapsed_outcomes[next_state][0] += prob
+        for ja in all_joint_actions:
+            successors = physics.get_successors(current, ja)
+            mdp_graph[current][ja] = successors
             
-            final_outcomes = []
-            for next_state, (prob, reward) in collapsed_outcomes.items():
-                # Safety check: Only register transitions that actually have a chance of happening
-                if prob > 0:
-                    final_outcomes.append((prob, next_state, reward))
+            for prob, next_state, reward in successors:
+                if next_state not in visited:
+                    visited.add(next_state)
+                    queue.append(next_state)
                     
-                    if next_state not in visited:
-                        visited.add(next_state)
-                        queue.append(next_state)
-            
-            transitions[current_state][joint_action] = final_outcomes
+    print(f"Model mapped! Total reachable states: {len(mdp_graph)}")
+    return mdp_graph
 
-    return transitions
-
-
-import time
-
-def modified_policy_iteration(
-    env,
-    gamma: float = 0.95,
-    k: int = 10,
-    theta: float = 1e-4,
-    max_outer_iters: int = 500,
-):
-    """
-    Modified Policy Iteration for the Stochastic Box Pushing Environment.
-    """
-    # 1. Build the transition graph
-    print("Building transition model (this might take a few seconds)...")
-    transitions = build_transition_model(env)
-    states = list(transitions.keys())
-    print(f"State space size: {len(states)} states.")
-
-    # 2. Initialization
-    # Initialize V(s) = 0 for all states
-    V = {s: 0.0 for s in states}
+def modified_policy_iteration(env, gamma: float = 0.95, k: int = 15, max_outer_iters: int = 500):
+    print("Mapping environment dynamics...")
+    graph = build_transition_model(env)
     
-    # Initialize an arbitrary policy π(s)
-    policy = {}
-    for s in states:
-        available_actions = list(transitions[s].keys())
-        if available_actions:
-            policy[s] = available_actions[0] # Just pick the first action
-        else:
-            policy[s] = None # Edge case: terminal state with no actions
-
-    # Helper function to compute the Bellman expectation
-    def expected_value(state, action):
-        val = 0.0
-        for prob, next_state, reward in transitions[state][action]:
-            val += prob * (reward + gamma * V[next_state])
-        return val
-
-    # 3. The MPI Loop
+    state_space = list(graph.keys())
+    value_table = {s: 0.0 for s in state_space}
+    policy_table = {s: next(iter(graph[s].keys())) for s in state_space}
+    
     for iteration in range(max_outer_iters):
-        iter_start_time = time.time() # <-- START TIMER
+        final_delta = 0.0
+        final_sweep_count = 0
         
-        # --- PHASE A: Partial Policy Evaluation ---
-        # Evaluate the CURRENT policy for 'k' sweeps
-        for _ in range(k):
-            delta = 0.0
-            new_V = {}
-            for s in states:
-                a = policy[s]
-                if a is None: # Terminal state
-                    new_V[s] = 0.0
-                    continue
+        for sweep in range(k):
+            max_value_shift = 0.0
+            updated_values = {}
+            for s in state_space:
+                expected_v = 0.0
+                for prob, n_state, rew in graph[s][policy_table[s]]:
+                    expected_v += prob * (rew + gamma * value_table[n_state])
                 
-                v_new = expected_value(s, a)
-                delta = max(delta, abs(v_new - V[s]))
-                new_V[s] = v_new
+                max_value_shift = max(max_value_shift, abs(expected_v - value_table[s]))
+                updated_values[s] = expected_v
             
-            # Synchronous update
-            V = new_V 
-            
-            # If the values stop changing significantly, break early to save time
-            if delta < theta:
-                break
+            value_table = updated_values
+            final_delta = max_value_shift
+            final_sweep_count = sweep + 1
+            if max_value_shift < 1e-5:
+                break 
+                
+        print(f"  Iteration {iteration + 1:02d} | Sweeps utilized: {final_sweep_count}/{k} | Max Delta: {final_delta:.8f}")
 
-        # --- PHASE B: Policy Improvement ---
-        policy_stable = True
-        
-        for s in states:
-            old_action = policy[s]
-            if old_action is None:
-                continue
+        is_stable = True
+        for s in state_space:
+            current_choice = policy_table[s]
+            top_choice, top_score = None, -float('inf')
             
-            best_action = None
-            best_value = -float('inf')
-            
-            # Test every possible action from this state to see if one is better
-            for a in transitions[s].keys():
-                val = expected_value(s, a)
-                if val > best_value:
-                    best_value = val
-                    best_action = a
-            
-            # Update the policy with the newfound best action
-            policy[s] = best_action
-            
-            # If the best action is different from what we used to do, the policy isn't stable yet
-            if old_action != best_action:
-                policy_stable = False
-        
-        # --- PHASE C: Convergence Check & Heartbeat ---
-        iter_duration = time.time() - iter_start_time
-        print(f"Iteration {iteration + 1} finished in {iter_duration:.2f}s | Max Delta: {delta:.4f}")
-
-        if policy_stable:
-            print(f"MPI converged successfully after {iteration + 1} outer iterations!")
+            for candidate_act in graph[s].keys():
+                score = sum(prob * (rew + gamma * value_table[n_state]) for prob, n_state, rew in graph[s][candidate_act])
+                if score > top_score + 1e-8:
+                    top_score = score
+                    top_choice = candidate_act
+                    
+            policy_table[s] = top_choice
+            if current_choice != top_choice:
+                is_stable = False
+                
+        if is_stable:
+            print(f"\nOptimal policy secured in {iteration + 1} macro-iterations.")
             break
             
-    else:
-        print("Warning: MPI reached max_outer_iters without fully converging.")
-
-    return policy, V
+    return policy_table, value_table
 
 # ===========================================================================
 # Evaluation (do not modify)
@@ -548,93 +398,72 @@ def evaluate_policy(policy_fn, env, n_runs: int = 100, max_steps: int = 500):
 
 
 # ===========================================================================
-# Main — run both algorithms and print results
+# Main - run both algorithms and print results
 # ===========================================================================
 
 if __name__ == "__main__":
     env = StochasticMultiAgentBoxPushEnv(ascii_map=ASCII_MAP, max_steps=500)
 
+    mean_ol = 0.0
+    std_ol = 0.0
+
     # ── Part 1: Online Planning ──────────────────────────────────────────────
     print("=" * 60)
-    print("Part 1 — Online Planning (classical planner on stochastic env)")
+    print("Part 1 - Online Planning (classical planner on stochastic env)")
     print("=" * 60)
 
-    # Wrap run_online_planning as a policy function for the evaluator
-    def online_planning_policy(env, obs):
-        """
-        This wrapper runs one COMPLETE episode internally and is only a shim
-        for the evaluator.  evaluate_policy will reset the env before each
-        call, so we hand control back immediately with a do-nothing action
-        after the first step — the real logic is inside run_online_planning.
-
-        NOTE: because run_online_planning drives the env loop itself, you
-        should call it directly (see the manual loop below) for the 100-run
-        evaluation; or adapt the evaluate_policy call to suit your design.
-        """
-        raise NotImplementedError(
-            "Adapt this shim or call run_online_planning directly in a loop."
-        )
-
-    # Direct evaluation loop for online planning
     online_steps = []
     for i in range(100):
         env_ep = StochasticMultiAgentBoxPushEnv(ascii_map=ASCII_MAP, max_steps=500)
         steps = run_online_planning(env_ep)
         online_steps.append(steps)
         if (i + 1) % 10 == 0:
-            print(f"  run {i+1}/100 — steps so far: {steps}")
+            print(f"  run {i+1}/100 - steps so far: {steps}")
 
     mean_ol, std_ol = float(np.mean(online_steps)), float(np.std(online_steps))
     print(f"\nOnline Planning  →  mean = {mean_ol:.2f}  std = {std_ol:.2f}\n")
 
     # ── Part 2: Modified Policy Iteration ───────────────────────────────────
     print("=" * 60)
-    print("Part 2 — Modified Policy Iteration")
+    print("Part 2 - Modified Policy Iteration")
     print("=" * 60)
 
     env_mpi = StochasticMultiAgentBoxPushEnv(ascii_map=ASCII_MAP, max_steps=500)
     policy, V = modified_policy_iteration(env_mpi)
-    
+
+    # Initialize a single physics engine instance to use for state extraction
+    physics_shim = BoxPushPhysicsEngine(env_mpi)
+
     def mpi_policy_fn(env, obs):
-        """Convert the MPI policy's cardinal directions into environment button presses."""
-        # 1. Get the canonical state to look up the policy
-        state = get_canonical_state(env)
+        # 1. Extract the current state using the exact same logic as the BFS graph
+        state = physics_shim.extract_start_state(env)
         
-        # 2. Extract the desired cardinal directions (e.g., 0=Right, 1=Down, 2=Left, 3=Up)
-        # Note: Because canonical state sorts agents, we must ensure we map the action 
-        # to the correct agent based on their sorted coordinates.
-        agents = env.possible_agents
-        # Update this line inside mpi_policy_fn:
-        raw_positions = [
-            tuple(env.agent_positions[agents[0]]), 
-            tuple(env.agent_positions[agents[1]])
-        ]
+        # Fallback: if we somehow slip into an unmapped state
+        if state not in policy:
+            return {env.possible_agents[0]: 0, env.possible_agents[1]: 0}
+            
+        joint_action = policy[state] 
         
-        # If Agent 1's coordinate was sorted to the front, we need to flip the actions!
-        is_swapped = tuple(raw_positions) != tuple(sorted(raw_positions))
+        # 2. Map the abstract policy back to the physical agents
+        # Since the abstract state sorted the agents by their (x, y) coordinates, 
+        # we must sort the physical agent IDs by those exact same coordinates!
+        ordered_roster = sorted(env.possible_agents, key=lambda a: tuple(env.agent_positions[a]))
         
-        canonical_action = policy[state]
-        if is_swapped:
-            desired_dir_0 = canonical_action[1]
-            desired_dir_1 = canonical_action[0]
-        else:
-            desired_dir_0 = canonical_action[0]
-            desired_dir_1 = canonical_action[1]
-
-        # 3. Helper to translate desired compass direction -> button press
-        def get_button_press(current_dir, desired_dir):
-            if current_dir == desired_dir:
-                return 2  # Already facing the right way -> Press "Forward"
-            elif (current_dir - 1) % 4 == desired_dir:
-                return 0  # Desired direction is to the left -> Press "Rotate Left"
+        commands = {}
+        for idx, agent in enumerate(ordered_roster):
+            desired_heading = joint_action[idx]
+            current_heading = env.agent_dirs[agent]
+            
+            # 3. Dynamic Rotation: Calculate how to turn if we aren't facing the target direction
+            if current_heading == desired_heading:
+                commands[agent] = 2  # 2 is Forward
             else:
-                return 1  # Otherwise -> Press "Rotate Right"
-
-        # 4. Generate the actual button presses
-        action_agent0 = get_button_press(env.agent_dirs[agents[0]], desired_dir_0)
-        action_agent1 = get_button_press(env.agent_dirs[agents[1]], desired_dir_1)
-
-        return {agents[0]: action_agent0, agents[1]: action_agent1}
+                rot_diff = (desired_heading - current_heading) % 4
+                # If target is 90 degrees right (1) or 180 degrees behind (2), turn Right (1)
+                # If target is 90 degrees left (3), turn Left (0)
+                commands[agent] = 1 if rot_diff in [1, 2] else 0 
+                
+        return commands
 
     mean_mpi, std_mpi = evaluate_policy(mpi_policy_fn, env_mpi, n_runs=100)
     print(f"\nMPI              →  mean = {mean_mpi:.2f}  std = {std_mpi:.2f}\n")
@@ -646,4 +475,4 @@ if __name__ == "__main__":
     print(f"{'Algorithm':<25} {'Mean steps':>12} {'Std steps':>12}")
     print("-" * 50)
     print(f"{'Online Planning':<25} {mean_ol:>12.2f} {std_ol:>12.2f}")
-    # print(f"{'MPI':<25} {mean_mpi:>12.2f} {std_mpi:>12.2f}")
+    print(f"{'MPI':<25} {mean_mpi:>12.2f} {std_mpi:>12.2f}")
