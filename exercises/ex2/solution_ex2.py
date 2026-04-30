@@ -531,7 +531,7 @@ if __name__ == "__main__":
 
     # Direct evaluation loop for online planning
     online_steps = []
-    for i in range(1):
+    for i in range(100):
         env_ep = StochasticMultiAgentBoxPushEnv(ascii_map=ASCII_MAP, max_steps=500)
         steps = run_online_planning(env_ep)
         online_steps.append(steps)
