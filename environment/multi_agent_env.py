@@ -246,7 +246,8 @@ class MultiAgentBoxPushEnv(ParallelEnv):
                         nx, ny = bx + vec[0], by + vec[1]
                         if (nx, ny) not in parts: 
                             n_cell = self.core_env.grid.get(nx, ny)
-                            if n_cell is not None and not n_cell.can_overlap():
+                            agent_at_n = any(p == (nx, ny) for p in self.agent_positions.values())
+                            if (n_cell is not None and not n_cell.can_overlap()) or agent_at_n:
                                 clear_to_push = False
                                 break
                     
@@ -280,7 +281,9 @@ class MultiAgentBoxPushEnv(ParallelEnv):
             vec = intent["vec"]
             fwd_cell = self.core_env.grid.get(*fwd_pos)
             
-            if fwd_cell is None or fwd_cell.can_overlap():
+            agent_at_fwd = any(p == fwd_pos for p in self.agent_positions.values())
+            
+            if (fwd_cell is None or fwd_cell.can_overlap()) and not agent_at_fwd:
                 self.agent_positions[agent] = fwd_pos
                 
                 if fwd_cell is not None and fwd_cell.type == "goal":
@@ -291,7 +294,10 @@ class MultiAgentBoxPushEnv(ParallelEnv):
             elif fwd_cell is not None and getattr(fwd_cell, "box_size", "") == "small":
                 fwd_fwd_pos = (fwd_pos[0] + vec[0], fwd_pos[1] + vec[1])
                 fwd_fwd_cell = self.core_env.grid.get(*fwd_fwd_pos)
-                if fwd_fwd_cell is None or fwd_fwd_cell.can_overlap():
+                
+                agent_at_fwd_fwd = any(p == fwd_fwd_pos for p in self.agent_positions.values())
+                
+                if (fwd_fwd_cell is None or fwd_fwd_cell.can_overlap()) and not agent_at_fwd_fwd:
                     self.core_env.grid.set(*fwd_fwd_pos, fwd_cell)
                     self.core_env.grid.set(*fwd_pos, None)
                     self.agent_positions[agent] = fwd_pos

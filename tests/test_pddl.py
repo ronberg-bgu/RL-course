@@ -36,5 +36,18 @@ class TestPDDL(unittest.TestCase):
         self.assertIsNotNone(plan, "The PDDL solver could not find a plan for a basic map.")
         self.assertGreater(len(plan.actions), 0, "Plan should have at least 1 action.")
 
+    def test_ex1_pddl_solving(self):
+        domain_path = os.path.join(os.path.dirname(__file__), "..", "pddl", "domain.pddl")
+        problem_path = os.path.join(os.path.dirname(__file__), "..", "pddl", "problem.pddl")
+        
+        self.assertTrue(os.path.exists(domain_path))
+        self.assertTrue(os.path.exists(problem_path))
+        
+        # Test unified planning solver
+        plan = solve_pddl(domain_path, problem_path)
+        
+        self.assertIsNotNone(plan, "The PDDL solver could not find a plan for Ex1 problem.")
+        self.assertGreater(len(plan.actions), 0, "Plan should have at least 1 action.")
+
 if __name__ == '__main__':
     unittest.main()
