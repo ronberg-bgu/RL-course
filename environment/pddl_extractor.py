@@ -1,18 +1,5 @@
 import os
 
-# Stable mapping for box objects to names
-BOX_REGISTRY = {}
-
-def get_box_name(cell, box_type):
-    global BOX_REGISTRY
-    mem_address = id(cell)
-    if mem_address in BOX_REGISTRY:
-        return BOX_REGISTRY[mem_address]
-    prefix = "hbx" if box_type == "heavy" else "box"
-    assigned_name = f"{prefix}_{len(BOX_REGISTRY)}"
-    BOX_REGISTRY[mem_address] = assigned_name
-    return assigned_name
-
 def generate_domain(domain_path):
     domain_str = """(define (domain box-push)
   (:requirements :strips :typing :equality)
@@ -130,6 +117,10 @@ def generate_problem(env, problem_path):
     agents = env.agents
     boxes = []
     heavyboxes = []
+    
+    # Simple counters to name boxes as they are found
+    b_count = 0
+    h_count = 0
 
     for y in range(h):
         for x in range(w):
@@ -138,6 +129,7 @@ def generate_problem(env, problem_path):
                 loc = f"loc_{x}_{y}"
                 locations.append(loc)
 
+                # Grid Adjacency logic
                 if x < w - 1:
                     r_cell = env.core_env.grid.get(x+1, y)
                     if r_cell is None or r_cell.type != 'wall':
@@ -149,13 +141,17 @@ def generate_problem(env, problem_path):
                         adjacencies.append((loc, f"loc_{x}_{y+1}", "down"))
                         adjacencies.append((f"loc_{x}_{y+1}", loc, "up"))
 
+                # Logic replaced here: No more BOX_REGISTRY
                 if cell is not None and cell.type == "box":
-                    b_type = "heavy" if getattr(cell, "box_size", "") == "heavy" else "small"
-                    b_name = get_box_name(cell, b_type)
-                    if b_type == "heavy":
+                    is_heavy = getattr(cell, "box_size", "") == "heavy"
+                    if is_heavy:
+                        b_name = f"hbx_{h_count}"
                         heavyboxes.append((b_name, loc))
+                        h_count += 1
                     else:
+                        b_name = f"box_{b_count}"
                         boxes.append((b_name, loc))
+                        b_count += 1
 
     goals = [f"loc_{gx}_{gy}" for gx, gy in env.goal_positions]
     agent_locs = [(a, f"loc_{env.agent_positions[a][0]}_{env.agent_positions[a][1]}") for a in agents]
