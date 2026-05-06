@@ -46,7 +46,7 @@ ASCII_MAP = [
 class BoxPushPhysicsEngine:
     """Handles all state transitions, probabilities, and physical rules of the environment."""
     
-    def _init_(self, env):
+    def __init__(self, env):
         self.move_prob = getattr(env, "move_success_prob", 0.8)
         self.push_prob = getattr(env, "push_success_prob", 0.8)
         self.slip_prob = (1.0 - self.move_prob) / 2.0
