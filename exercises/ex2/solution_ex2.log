@@ -1,0 +1,1161 @@
+2026-05-08 09:36:50,364 [INFO] Starting solution_ex2 evaluation
+2026-05-08 09:36:50,365 [INFO] ============================================================
+2026-05-08 09:36:50,365 [INFO] Part 1 — Online Planning
+2026-05-08 09:36:50,365 [INFO] ============================================================
+2026-05-08 09:37:50,208 [INFO]   run 1/100 — steps: 107  (59.8s)
+2026-05-08 09:38:24,853 [INFO]   run 2/100 — steps: 53  (34.6s)
+2026-05-08 09:39:04,730 [INFO]   run 3/100 — steps: 69  (39.9s)
+2026-05-08 09:39:45,659 [INFO]   run 4/100 — steps: 66  (40.9s)
+2026-05-08 09:40:26,679 [INFO]   run 5/100 — steps: 70  (41.0s)
+2026-05-08 09:41:14,205 [INFO]   run 6/100 — steps: 84  (47.5s)
+2026-05-08 09:42:01,095 [INFO]   run 7/100 — steps: 82  (46.9s)
+2026-05-08 09:42:35,447 [INFO]   run 8/100 — steps: 52  (34.4s)
+2026-05-08 09:43:11,435 [INFO]   run 9/100 — steps: 58  (36.0s)
+2026-05-08 09:43:41,697 [INFO]   run 10/100 — steps: 54  (30.3s)
+2026-05-08 09:44:31,879 [INFO]   run 11/100 — steps: 80  (50.2s)
+2026-05-08 09:45:02,848 [INFO]   run 12/100 — steps: 54  (31.0s)
+2026-05-08 09:45:53,542 [INFO]   run 13/100 — steps: 85  (50.7s)
+2026-05-08 09:46:31,788 [INFO]   run 14/100 — steps: 64  (38.2s)
+2026-05-08 09:47:10,171 [INFO]   run 15/100 — steps: 56  (38.4s)
+2026-05-08 09:47:47,119 [INFO]   run 16/100 — steps: 63  (36.9s)
+2026-05-08 09:48:22,906 [INFO]   run 17/100 — steps: 54  (35.8s)
+2026-05-08 09:48:57,945 [INFO]   run 18/100 — steps: 57  (35.0s)
+2026-05-08 09:50:22,572 [INFO]   run 19/100 — steps: 149  (84.6s)
+2026-05-08 09:52:23,517 [INFO]   run 20/100 — steps: 228  (120.9s)
+2026-05-08 09:53:13,085 [INFO]   run 21/100 — steps: 88  (49.6s)
+2026-05-08 09:54:07,209 [INFO]   run 22/100 — steps: 95  (54.1s)
+2026-05-08 09:54:42,888 [INFO]   run 23/100 — steps: 62  (35.7s)
+2026-05-08 09:55:19,969 [INFO]   run 24/100 — steps: 59  (37.1s)
+2026-05-08 09:55:53,451 [INFO]   run 25/100 — steps: 52  (33.5s)
+2026-05-08 09:56:34,737 [INFO]   run 26/100 — steps: 66  (41.3s)
+2026-05-08 09:57:13,025 [INFO]   run 27/100 — steps: 60  (38.3s)
+2026-05-08 09:57:48,690 [INFO]   run 28/100 — steps: 58  (35.7s)
+2026-05-08 09:58:29,705 [INFO]   run 29/100 — steps: 66  (41.0s)
+2026-05-08 09:59:07,925 [INFO]   run 30/100 — steps: 60  (38.2s)
+2026-05-08 09:59:46,222 [INFO]   run 31/100 — steps: 68  (38.3s)
+2026-05-08 10:00:38,534 [INFO]   run 32/100 — steps: 102  (52.3s)
+2026-05-08 10:01:12,900 [INFO]   run 33/100 — steps: 53  (34.4s)
+2026-05-08 10:01:50,987 [INFO]   run 34/100 — steps: 64  (38.1s)
+2026-05-08 10:02:29,591 [INFO]   run 35/100 — steps: 60  (38.6s)
+2026-05-08 10:03:04,039 [INFO]   run 36/100 — steps: 53  (34.4s)
+2026-05-08 10:03:50,161 [INFO]   run 37/100 — steps: 70  (46.1s)
+2026-05-08 10:04:24,524 [INFO]   run 38/100 — steps: 57  (34.4s)
+2026-05-08 10:05:12,455 [INFO]   run 39/100 — steps: 71  (47.9s)
+2026-05-08 10:05:43,056 [INFO]   run 40/100 — steps: 50  (30.6s)
+2026-05-08 10:06:31,849 [INFO]   run 41/100 — steps: 84  (48.8s)
+2026-05-08 10:07:28,235 [INFO]   run 42/100 — steps: 78  (56.4s)
+2026-05-08 10:08:10,168 [INFO]   run 43/100 — steps: 68  (41.9s)
+2026-05-08 10:08:47,175 [INFO]   run 44/100 — steps: 56  (37.0s)
+2026-05-08 10:09:37,080 [INFO]   run 45/100 — steps: 73  (49.9s)
+2026-05-08 10:10:21,164 [INFO]   run 46/100 — steps: 65  (44.1s)
+2026-05-08 10:11:05,226 [INFO]   run 47/100 — steps: 73  (44.1s)
+2026-05-08 10:11:40,082 [INFO]   run 48/100 — steps: 55  (34.9s)
+2026-05-08 10:12:20,895 [INFO]   run 49/100 — steps: 59  (40.8s)
+2026-05-08 10:13:10,218 [INFO]   run 50/100 — steps: 73  (49.3s)
+2026-05-08 10:13:58,595 [INFO]   run 51/100 — steps: 72  (48.4s)
+2026-05-08 10:14:38,249 [INFO]   run 52/100 — steps: 58  (39.7s)
+2026-05-08 10:15:23,211 [INFO]   run 53/100 — steps: 66  (45.0s)
+2026-05-08 10:16:10,788 [INFO]   run 54/100 — steps: 75  (47.6s)
+2026-05-08 10:16:58,377 [INFO]   run 55/100 — steps: 71  (47.6s)
+2026-05-08 10:17:44,520 [INFO]   run 56/100 — steps: 66  (46.1s)
+2026-05-08 10:18:36,310 [INFO]   run 57/100 — steps: 74  (51.8s)
+2026-05-08 10:19:15,129 [INFO]   run 58/100 — steps: 57  (38.8s)
+2026-05-08 10:19:52,213 [INFO]   run 59/100 — steps: 56  (37.1s)
+2026-05-08 10:20:28,879 [INFO]   run 60/100 — steps: 57  (36.7s)
+2026-05-08 10:21:10,963 [INFO]   run 61/100 — steps: 68  (42.1s)
+2026-05-08 10:21:53,128 [INFO]   run 62/100 — steps: 68  (42.2s)
+2026-05-08 10:22:32,820 [INFO]   run 63/100 — steps: 58  (39.7s)
+2026-05-08 10:23:18,876 [INFO]   run 64/100 — steps: 66  (46.1s)
+2026-05-08 10:24:08,151 [INFO]   run 65/100 — steps: 65  (49.3s)
+2026-05-08 10:24:38,310 [INFO]   run 66/100 — steps: 45  (30.2s)
+2026-05-08 10:25:47,403 [INFO]   run 67/100 — steps: 114  (69.1s)
+2026-05-08 10:26:28,285 [INFO]   run 68/100 — steps: 59  (40.9s)
+2026-05-08 10:27:10,708 [INFO]   run 69/100 — steps: 64  (42.4s)
+2026-05-08 10:28:09,480 [INFO]   run 70/100 — steps: 91  (58.8s)
+2026-05-08 10:28:54,063 [INFO]   run 71/100 — steps: 65  (44.6s)
+2026-05-08 10:29:41,014 [INFO]   run 72/100 — steps: 87  (47.0s)
+2026-05-08 10:30:16,229 [INFO]   run 73/100 — steps: 47  (35.2s)
+2026-05-08 10:31:05,454 [INFO]   run 74/100 — steps: 76  (49.2s)
+2026-05-08 10:31:45,354 [INFO]   run 75/100 — steps: 58  (39.9s)
+2026-05-08 10:33:21,364 [INFO]   run 76/100 — steps: 172  (96.0s)
+2026-05-08 10:34:09,984 [INFO]   run 77/100 — steps: 65  (48.6s)
+2026-05-08 10:34:54,174 [INFO]   run 78/100 — steps: 65  (44.2s)
+2026-05-08 10:35:34,887 [INFO]   run 79/100 — steps: 59  (40.7s)
+2026-05-08 10:36:15,915 [INFO]   run 80/100 — steps: 67  (41.0s)
+2026-05-08 10:37:07,604 [INFO]   run 81/100 — steps: 82  (51.7s)
+2026-05-08 10:37:43,033 [INFO]   run 82/100 — steps: 55  (35.4s)
+2026-05-08 10:38:24,234 [INFO]   run 83/100 — steps: 55  (41.2s)
+2026-05-08 10:39:08,490 [INFO]   run 84/100 — steps: 65  (44.3s)
+2026-05-08 10:39:46,744 [INFO]   run 85/100 — steps: 59  (38.3s)
+2026-05-08 10:40:27,810 [INFO]   run 86/100 — steps: 62  (41.1s)
+2026-05-08 10:41:06,121 [INFO]   run 87/100 — steps: 56  (38.3s)
+2026-05-08 10:41:55,801 [INFO]   run 88/100 — steps: 88  (49.7s)
+2026-05-08 10:42:40,447 [INFO]   run 89/100 — steps: 65  (44.6s)
+2026-05-08 10:43:16,746 [INFO]   run 90/100 — steps: 58  (36.3s)
+2026-05-08 10:43:56,722 [INFO]   run 91/100 — steps: 65  (40.0s)
+2026-05-08 10:44:41,920 [INFO]   run 92/100 — steps: 62  (45.2s)
+2026-05-08 10:45:46,250 [INFO]   run 93/100 — steps: 75  (64.3s)
+2026-05-08 10:46:29,464 [INFO]   run 94/100 — steps: 56  (43.2s)
+2026-05-08 10:47:29,881 [INFO]   run 95/100 — steps: 72  (60.4s)
+2026-05-08 10:48:14,558 [INFO]   run 96/100 — steps: 56  (44.7s)
+2026-05-08 10:49:05,748 [INFO]   run 97/100 — steps: 70  (51.2s)
+2026-05-08 10:49:54,706 [INFO]   run 98/100 — steps: 69  (49.0s)
+2026-05-08 10:50:55,759 [INFO]   run 99/100 — steps: 73  (61.1s)
+2026-05-08 10:51:47,472 [INFO]   run 100/100 — steps: 62  (51.7s)
+2026-05-08 10:51:47,476 [INFO] ============================================================
+2026-05-08 10:51:47,476 [INFO] Part 2 — Modified Policy Iteration
+2026-05-08 10:51:47,478 [INFO] ============================================================
+2026-05-08 10:51:47,480 [INFO] Building transition model (BFS)...
+2026-05-08 10:51:47,803 [INFO]   expanded: 500  queued: 736
+2026-05-08 10:51:47,991 [INFO]   expanded: 1000  queued: 1394
+2026-05-08 10:51:48,175 [INFO]   expanded: 1500  queued: 1931
+2026-05-08 10:51:48,457 [INFO]   expanded: 2000  queued: 2494
+2026-05-08 10:51:48,638 [INFO]   expanded: 2500  queued: 2932
+2026-05-08 10:51:48,806 [INFO]   expanded: 3000  queued: 3443
+2026-05-08 10:51:49,091 [INFO]   expanded: 3500  queued: 3823
+2026-05-08 10:51:49,276 [INFO]   expanded: 4000  queued: 4161
+2026-05-08 10:51:49,460 [INFO]   expanded: 4500  queued: 4637
+2026-05-08 10:51:49,636 [INFO]   expanded: 5000  queued: 5064
+2026-05-08 10:51:49,930 [INFO]   expanded: 5500  queued: 5387
+2026-05-08 10:51:50,108 [INFO]   expanded: 6000  queued: 5719
+2026-05-08 10:51:50,276 [INFO]   expanded: 6500  queued: 6220
+2026-05-08 10:51:50,470 [INFO]   expanded: 7000  queued: 6485
+2026-05-08 10:51:50,647 [INFO]   expanded: 7500  queued: 6713
+2026-05-08 10:51:50,965 [INFO]   expanded: 8000  queued: 6957
+2026-05-08 10:51:51,144 [INFO]   expanded: 8500  queued: 7287
+2026-05-08 10:51:51,330 [INFO]   expanded: 9000  queued: 7580
+2026-05-08 10:51:51,519 [INFO]   expanded: 9500  queued: 7983
+2026-05-08 10:51:51,703 [INFO]   expanded: 10000  queued: 8255
+2026-05-08 10:51:52,026 [INFO]   expanded: 10500  queued: 8508
+2026-05-08 10:51:52,204 [INFO]   expanded: 11000  queued: 8742
+2026-05-08 10:51:52,393 [INFO]   expanded: 11500  queued: 8945
+2026-05-08 10:51:52,590 [INFO]   expanded: 12000  queued: 9226
+2026-05-08 10:51:52,761 [INFO]   expanded: 12500  queued: 9747
+2026-05-08 10:51:53,058 [INFO]   expanded: 13000  queued: 9966
+2026-05-08 10:51:53,241 [INFO]   expanded: 13500  queued: 10091
+2026-05-08 10:51:53,389 [INFO]   expanded: 14000  queued: 10226
+2026-05-08 10:51:53,553 [INFO]   expanded: 14500  queued: 10342
+2026-05-08 10:51:53,743 [INFO]   expanded: 15000  queued: 10487
+2026-05-08 10:51:53,929 [INFO]   expanded: 15500  queued: 10681
+2026-05-08 10:51:54,122 [INFO]   expanded: 16000  queued: 10886
+2026-05-08 10:51:54,453 [INFO]   expanded: 16500  queued: 11032
+2026-05-08 10:51:54,603 [INFO]   expanded: 17000  queued: 11352
+2026-05-08 10:51:54,755 [INFO]   expanded: 17500  queued: 11664
+2026-05-08 10:51:54,880 [INFO]   expanded: 18000  queued: 11871
+2026-05-08 10:51:55,035 [INFO]   expanded: 18500  queued: 12001
+2026-05-08 10:51:55,163 [INFO]   expanded: 19000  queued: 12275
+2026-05-08 10:51:55,336 [INFO]   expanded: 19500  queued: 12444
+2026-05-08 10:51:55,637 [INFO]   expanded: 20000  queued: 12589
+2026-05-08 10:51:55,785 [INFO]   expanded: 20500  queued: 12699
+2026-05-08 10:51:55,943 [INFO]   expanded: 21000  queued: 12912
+2026-05-08 10:51:56,114 [INFO]   expanded: 21500  queued: 13241
+2026-05-08 10:51:56,286 [INFO]   expanded: 22000  queued: 13658
+2026-05-08 10:51:56,432 [INFO]   expanded: 22500  queued: 13866
+2026-05-08 10:51:56,568 [INFO]   expanded: 23000  queued: 14021
+2026-05-08 10:51:56,687 [INFO]   expanded: 23500  queued: 14064
+2026-05-08 10:51:57,025 [INFO]   expanded: 24000  queued: 14155
+2026-05-08 10:51:57,206 [INFO]   expanded: 24500  queued: 14218
+2026-05-08 10:51:57,376 [INFO]   expanded: 25000  queued: 14270
+2026-05-08 10:51:57,561 [INFO]   expanded: 25500  queued: 14376
+2026-05-08 10:51:57,735 [INFO]   expanded: 26000  queued: 14474
+2026-05-08 10:51:57,929 [INFO]   expanded: 26500  queued: 14629
+2026-05-08 10:51:58,113 [INFO]   expanded: 27000  queued: 14671
+2026-05-08 10:51:58,294 [INFO]   expanded: 27500  queued: 14747
+2026-05-08 10:51:58,474 [INFO]   expanded: 28000  queued: 14974
+2026-05-08 10:51:58,838 [INFO]   expanded: 28500  queued: 15246
+2026-05-08 10:51:59,003 [INFO]   expanded: 29000  queued: 15391
+2026-05-08 10:51:59,182 [INFO]   expanded: 29500  queued: 15535
+2026-05-08 10:51:59,355 [INFO]   expanded: 30000  queued: 15715
+2026-05-08 10:51:59,519 [INFO]   expanded: 30500  queued: 15707
+2026-05-08 10:51:59,690 [INFO]   expanded: 31000  queued: 15990
+2026-05-08 10:51:59,872 [INFO]   expanded: 31500  queued: 16138
+2026-05-08 10:52:00,058 [INFO]   expanded: 32000  queued: 16214
+2026-05-08 10:52:00,238 [INFO]   expanded: 32500  queued: 16300
+2026-05-08 10:52:00,419 [INFO]   expanded: 33000  queued: 16277
+2026-05-08 10:52:00,826 [INFO]   expanded: 33500  queued: 16433
+2026-05-08 10:52:00,995 [INFO]   expanded: 34000  queued: 16563
+2026-05-08 10:52:01,181 [INFO]   expanded: 34500  queued: 16785
+2026-05-08 10:52:01,372 [INFO]   expanded: 35000  queued: 17047
+2026-05-08 10:52:01,573 [INFO]   expanded: 35500  queued: 17318
+2026-05-08 10:52:01,747 [INFO]   expanded: 36000  queued: 17451
+2026-05-08 10:52:01,923 [INFO]   expanded: 36500  queued: 17559
+2026-05-08 10:52:02,114 [INFO]   expanded: 37000  queued: 17644
+2026-05-08 10:52:02,280 [INFO]   expanded: 37500  queued: 17618
+2026-05-08 10:52:02,473 [INFO]   expanded: 38000  queued: 17612
+2026-05-08 10:52:02,645 [INFO]   expanded: 38500  queued: 17744
+2026-05-08 10:52:02,806 [INFO]   expanded: 39000  queued: 17765
+2026-05-08 10:52:03,299 [INFO]   expanded: 39500  queued: 17738
+2026-05-08 10:52:03,485 [INFO]   expanded: 40000  queued: 17742
+2026-05-08 10:52:03,670 [INFO]   expanded: 40500  queued: 17759
+2026-05-08 10:52:03,814 [INFO]   expanded: 41000  queued: 17868
+2026-05-08 10:52:03,973 [INFO]   expanded: 41500  queued: 17872
+2026-05-08 10:52:04,154 [INFO]   expanded: 42000  queued: 17815
+2026-05-08 10:52:04,321 [INFO]   expanded: 42500  queued: 17855
+2026-05-08 10:52:04,469 [INFO]   expanded: 43000  queued: 18013
+2026-05-08 10:52:04,624 [INFO]   expanded: 43500  queued: 18164
+2026-05-08 10:52:04,787 [INFO]   expanded: 44000  queued: 18235
+2026-05-08 10:52:04,967 [INFO]   expanded: 44500  queued: 18250
+2026-05-08 10:52:05,141 [INFO]   expanded: 45000  queued: 18314
+2026-05-08 10:52:05,308 [INFO]   expanded: 45500  queued: 18440
+2026-05-08 10:52:05,777 [INFO]   expanded: 46000  queued: 18456
+2026-05-08 10:52:05,947 [INFO]   expanded: 46500  queued: 18736
+2026-05-08 10:52:06,105 [INFO]   expanded: 47000  queued: 18889
+2026-05-08 10:52:06,273 [INFO]   expanded: 47500  queued: 19000
+2026-05-08 10:52:06,450 [INFO]   expanded: 48000  queued: 19107
+2026-05-08 10:52:06,627 [INFO]   expanded: 48500  queued: 19158
+2026-05-08 10:52:06,770 [INFO]   expanded: 49000  queued: 19138
+2026-05-08 10:52:06,947 [INFO]   expanded: 49500  queued: 19159
+2026-05-08 10:52:07,091 [INFO]   expanded: 50000  queued: 19361
+2026-05-08 10:52:07,271 [INFO]   expanded: 50500  queued: 19447
+2026-05-08 10:52:07,443 [INFO]   expanded: 51000  queued: 19582
+2026-05-08 10:52:07,577 [INFO]   expanded: 51500  queued: 19705
+2026-05-08 10:52:07,727 [INFO]   expanded: 52000  queued: 19800
+2026-05-08 10:52:07,875 [INFO]   expanded: 52500  queued: 19935
+2026-05-08 10:52:08,025 [INFO]   expanded: 53000  queued: 20103
+2026-05-08 10:52:08,595 [INFO]   expanded: 53500  queued: 20109
+2026-05-08 10:52:08,765 [INFO]   expanded: 54000  queued: 20235
+2026-05-08 10:52:08,895 [INFO]   expanded: 54500  queued: 20264
+2026-05-08 10:52:09,038 [INFO]   expanded: 55000  queued: 20217
+2026-05-08 10:52:09,198 [INFO]   expanded: 55500  queued: 20217
+2026-05-08 10:52:09,374 [INFO]   expanded: 56000  queued: 20337
+2026-05-08 10:52:09,532 [INFO]   expanded: 56500  queued: 20312
+2026-05-08 10:52:09,697 [INFO]   expanded: 57000  queued: 20266
+2026-05-08 10:52:09,854 [INFO]   expanded: 57500  queued: 20279
+2026-05-08 10:52:10,009 [INFO]   expanded: 58000  queued: 20256
+2026-05-08 10:52:10,186 [INFO]   expanded: 58500  queued: 20201
+2026-05-08 10:52:10,358 [INFO]   expanded: 59000  queued: 20230
+2026-05-08 10:52:10,531 [INFO]   expanded: 59500  queued: 20137
+2026-05-08 10:52:10,677 [INFO]   expanded: 60000  queued: 20088
+2026-05-08 10:52:10,828 [INFO]   expanded: 60500  queued: 20087
+2026-05-08 10:52:10,989 [INFO]   expanded: 61000  queued: 20151
+2026-05-08 10:52:11,578 [INFO]   expanded: 61500  queued: 20195
+2026-05-08 10:52:11,747 [INFO]   expanded: 62000  queued: 20219
+2026-05-08 10:52:11,908 [INFO]   expanded: 62500  queued: 20121
+2026-05-08 10:52:12,086 [INFO]   expanded: 63000  queued: 20139
+2026-05-08 10:52:12,260 [INFO]   expanded: 63500  queued: 20094
+2026-05-08 10:52:12,426 [INFO]   expanded: 64000  queued: 20163
+2026-05-08 10:52:12,604 [INFO]   expanded: 64500  queued: 20111
+2026-05-08 10:52:12,771 [INFO]   expanded: 65000  queued: 20443
+2026-05-08 10:52:12,939 [INFO]   expanded: 65500  queued: 20886
+2026-05-08 10:52:13,107 [INFO]   expanded: 66000  queued: 20849
+2026-05-08 10:52:13,287 [INFO]   expanded: 66500  queued: 20925
+2026-05-08 10:52:13,460 [INFO]   expanded: 67000  queued: 20989
+2026-05-08 10:52:13,636 [INFO]   expanded: 67500  queued: 20989
+2026-05-08 10:52:13,808 [INFO]   expanded: 68000  queued: 20979
+2026-05-08 10:52:13,989 [INFO]   expanded: 68500  queued: 20896
+2026-05-08 10:52:14,115 [INFO]   expanded: 69000  queued: 21061
+2026-05-08 10:52:14,289 [INFO]   expanded: 69500  queued: 21178
+2026-05-08 10:52:14,483 [INFO]   expanded: 70000  queued: 21210
+2026-05-08 10:52:14,648 [INFO]   expanded: 70500  queued: 21268
+2026-05-08 10:52:15,276 [INFO]   expanded: 71000  queued: 21304
+2026-05-08 10:52:15,418 [INFO]   expanded: 71500  queued: 21319
+2026-05-08 10:52:15,549 [INFO]   expanded: 72000  queued: 21328
+2026-05-08 10:52:15,672 [INFO]   expanded: 72500  queued: 21341
+2026-05-08 10:52:15,841 [INFO]   expanded: 73000  queued: 21387
+2026-05-08 10:52:15,974 [INFO]   expanded: 73500  queued: 21328
+2026-05-08 10:52:16,130 [INFO]   expanded: 74000  queued: 21292
+2026-05-08 10:52:16,338 [INFO]   expanded: 74500  queued: 21427
+2026-05-08 10:52:16,481 [INFO]   expanded: 75000  queued: 21433
+2026-05-08 10:52:16,648 [INFO]   expanded: 75500  queued: 21401
+2026-05-08 10:52:16,810 [INFO]   expanded: 76000  queued: 21460
+2026-05-08 10:52:16,959 [INFO]   expanded: 76500  queued: 21542
+2026-05-08 10:52:17,091 [INFO]   expanded: 77000  queued: 21513
+2026-05-08 10:52:17,246 [INFO]   expanded: 77500  queued: 21483
+2026-05-08 10:52:17,390 [INFO]   expanded: 78000  queued: 21385
+2026-05-08 10:52:17,562 [INFO]   expanded: 78500  queued: 21403
+2026-05-08 10:52:17,722 [INFO]   expanded: 79000  queued: 21405
+2026-05-08 10:52:17,893 [INFO]   expanded: 79500  queued: 21303
+2026-05-08 10:52:18,056 [INFO]   expanded: 80000  queued: 21221
+2026-05-08 10:52:18,186 [INFO]   expanded: 80500  queued: 21122
+2026-05-08 10:52:18,308 [INFO]   expanded: 81000  queued: 21080
+2026-05-08 10:52:18,956 [INFO]   expanded: 81500  queued: 20987
+2026-05-08 10:52:19,115 [INFO]   expanded: 82000  queued: 20951
+2026-05-08 10:52:19,264 [INFO]   expanded: 82500  queued: 20840
+2026-05-08 10:52:19,425 [INFO]   expanded: 83000  queued: 20755
+2026-05-08 10:52:19,593 [INFO]   expanded: 83500  queued: 20607
+2026-05-08 10:52:19,761 [INFO]   expanded: 84000  queued: 20660
+2026-05-08 10:52:19,914 [INFO]   expanded: 84500  queued: 20579
+2026-05-08 10:52:20,069 [INFO]   expanded: 85000  queued: 20790
+2026-05-08 10:52:20,196 [INFO]   expanded: 85500  queued: 21172
+2026-05-08 10:52:20,321 [INFO]   expanded: 86000  queued: 21556
+2026-05-08 10:52:20,476 [INFO]   expanded: 86500  queued: 21828
+2026-05-08 10:52:20,647 [INFO]   expanded: 87000  queued: 21748
+2026-05-08 10:52:20,834 [INFO]   expanded: 87500  queued: 21877
+2026-05-08 10:52:21,007 [INFO]   expanded: 88000  queued: 21950
+2026-05-08 10:52:21,179 [INFO]   expanded: 88500  queued: 21968
+2026-05-08 10:52:21,340 [INFO]   expanded: 89000  queued: 21964
+2026-05-08 10:52:21,487 [INFO]   expanded: 89500  queued: 21936
+2026-05-08 10:52:21,654 [INFO]   expanded: 90000  queued: 22106
+2026-05-08 10:52:21,827 [INFO]   expanded: 90500  queued: 22284
+2026-05-08 10:52:21,997 [INFO]   expanded: 91000  queued: 22241
+2026-05-08 10:52:22,156 [INFO]   expanded: 91500  queued: 22225
+2026-05-08 10:52:22,334 [INFO]   expanded: 92000  queued: 22179
+2026-05-08 10:52:22,470 [INFO]   expanded: 92500  queued: 22174
+2026-05-08 10:52:22,596 [INFO]   expanded: 93000  queued: 22069
+2026-05-08 10:52:23,288 [INFO]   expanded: 93500  queued: 22017
+2026-05-08 10:52:23,463 [INFO]   expanded: 94000  queued: 21988
+2026-05-08 10:52:23,615 [INFO]   expanded: 94500  queued: 21952
+2026-05-08 10:52:23,783 [INFO]   expanded: 95000  queued: 21855
+2026-05-08 10:52:23,951 [INFO]   expanded: 95500  queued: 21938
+2026-05-08 10:52:24,134 [INFO]   expanded: 96000  queued: 22015
+2026-05-08 10:52:24,301 [INFO]   expanded: 96500  queued: 22004
+2026-05-08 10:52:24,471 [INFO]   expanded: 97000  queued: 22075
+2026-05-08 10:52:24,644 [INFO]   expanded: 97500  queued: 22093
+2026-05-08 10:52:24,819 [INFO]   expanded: 98000  queued: 22167
+2026-05-08 10:52:24,970 [INFO]   expanded: 98500  queued: 22205
+2026-05-08 10:52:25,125 [INFO]   expanded: 99000  queued: 22209
+2026-05-08 10:52:25,266 [INFO]   expanded: 99500  queued: 22101
+2026-05-08 10:52:25,392 [INFO]   expanded: 100000  queued: 22188
+2026-05-08 10:52:25,516 [INFO]   expanded: 100500  queued: 22116
+2026-05-08 10:52:25,655 [INFO]   expanded: 101000  queued: 22004
+2026-05-08 10:52:25,842 [INFO]   expanded: 101500  queued: 21879
+2026-05-08 10:52:26,000 [INFO]   expanded: 102000  queued: 21781
+2026-05-08 10:52:26,168 [INFO]   expanded: 102500  queued: 21675
+2026-05-08 10:52:26,351 [INFO]   expanded: 103000  queued: 21563
+2026-05-08 10:52:26,529 [INFO]   expanded: 103500  queued: 21446
+2026-05-08 10:52:26,704 [INFO]   expanded: 104000  queued: 21292
+2026-05-08 10:52:26,877 [INFO]   expanded: 104500  queued: 21246
+2026-05-08 10:52:27,036 [INFO]   expanded: 105000  queued: 21063
+2026-05-08 10:52:27,186 [INFO]   expanded: 105500  queued: 21199
+2026-05-08 10:52:27,324 [INFO]   expanded: 106000  queued: 21627
+2026-05-08 10:52:27,448 [INFO]   expanded: 106500  queued: 21916
+2026-05-08 10:52:28,235 [INFO]   expanded: 107000  queued: 22237
+2026-05-08 10:52:28,404 [INFO]   expanded: 107500  queued: 22625
+2026-05-08 10:52:28,546 [INFO]   expanded: 108000  queued: 22863
+2026-05-08 10:52:28,720 [INFO]   expanded: 108500  queued: 23046
+2026-05-08 10:52:28,887 [INFO]   expanded: 109000  queued: 22970
+2026-05-08 10:52:29,052 [INFO]   expanded: 109500  queued: 23173
+2026-05-08 10:52:29,214 [INFO]   expanded: 110000  queued: 23234
+2026-05-08 10:52:29,389 [INFO]   expanded: 110500  queued: 23277
+2026-05-08 10:52:29,547 [INFO]   expanded: 111000  queued: 23313
+2026-05-08 10:52:29,721 [INFO]   expanded: 111500  queued: 23184
+2026-05-08 10:52:29,916 [INFO]   expanded: 112000  queued: 23370
+2026-05-08 10:52:30,079 [INFO]   expanded: 112500  queued: 23605
+2026-05-08 10:52:30,231 [INFO]   expanded: 113000  queued: 23574
+2026-05-08 10:52:30,402 [INFO]   expanded: 113500  queued: 23447
+2026-05-08 10:52:30,591 [INFO]   expanded: 114000  queued: 23423
+2026-05-08 10:52:30,726 [INFO]   expanded: 114500  queued: 23432
+2026-05-08 10:52:30,851 [INFO]   expanded: 115000  queued: 23294
+2026-05-08 10:52:30,985 [INFO]   expanded: 115500  queued: 23189
+2026-05-08 10:52:31,138 [INFO]   expanded: 116000  queued: 23184
+2026-05-08 10:52:31,307 [INFO]   expanded: 116500  queued: 23084
+2026-05-08 10:52:31,454 [INFO]   expanded: 117000  queued: 22978
+2026-05-08 10:52:31,597 [INFO]   expanded: 117500  queued: 23121
+2026-05-08 10:52:31,737 [INFO]   expanded: 118000  queued: 23199
+2026-05-08 10:52:31,873 [INFO]   expanded: 118500  queued: 23193
+2026-05-08 10:52:32,030 [INFO]   expanded: 119000  queued: 23282
+2026-05-08 10:52:32,184 [INFO]   expanded: 119500  queued: 23424
+2026-05-08 10:52:32,315 [INFO]   expanded: 120000  queued: 23393
+2026-05-08 10:52:32,465 [INFO]   expanded: 120500  queued: 23470
+2026-05-08 10:52:32,627 [INFO]   expanded: 121000  queued: 23609
+2026-05-08 10:52:32,811 [INFO]   expanded: 121500  queued: 23450
+2026-05-08 10:52:32,974 [INFO]   expanded: 122000  queued: 23550
+2026-05-08 10:52:33,929 [INFO]   expanded: 122500  queued: 23515
+2026-05-08 10:52:34,088 [INFO]   expanded: 123000  queued: 23418
+2026-05-08 10:52:34,226 [INFO]   expanded: 123500  queued: 23242
+2026-05-08 10:52:34,362 [INFO]   expanded: 124000  queued: 23178
+2026-05-08 10:52:34,507 [INFO]   expanded: 124500  queued: 23068
+2026-05-08 10:52:34,667 [INFO]   expanded: 125000  queued: 23009
+2026-05-08 10:52:34,794 [INFO]   expanded: 125500  queued: 22860
+2026-05-08 10:52:34,959 [INFO]   expanded: 126000  queued: 22689
+2026-05-08 10:52:35,129 [INFO]   expanded: 126500  queued: 22857
+2026-05-08 10:52:35,301 [INFO]   expanded: 127000  queued: 23182
+2026-05-08 10:52:35,464 [INFO]   expanded: 127500  queued: 23501
+2026-05-08 10:52:35,621 [INFO]   expanded: 128000  queued: 23742
+2026-05-08 10:52:35,776 [INFO]   expanded: 128500  queued: 23933
+2026-05-08 10:52:35,956 [INFO]   expanded: 129000  queued: 24171
+2026-05-08 10:52:36,136 [INFO]   expanded: 129500  queued: 24358
+2026-05-08 10:52:36,297 [INFO]   expanded: 130000  queued: 24784
+2026-05-08 10:52:36,484 [INFO]   expanded: 130500  queued: 24989
+2026-05-08 10:52:36,636 [INFO]   expanded: 131000  queued: 25267
+2026-05-08 10:52:36,773 [INFO]   expanded: 131500  queued: 25453
+2026-05-08 10:52:36,935 [INFO]   expanded: 132000  queued: 25466
+2026-05-08 10:52:37,121 [INFO]   expanded: 132500  queued: 25596
+2026-05-08 10:52:37,289 [INFO]   expanded: 133000  queued: 25886
+2026-05-08 10:52:37,471 [INFO]   expanded: 133500  queued: 25836
+2026-05-08 10:52:37,651 [INFO]   expanded: 134000  queued: 25895
+2026-05-08 10:52:37,836 [INFO]   expanded: 134500  queued: 25976
+2026-05-08 10:52:38,027 [INFO]   expanded: 135000  queued: 25966
+2026-05-08 10:52:38,211 [INFO]   expanded: 135500  queued: 26046
+2026-05-08 10:52:38,391 [INFO]   expanded: 136000  queued: 26243
+2026-05-08 10:52:38,554 [INFO]   expanded: 136500  queued: 26250
+2026-05-08 10:52:38,739 [INFO]   expanded: 137000  queued: 26174
+2026-05-08 10:52:38,912 [INFO]   expanded: 137500  queued: 26173
+2026-05-08 10:52:39,102 [INFO]   expanded: 138000  queued: 26241
+2026-05-08 10:52:39,261 [INFO]   expanded: 138500  queued: 26082
+2026-05-08 10:52:39,412 [INFO]   expanded: 139000  queued: 26122
+2026-05-08 10:52:39,558 [INFO]   expanded: 139500  queued: 26071
+2026-05-08 10:52:40,491 [INFO]   expanded: 140000  queued: 25934
+2026-05-08 10:52:40,647 [INFO]   expanded: 140500  queued: 26090
+2026-05-08 10:52:40,795 [INFO]   expanded: 141000  queued: 26276
+2026-05-08 10:52:40,963 [INFO]   expanded: 141500  queued: 26205
+2026-05-08 10:52:41,147 [INFO]   expanded: 142000  queued: 26374
+2026-05-08 10:52:41,331 [INFO]   expanded: 142500  queued: 26420
+2026-05-08 10:52:41,487 [INFO]   expanded: 143000  queued: 26495
+2026-05-08 10:52:41,628 [INFO]   expanded: 143500  queued: 26547
+2026-05-08 10:52:41,750 [INFO]   expanded: 144000  queued: 26632
+2026-05-08 10:52:41,894 [INFO]   expanded: 144500  queued: 26827
+2026-05-08 10:52:42,032 [INFO]   expanded: 145000  queued: 26682
+2026-05-08 10:52:42,178 [INFO]   expanded: 145500  queued: 26729
+2026-05-08 10:52:42,365 [INFO]   expanded: 146000  queued: 26763
+2026-05-08 10:52:42,536 [INFO]   expanded: 146500  queued: 26699
+2026-05-08 10:52:42,703 [INFO]   expanded: 147000  queued: 26730
+2026-05-08 10:52:42,869 [INFO]   expanded: 147500  queued: 26715
+2026-05-08 10:52:43,035 [INFO]   expanded: 148000  queued: 26755
+2026-05-08 10:52:43,179 [INFO]   expanded: 148500  queued: 26633
+2026-05-08 10:52:43,359 [INFO]   expanded: 149000  queued: 26655
+2026-05-08 10:52:43,539 [INFO]   expanded: 149500  queued: 26887
+2026-05-08 10:52:43,713 [INFO]   expanded: 150000  queued: 27030
+2026-05-08 10:52:43,876 [INFO]   expanded: 150500  queued: 27335
+2026-05-08 10:52:44,066 [INFO]   expanded: 151000  queued: 27566
+2026-05-08 10:52:44,228 [INFO]   expanded: 151500  queued: 27770
+2026-05-08 10:52:44,392 [INFO]   expanded: 152000  queued: 27906
+2026-05-08 10:52:44,575 [INFO]   expanded: 152500  queued: 28079
+2026-05-08 10:52:44,740 [INFO]   expanded: 153000  queued: 28267
+2026-05-08 10:52:44,886 [INFO]   expanded: 153500  queued: 28460
+2026-05-08 10:52:45,012 [INFO]   expanded: 154000  queued: 28654
+2026-05-08 10:52:45,159 [INFO]   expanded: 154500  queued: 29000
+2026-05-08 10:52:45,345 [INFO]   expanded: 155000  queued: 29258
+2026-05-08 10:52:45,516 [INFO]   expanded: 155500  queued: 29378
+2026-05-08 10:52:45,693 [INFO]   expanded: 156000  queued: 29603
+2026-05-08 10:52:45,880 [INFO]   expanded: 156500  queued: 29773
+2026-05-08 10:52:46,048 [INFO]   expanded: 157000  queued: 30007
+2026-05-08 10:52:46,207 [INFO]   expanded: 157500  queued: 30046
+2026-05-08 10:52:46,385 [INFO]   expanded: 158000  queued: 30204
+2026-05-08 10:52:46,559 [INFO]   expanded: 158500  queued: 30449
+2026-05-08 10:52:46,746 [INFO]   expanded: 159000  queued: 30557
+2026-05-08 10:52:47,851 [INFO]   expanded: 159500  queued: 30617
+2026-05-08 10:52:48,034 [INFO]   expanded: 160000  queued: 30656
+2026-05-08 10:52:48,216 [INFO]   expanded: 160500  queued: 30670
+2026-05-08 10:52:48,393 [INFO]   expanded: 161000  queued: 30671
+2026-05-08 10:52:48,574 [INFO]   expanded: 161500  queued: 30740
+2026-05-08 10:52:48,760 [INFO]   expanded: 162000  queued: 30869
+2026-05-08 10:52:48,943 [INFO]   expanded: 162500  queued: 30932
+2026-05-08 10:52:49,113 [INFO]   expanded: 163000  queued: 30830
+2026-05-08 10:52:49,284 [INFO]   expanded: 163500  queued: 30943
+2026-05-08 10:52:49,463 [INFO]   expanded: 164000  queued: 31124
+2026-05-08 10:52:49,626 [INFO]   expanded: 164500  queued: 31086
+2026-05-08 10:52:49,815 [INFO]   expanded: 165000  queued: 31172
+2026-05-08 10:52:49,990 [INFO]   expanded: 165500  queued: 31186
+2026-05-08 10:52:50,141 [INFO]   expanded: 166000  queued: 31125
+2026-05-08 10:52:50,322 [INFO]   expanded: 166500  queued: 31279
+2026-05-08 10:52:50,478 [INFO]   expanded: 167000  queued: 31428
+2026-05-08 10:52:50,648 [INFO]   expanded: 167500  queued: 31466
+2026-05-08 10:52:50,823 [INFO]   expanded: 168000  queued: 31540
+2026-05-08 10:52:50,989 [INFO]   expanded: 168500  queued: 31668
+2026-05-08 10:52:51,189 [INFO]   expanded: 169000  queued: 31653
+2026-05-08 10:52:51,375 [INFO]   expanded: 169500  queued: 31705
+2026-05-08 10:52:51,515 [INFO]   expanded: 170000  queued: 31747
+2026-05-08 10:52:51,667 [INFO]   expanded: 170500  queued: 31795
+2026-05-08 10:52:51,838 [INFO]   expanded: 171000  queued: 31961
+2026-05-08 10:52:52,011 [INFO]   expanded: 171500  queued: 31943
+2026-05-08 10:52:52,158 [INFO]   expanded: 172000  queued: 31854
+2026-05-08 10:52:52,317 [INFO]   expanded: 172500  queued: 31940
+2026-05-08 10:52:52,489 [INFO]   expanded: 173000  queued: 31944
+2026-05-08 10:52:52,658 [INFO]   expanded: 173500  queued: 31944
+2026-05-08 10:52:52,850 [INFO]   expanded: 174000  queued: 32077
+2026-05-08 10:52:53,029 [INFO]   expanded: 174500  queued: 32260
+2026-05-08 10:52:53,212 [INFO]   expanded: 175000  queued: 32375
+2026-05-08 10:52:53,376 [INFO]   expanded: 175500  queued: 32306
+2026-05-08 10:52:53,561 [INFO]   expanded: 176000  queued: 32529
+2026-05-08 10:52:53,731 [INFO]   expanded: 176500  queued: 32633
+2026-05-08 10:52:53,908 [INFO]   expanded: 177000  queued: 32667
+2026-05-08 10:52:54,068 [INFO]   expanded: 177500  queued: 33019
+2026-05-08 10:52:54,244 [INFO]   expanded: 178000  queued: 33112
+2026-05-08 10:52:54,395 [INFO]   expanded: 178500  queued: 33313
+2026-05-08 10:52:54,555 [INFO]   expanded: 179000  queued: 33424
+2026-05-08 10:52:54,728 [INFO]   expanded: 179500  queued: 33511
+2026-05-08 10:52:54,906 [INFO]   expanded: 180000  queued: 33570
+2026-05-08 10:52:55,048 [INFO]   expanded: 180500  queued: 33672
+2026-05-08 10:52:55,189 [INFO]   expanded: 181000  queued: 33795
+2026-05-08 10:52:56,380 [INFO]   expanded: 181500  queued: 33866
+2026-05-08 10:52:56,548 [INFO]   expanded: 182000  queued: 33950
+2026-05-08 10:52:56,708 [INFO]   expanded: 182500  queued: 34121
+2026-05-08 10:52:56,898 [INFO]   expanded: 183000  queued: 34356
+2026-05-08 10:52:57,096 [INFO]   expanded: 183500  queued: 34585
+2026-05-08 10:52:57,261 [INFO]   expanded: 184000  queued: 34767
+2026-05-08 10:52:57,441 [INFO]   expanded: 184500  queued: 34912
+2026-05-08 10:52:57,613 [INFO]   expanded: 185000  queued: 35040
+2026-05-08 10:52:57,796 [INFO]   expanded: 185500  queued: 35171
+2026-05-08 10:52:57,972 [INFO]   expanded: 186000  queued: 35368
+2026-05-08 10:52:58,150 [INFO]   expanded: 186500  queued: 35482
+2026-05-08 10:52:58,314 [INFO]   expanded: 187000  queued: 35695
+2026-05-08 10:52:58,447 [INFO]   expanded: 187500  queued: 35762
+2026-05-08 10:52:58,569 [INFO]   expanded: 188000  queued: 35890
+2026-05-08 10:52:58,718 [INFO]   expanded: 188500  queued: 36059
+2026-05-08 10:52:58,883 [INFO]   expanded: 189000  queued: 36296
+2026-05-08 10:52:59,055 [INFO]   expanded: 189500  queued: 36432
+2026-05-08 10:52:59,255 [INFO]   expanded: 190000  queued: 36466
+2026-05-08 10:52:59,393 [INFO]   expanded: 190500  queued: 36492
+2026-05-08 10:52:59,521 [INFO]   expanded: 191000  queued: 36480
+2026-05-08 10:52:59,682 [INFO]   expanded: 191500  queued: 36415
+2026-05-08 10:52:59,834 [INFO]   expanded: 192000  queued: 36355
+2026-05-08 10:52:59,994 [INFO]   expanded: 192500  queued: 36406
+2026-05-08 10:53:00,180 [INFO]   expanded: 193000  queued: 36479
+2026-05-08 10:53:00,363 [INFO]   expanded: 193500  queued: 36516
+2026-05-08 10:53:00,531 [INFO]   expanded: 194000  queued: 36482
+2026-05-08 10:53:00,653 [INFO]   expanded: 194500  queued: 36659
+2026-05-08 10:53:00,805 [INFO]   expanded: 195000  queued: 36846
+2026-05-08 10:53:00,964 [INFO]   expanded: 195500  queued: 36912
+2026-05-08 10:53:01,146 [INFO]   expanded: 196000  queued: 37008
+2026-05-08 10:53:01,315 [INFO]   expanded: 196500  queued: 37113
+2026-05-08 10:53:01,493 [INFO]   expanded: 197000  queued: 37216
+2026-05-08 10:53:01,644 [INFO]   expanded: 197500  queued: 37292
+2026-05-08 10:53:01,794 [INFO]   expanded: 198000  queued: 37386
+2026-05-08 10:53:01,961 [INFO]   expanded: 198500  queued: 37506
+2026-05-08 10:53:02,156 [INFO]   expanded: 199000  queued: 37527
+2026-05-08 10:53:02,326 [INFO]   expanded: 199500  queued: 37587
+2026-05-08 10:53:02,495 [INFO]   expanded: 200000  queued: 37723
+2026-05-08 10:53:02,671 [INFO]   expanded: 200500  queued: 37650
+2026-05-08 10:53:02,815 [INFO]   expanded: 201000  queued: 37661
+2026-05-08 10:53:02,959 [INFO]   expanded: 201500  queued: 37668
+2026-05-08 10:53:03,088 [INFO]   expanded: 202000  queued: 37706
+2026-05-08 10:53:03,218 [INFO]   expanded: 202500  queued: 37685
+2026-05-08 10:53:03,367 [INFO]   expanded: 203000  queued: 37816
+2026-05-08 10:53:03,540 [INFO]   expanded: 203500  queued: 37757
+2026-05-08 10:53:03,695 [INFO]   expanded: 204000  queued: 37640
+2026-05-08 10:53:03,877 [INFO]   expanded: 204500  queued: 37704
+2026-05-08 10:53:04,043 [INFO]   expanded: 205000  queued: 37722
+2026-05-08 10:53:04,200 [INFO]   expanded: 205500  queued: 37792
+2026-05-08 10:53:05,511 [INFO]   expanded: 206000  queued: 37949
+2026-05-08 10:53:05,680 [INFO]   expanded: 206500  queued: 38153
+2026-05-08 10:53:05,856 [INFO]   expanded: 207000  queued: 38296
+2026-05-08 10:53:06,029 [INFO]   expanded: 207500  queued: 38353
+2026-05-08 10:53:06,200 [INFO]   expanded: 208000  queued: 38556
+2026-05-08 10:53:06,367 [INFO]   expanded: 208500  queued: 38656
+2026-05-08 10:53:06,518 [INFO]   expanded: 209000  queued: 38727
+2026-05-08 10:53:06,687 [INFO]   expanded: 209500  queued: 38687
+2026-05-08 10:53:06,858 [INFO]   expanded: 210000  queued: 38850
+2026-05-08 10:53:07,039 [INFO]   expanded: 210500  queued: 39086
+2026-05-08 10:53:07,191 [INFO]   expanded: 211000  queued: 39120
+2026-05-08 10:53:07,361 [INFO]   expanded: 211500  queued: 39220
+2026-05-08 10:53:07,522 [INFO]   expanded: 212000  queued: 39345
+2026-05-08 10:53:07,694 [INFO]   expanded: 212500  queued: 39359
+2026-05-08 10:53:07,881 [INFO]   expanded: 213000  queued: 39407
+2026-05-08 10:53:08,059 [INFO]   expanded: 213500  queued: 39443
+2026-05-08 10:53:08,222 [INFO]   expanded: 214000  queued: 39457
+2026-05-08 10:53:08,395 [INFO]   expanded: 214500  queued: 39657
+2026-05-08 10:53:08,553 [INFO]   expanded: 215000  queued: 39696
+2026-05-08 10:53:08,698 [INFO]   expanded: 215500  queued: 39741
+2026-05-08 10:53:08,830 [INFO]   expanded: 216000  queued: 39810
+2026-05-08 10:53:08,955 [INFO]   expanded: 216500  queued: 39947
+2026-05-08 10:53:09,114 [INFO]   expanded: 217000  queued: 40080
+2026-05-08 10:53:09,263 [INFO]   expanded: 217500  queued: 40220
+2026-05-08 10:53:09,446 [INFO]   expanded: 218000  queued: 40362
+2026-05-08 10:53:09,654 [INFO]   expanded: 218500  queued: 40477
+2026-05-08 10:53:09,835 [INFO]   expanded: 219000  queued: 40600
+2026-05-08 10:53:10,003 [INFO]   expanded: 219500  queued: 40694
+2026-05-08 10:53:10,205 [INFO]   expanded: 220000  queued: 40759
+2026-05-08 10:53:10,363 [INFO]   expanded: 220500  queued: 40776
+2026-05-08 10:53:10,544 [INFO]   expanded: 221000  queued: 40945
+2026-05-08 10:53:10,675 [INFO]   expanded: 221500  queued: 41001
+2026-05-08 10:53:10,812 [INFO]   expanded: 222000  queued: 41021
+2026-05-08 10:53:10,937 [INFO]   expanded: 222500  queued: 41224
+2026-05-08 10:53:11,111 [INFO]   expanded: 223000  queued: 41334
+2026-05-08 10:53:11,287 [INFO]   expanded: 223500  queued: 41396
+2026-05-08 10:53:11,446 [INFO]   expanded: 224000  queued: 41480
+2026-05-08 10:53:11,640 [INFO]   expanded: 224500  queued: 41578
+2026-05-08 10:53:11,806 [INFO]   expanded: 225000  queued: 41738
+2026-05-08 10:53:12,004 [INFO]   expanded: 225500  queued: 41950
+2026-05-08 10:53:12,174 [INFO]   expanded: 226000  queued: 41943
+2026-05-08 10:53:12,343 [INFO]   expanded: 226500  queued: 41969
+2026-05-08 10:53:12,481 [INFO]   expanded: 227000  queued: 41956
+2026-05-08 10:53:12,609 [INFO]   expanded: 227500  queued: 41825
+2026-05-08 10:53:12,774 [INFO]   expanded: 228000  queued: 41728
+2026-05-08 10:53:12,943 [INFO]   expanded: 228500  queued: 41694
+2026-05-08 10:53:13,085 [INFO]   expanded: 229000  queued: 41629
+2026-05-08 10:53:13,225 [INFO]   expanded: 229500  queued: 41651
+2026-05-08 10:53:13,378 [INFO]   expanded: 230000  queued: 41609
+2026-05-08 10:53:13,530 [INFO]   expanded: 230500  queued: 41587
+2026-05-08 10:53:13,665 [INFO]   expanded: 231000  queued: 41765
+2026-05-08 10:53:13,825 [INFO]   expanded: 231500  queued: 41902
+2026-05-08 10:53:13,998 [INFO]   expanded: 232000  queued: 41970
+2026-05-08 10:53:14,184 [INFO]   expanded: 232500  queued: 42006
+2026-05-08 10:53:14,382 [INFO]   expanded: 233000  queued: 42192
+2026-05-08 10:53:15,841 [INFO]   expanded: 233500  queued: 42316
+2026-05-08 10:53:16,015 [INFO]   expanded: 234000  queued: 42537
+2026-05-08 10:53:16,181 [INFO]   expanded: 234500  queued: 42547
+2026-05-08 10:53:16,319 [INFO]   expanded: 235000  queued: 42570
+2026-05-08 10:53:16,472 [INFO]   expanded: 235500  queued: 42629
+2026-05-08 10:53:16,635 [INFO]   expanded: 236000  queued: 42675
+2026-05-08 10:53:16,817 [INFO]   expanded: 236500  queued: 42661
+2026-05-08 10:53:17,010 [INFO]   expanded: 237000  queued: 42704
+2026-05-08 10:53:17,190 [INFO]   expanded: 237500  queued: 42789
+2026-05-08 10:53:17,365 [INFO]   expanded: 238000  queued: 42787
+2026-05-08 10:53:17,547 [INFO]   expanded: 238500  queued: 42682
+2026-05-08 10:53:17,730 [INFO]   expanded: 239000  queued: 42780
+2026-05-08 10:53:17,916 [INFO]   expanded: 239500  queued: 42770
+2026-05-08 10:53:18,069 [INFO]   expanded: 240000  queued: 42703
+2026-05-08 10:53:18,213 [INFO]   expanded: 240500  queued: 42765
+2026-05-08 10:53:18,358 [INFO]   expanded: 241000  queued: 42753
+2026-05-08 10:53:18,504 [INFO]   expanded: 241500  queued: 42583
+2026-05-08 10:53:18,650 [INFO]   expanded: 242000  queued: 42557
+2026-05-08 10:53:18,790 [INFO]   expanded: 242500  queued: 42569
+2026-05-08 10:53:18,951 [INFO]   expanded: 243000  queued: 42559
+2026-05-08 10:53:19,100 [INFO]   expanded: 243500  queued: 42599
+2026-05-08 10:53:19,238 [INFO]   expanded: 244000  queued: 42736
+2026-05-08 10:53:19,385 [INFO]   expanded: 244500  queued: 42872
+2026-05-08 10:53:19,549 [INFO]   expanded: 245000  queued: 42961
+2026-05-08 10:53:19,699 [INFO]   expanded: 245500  queued: 43094
+2026-05-08 10:53:19,872 [INFO]   expanded: 246000  queued: 43139
+2026-05-08 10:53:20,052 [INFO]   expanded: 246500  queued: 43349
+2026-05-08 10:53:20,219 [INFO]   expanded: 247000  queued: 43419
+2026-05-08 10:53:20,369 [INFO]   expanded: 247500  queued: 43418
+2026-05-08 10:53:20,501 [INFO]   expanded: 248000  queued: 43396
+2026-05-08 10:53:20,639 [INFO]   expanded: 248500  queued: 43384
+2026-05-08 10:53:20,805 [INFO]   expanded: 249000  queued: 43564
+2026-05-08 10:53:20,972 [INFO]   expanded: 249500  queued: 43650
+2026-05-08 10:53:21,141 [INFO]   expanded: 250000  queued: 43655
+2026-05-08 10:53:21,290 [INFO]   expanded: 250500  queued: 43659
+2026-05-08 10:53:21,440 [INFO]   expanded: 251000  queued: 43790
+2026-05-08 10:53:21,588 [INFO]   expanded: 251500  queued: 43768
+2026-05-08 10:53:21,720 [INFO]   expanded: 252000  queued: 43702
+2026-05-08 10:53:21,868 [INFO]   expanded: 252500  queued: 43639
+2026-05-08 10:53:22,032 [INFO]   expanded: 253000  queued: 43571
+2026-05-08 10:53:22,218 [INFO]   expanded: 253500  queued: 43605
+2026-05-08 10:53:22,391 [INFO]   expanded: 254000  queued: 43696
+2026-05-08 10:53:22,562 [INFO]   expanded: 254500  queued: 43640
+2026-05-08 10:53:22,695 [INFO]   expanded: 255000  queued: 43561
+2026-05-08 10:53:22,825 [INFO]   expanded: 255500  queued: 43540
+2026-05-08 10:53:22,991 [INFO]   expanded: 256000  queued: 43496
+2026-05-08 10:53:23,163 [INFO]   expanded: 256500  queued: 43682
+2026-05-08 10:53:23,335 [INFO]   expanded: 257000  queued: 43758
+2026-05-08 10:53:23,517 [INFO]   expanded: 257500  queued: 43861
+2026-05-08 10:53:23,700 [INFO]   expanded: 258000  queued: 43953
+2026-05-08 10:53:23,882 [INFO]   expanded: 258500  queued: 44016
+2026-05-08 10:53:24,060 [INFO]   expanded: 259000  queued: 44098
+2026-05-08 10:53:24,216 [INFO]   expanded: 259500  queued: 44202
+2026-05-08 10:53:24,378 [INFO]   expanded: 260000  queued: 44248
+2026-05-08 10:53:24,507 [INFO]   expanded: 260500  queued: 44322
+2026-05-08 10:53:24,668 [INFO]   expanded: 261000  queued: 44308
+2026-05-08 10:53:24,832 [INFO]   expanded: 261500  queued: 44454
+2026-05-08 10:53:24,990 [INFO]   expanded: 262000  queued: 44527
+2026-05-08 10:53:25,121 [INFO]   expanded: 262500  queued: 44577
+2026-05-08 10:53:25,265 [INFO]   expanded: 263000  queued: 44544
+2026-05-08 10:53:25,392 [INFO]   expanded: 263500  queued: 44681
+2026-05-08 10:53:25,534 [INFO]   expanded: 264000  queued: 44848
+2026-05-08 10:53:25,673 [INFO]   expanded: 264500  queued: 44822
+2026-05-08 10:53:27,278 [INFO]   expanded: 265000  queued: 44811
+2026-05-08 10:53:27,465 [INFO]   expanded: 265500  queued: 44815
+2026-05-08 10:53:27,605 [INFO]   expanded: 266000  queued: 44883
+2026-05-08 10:53:27,748 [INFO]   expanded: 266500  queued: 44980
+2026-05-08 10:53:27,874 [INFO]   expanded: 267000  queued: 45108
+2026-05-08 10:53:28,039 [INFO]   expanded: 267500  queued: 45111
+2026-05-08 10:53:28,185 [INFO]   expanded: 268000  queued: 45064
+2026-05-08 10:53:28,327 [INFO]   expanded: 268500  queued: 45083
+2026-05-08 10:53:28,468 [INFO]   expanded: 269000  queued: 45053
+2026-05-08 10:53:28,600 [INFO]   expanded: 269500  queued: 44884
+2026-05-08 10:53:28,755 [INFO]   expanded: 270000  queued: 44738
+2026-05-08 10:53:28,921 [INFO]   expanded: 270500  queued: 44653
+2026-05-08 10:53:29,090 [INFO]   expanded: 271000  queued: 44638
+2026-05-08 10:53:29,235 [INFO]   expanded: 271500  queued: 44549
+2026-05-08 10:53:29,381 [INFO]   expanded: 272000  queued: 44531
+2026-05-08 10:53:29,551 [INFO]   expanded: 272500  queued: 44652
+2026-05-08 10:53:29,718 [INFO]   expanded: 273000  queued: 44657
+2026-05-08 10:53:29,869 [INFO]   expanded: 273500  queued: 44700
+2026-05-08 10:53:30,018 [INFO]   expanded: 274000  queued: 44713
+2026-05-08 10:53:30,175 [INFO]   expanded: 274500  queued: 44728
+2026-05-08 10:53:30,346 [INFO]   expanded: 275000  queued: 44934
+2026-05-08 10:53:30,510 [INFO]   expanded: 275500  queued: 45039
+2026-05-08 10:53:30,673 [INFO]   expanded: 276000  queued: 45028
+2026-05-08 10:53:30,848 [INFO]   expanded: 276500  queued: 45224
+2026-05-08 10:53:30,984 [INFO]   expanded: 277000  queued: 45250
+2026-05-08 10:53:31,141 [INFO]   expanded: 277500  queued: 45248
+2026-05-08 10:53:31,279 [INFO]   expanded: 278000  queued: 45272
+2026-05-08 10:53:31,432 [INFO]   expanded: 278500  queued: 45263
+2026-05-08 10:53:31,603 [INFO]   expanded: 279000  queued: 45255
+2026-05-08 10:53:31,793 [INFO]   expanded: 279500  queued: 45272
+2026-05-08 10:53:31,968 [INFO]   expanded: 280000  queued: 45340
+2026-05-08 10:53:32,124 [INFO]   expanded: 280500  queued: 45377
+2026-05-08 10:53:32,315 [INFO]   expanded: 281000  queued: 45241
+2026-05-08 10:53:32,472 [INFO]   expanded: 281500  queued: 45309
+2026-05-08 10:53:32,657 [INFO]   expanded: 282000  queued: 45279
+2026-05-08 10:53:32,832 [INFO]   expanded: 282500  queued: 45178
+2026-05-08 10:53:33,020 [INFO]   expanded: 283000  queued: 45112
+2026-05-08 10:53:33,177 [INFO]   expanded: 283500  queued: 45094
+2026-05-08 10:53:33,325 [INFO]   expanded: 284000  queued: 45029
+2026-05-08 10:53:33,493 [INFO]   expanded: 284500  queued: 44900
+2026-05-08 10:53:33,648 [INFO]   expanded: 285000  queued: 44818
+2026-05-08 10:53:33,795 [INFO]   expanded: 285500  queued: 44775
+2026-05-08 10:53:33,963 [INFO]   expanded: 286000  queued: 44758
+2026-05-08 10:53:34,158 [INFO]   expanded: 286500  queued: 44763
+2026-05-08 10:53:34,350 [INFO]   expanded: 287000  queued: 44921
+2026-05-08 10:53:34,546 [INFO]   expanded: 287500  queued: 44982
+2026-05-08 10:53:34,706 [INFO]   expanded: 288000  queued: 44956
+2026-05-08 10:53:34,891 [INFO]   expanded: 288500  queued: 45051
+2026-05-08 10:53:35,082 [INFO]   expanded: 289000  queued: 45083
+2026-05-08 10:53:35,257 [INFO]   expanded: 289500  queued: 45123
+2026-05-08 10:53:35,411 [INFO]   expanded: 290000  queued: 45297
+2026-05-08 10:53:35,544 [INFO]   expanded: 290500  queued: 45262
+2026-05-08 10:53:35,712 [INFO]   expanded: 291000  queued: 45271
+2026-05-08 10:53:35,900 [INFO]   expanded: 291500  queued: 45128
+2026-05-08 10:53:36,087 [INFO]   expanded: 292000  queued: 45149
+2026-05-08 10:53:36,263 [INFO]   expanded: 292500  queued: 45223
+2026-05-08 10:53:36,436 [INFO]   expanded: 293000  queued: 45237
+2026-05-08 10:53:36,632 [INFO]   expanded: 293500  queued: 45257
+2026-05-08 10:53:36,829 [INFO]   expanded: 294000  queued: 45200
+2026-05-08 10:53:36,995 [INFO]   expanded: 294500  queued: 45253
+2026-05-08 10:53:37,167 [INFO]   expanded: 295000  queued: 45296
+2026-05-08 10:53:37,334 [INFO]   expanded: 295500  queued: 45192
+2026-05-08 10:53:37,499 [INFO]   expanded: 296000  queued: 45089
+2026-05-08 10:53:37,673 [INFO]   expanded: 296500  queued: 45058
+2026-05-08 10:53:37,829 [INFO]   expanded: 297000  queued: 45050
+2026-05-08 10:53:37,994 [INFO]   expanded: 297500  queued: 45086
+2026-05-08 10:53:38,169 [INFO]   expanded: 298000  queued: 44979
+2026-05-08 10:53:38,371 [INFO]   expanded: 298500  queued: 44902
+2026-05-08 10:53:38,565 [INFO]   expanded: 299000  queued: 44874
+2026-05-08 10:53:40,365 [INFO]   expanded: 299500  queued: 44761
+2026-05-08 10:53:40,523 [INFO]   expanded: 300000  queued: 44897
+2026-05-08 10:53:40,707 [INFO]   expanded: 300500  queued: 44939
+2026-05-08 10:53:40,902 [INFO]   expanded: 301000  queued: 44858
+2026-05-08 10:53:41,079 [INFO]   expanded: 301500  queued: 44981
+2026-05-08 10:53:41,261 [INFO]   expanded: 302000  queued: 45040
+2026-05-08 10:53:41,426 [INFO]   expanded: 302500  queued: 45058
+2026-05-08 10:53:41,585 [INFO]   expanded: 303000  queued: 45028
+2026-05-08 10:53:41,743 [INFO]   expanded: 303500  queued: 45042
+2026-05-08 10:53:41,967 [INFO]   expanded: 304000  queued: 45065
+2026-05-08 10:53:42,107 [INFO]   expanded: 304500  queued: 44996
+2026-05-08 10:53:42,231 [INFO]   expanded: 305000  queued: 44968
+2026-05-08 10:53:42,396 [INFO]   expanded: 305500  queued: 44965
+2026-05-08 10:53:42,567 [INFO]   expanded: 306000  queued: 44993
+2026-05-08 10:53:42,751 [INFO]   expanded: 306500  queued: 44949
+2026-05-08 10:53:42,925 [INFO]   expanded: 307000  queued: 44894
+2026-05-08 10:53:43,110 [INFO]   expanded: 307500  queued: 44765
+2026-05-08 10:53:43,315 [INFO]   expanded: 308000  queued: 44811
+2026-05-08 10:53:43,510 [INFO]   expanded: 308500  queued: 44978
+2026-05-08 10:53:43,691 [INFO]   expanded: 309000  queued: 45113
+2026-05-08 10:53:43,857 [INFO]   expanded: 309500  queued: 45009
+2026-05-08 10:53:44,017 [INFO]   expanded: 310000  queued: 44941
+2026-05-08 10:53:44,186 [INFO]   expanded: 310500  queued: 44845
+2026-05-08 10:53:44,329 [INFO]   expanded: 311000  queued: 44861
+2026-05-08 10:53:44,498 [INFO]   expanded: 311500  queued: 44918
+2026-05-08 10:53:44,673 [INFO]   expanded: 312000  queued: 44986
+2026-05-08 10:53:44,861 [INFO]   expanded: 312500  queued: 44966
+2026-05-08 10:53:45,060 [INFO]   expanded: 313000  queued: 44889
+2026-05-08 10:53:45,238 [INFO]   expanded: 313500  queued: 44845
+2026-05-08 10:53:45,421 [INFO]   expanded: 314000  queued: 44858
+2026-05-08 10:53:45,609 [INFO]   expanded: 314500  queued: 44660
+2026-05-08 10:53:45,759 [INFO]   expanded: 315000  queued: 44524
+2026-05-08 10:53:45,923 [INFO]   expanded: 315500  queued: 44471
+2026-05-08 10:53:46,113 [INFO]   expanded: 316000  queued: 44282
+2026-05-08 10:53:46,285 [INFO]   expanded: 316500  queued: 44195
+2026-05-08 10:53:46,471 [INFO]   expanded: 317000  queued: 44208
+2026-05-08 10:53:46,659 [INFO]   expanded: 317500  queued: 44151
+2026-05-08 10:53:46,817 [INFO]   expanded: 318000  queued: 44129
+2026-05-08 10:53:46,962 [INFO]   expanded: 318500  queued: 44054
+2026-05-08 10:53:47,093 [INFO]   expanded: 319000  queued: 43995
+2026-05-08 10:53:47,228 [INFO]   expanded: 319500  queued: 44081
+2026-05-08 10:53:47,356 [INFO]   expanded: 320000  queued: 44200
+2026-05-08 10:53:47,507 [INFO]   expanded: 320500  queued: 44200
+2026-05-08 10:53:47,655 [INFO]   expanded: 321000  queued: 44169
+2026-05-08 10:53:47,810 [INFO]   expanded: 321500  queued: 44277
+2026-05-08 10:53:47,984 [INFO]   expanded: 322000  queued: 44365
+2026-05-08 10:53:48,137 [INFO]   expanded: 322500  queued: 44330
+2026-05-08 10:53:48,267 [INFO]   expanded: 323000  queued: 44353
+2026-05-08 10:53:48,397 [INFO]   expanded: 323500  queued: 44309
+2026-05-08 10:53:48,524 [INFO]   expanded: 324000  queued: 44293
+2026-05-08 10:53:48,674 [INFO]   expanded: 324500  queued: 44293
+2026-05-08 10:53:48,838 [INFO]   expanded: 325000  queued: 44281
+2026-05-08 10:53:49,006 [INFO]   expanded: 325500  queued: 44215
+2026-05-08 10:53:49,176 [INFO]   expanded: 326000  queued: 44205
+2026-05-08 10:53:49,385 [INFO]   expanded: 326500  queued: 44050
+2026-05-08 10:53:49,548 [INFO]   expanded: 327000  queued: 44140
+2026-05-08 10:53:49,694 [INFO]   expanded: 327500  queued: 44014
+2026-05-08 10:53:49,849 [INFO]   expanded: 328000  queued: 43837
+2026-05-08 10:53:50,045 [INFO]   expanded: 328500  queued: 43826
+2026-05-08 10:53:50,241 [INFO]   expanded: 329000  queued: 43784
+2026-05-08 10:53:50,397 [INFO]   expanded: 329500  queued: 43638
+2026-05-08 10:53:50,580 [INFO]   expanded: 330000  queued: 43519
+2026-05-08 10:53:50,754 [INFO]   expanded: 330500  queued: 43410
+2026-05-08 10:53:50,915 [INFO]   expanded: 331000  queued: 43363
+2026-05-08 10:53:51,063 [INFO]   expanded: 331500  queued: 43343
+2026-05-08 10:53:51,218 [INFO]   expanded: 332000  queued: 43378
+2026-05-08 10:53:51,354 [INFO]   expanded: 332500  queued: 43326
+2026-05-08 10:53:51,487 [INFO]   expanded: 333000  queued: 43239
+2026-05-08 10:53:51,648 [INFO]   expanded: 333500  queued: 43234
+2026-05-08 10:53:51,804 [INFO]   expanded: 334000  queued: 43254
+2026-05-08 10:53:51,964 [INFO]   expanded: 334500  queued: 43198
+2026-05-08 10:53:52,124 [INFO]   expanded: 335000  queued: 43316
+2026-05-08 10:53:52,261 [INFO]   expanded: 335500  queued: 43297
+2026-05-08 10:53:52,491 [INFO]   expanded: 336000  queued: 43202
+2026-05-08 10:53:52,684 [INFO]   expanded: 336500  queued: 43096
+2026-05-08 10:53:52,830 [INFO]   expanded: 337000  queued: 42997
+2026-05-08 10:53:52,988 [INFO]   expanded: 337500  queued: 42952
+2026-05-08 10:53:53,147 [INFO]   expanded: 338000  queued: 42935
+2026-05-08 10:53:55,129 [INFO]   expanded: 338500  queued: 42843
+2026-05-08 10:53:55,296 [INFO]   expanded: 339000  queued: 42802
+2026-05-08 10:53:55,438 [INFO]   expanded: 339500  queued: 42735
+2026-05-08 10:53:55,580 [INFO]   expanded: 340000  queued: 42775
+2026-05-08 10:53:55,734 [INFO]   expanded: 340500  queued: 42700
+2026-05-08 10:53:55,876 [INFO]   expanded: 341000  queued: 42540
+2026-05-08 10:53:56,019 [INFO]   expanded: 341500  queued: 42402
+2026-05-08 10:53:56,188 [INFO]   expanded: 342000  queued: 42332
+2026-05-08 10:53:56,366 [INFO]   expanded: 342500  queued: 42289
+2026-05-08 10:53:56,511 [INFO]   expanded: 343000  queued: 42104
+2026-05-08 10:53:56,648 [INFO]   expanded: 343500  queued: 41978
+2026-05-08 10:53:56,823 [INFO]   expanded: 344000  queued: 41835
+2026-05-08 10:53:57,009 [INFO]   expanded: 344500  queued: 41780
+2026-05-08 10:53:57,179 [INFO]   expanded: 345000  queued: 41864
+2026-05-08 10:53:57,325 [INFO]   expanded: 345500  queued: 41847
+2026-05-08 10:53:57,505 [INFO]   expanded: 346000  queued: 41727
+2026-05-08 10:53:57,691 [INFO]   expanded: 346500  queued: 41773
+2026-05-08 10:53:57,893 [INFO]   expanded: 347000  queued: 41810
+2026-05-08 10:53:58,065 [INFO]   expanded: 347500  queued: 41774
+2026-05-08 10:53:58,223 [INFO]   expanded: 348000  queued: 41664
+2026-05-08 10:53:58,388 [INFO]   expanded: 348500  queued: 41607
+2026-05-08 10:53:58,585 [INFO]   expanded: 349000  queued: 41528
+2026-05-08 10:53:58,772 [INFO]   expanded: 349500  queued: 41427
+2026-05-08 10:53:58,987 [INFO]   expanded: 350000  queued: 41364
+2026-05-08 10:53:59,173 [INFO]   expanded: 350500  queued: 41353
+2026-05-08 10:53:59,363 [INFO]   expanded: 351000  queued: 41280
+2026-05-08 10:53:59,530 [INFO]   expanded: 351500  queued: 41181
+2026-05-08 10:53:59,709 [INFO]   expanded: 352000  queued: 41068
+2026-05-08 10:53:59,855 [INFO]   expanded: 352500  queued: 40982
+2026-05-08 10:54:00,030 [INFO]   expanded: 353000  queued: 41043
+2026-05-08 10:54:00,171 [INFO]   expanded: 353500  queued: 41062
+2026-05-08 10:54:00,315 [INFO]   expanded: 354000  queued: 41115
+2026-05-08 10:54:00,481 [INFO]   expanded: 354500  queued: 40961
+2026-05-08 10:54:00,658 [INFO]   expanded: 355000  queued: 40803
+2026-05-08 10:54:00,814 [INFO]   expanded: 355500  queued: 40708
+2026-05-08 10:54:00,982 [INFO]   expanded: 356000  queued: 40641
+2026-05-08 10:54:01,154 [INFO]   expanded: 356500  queued: 40667
+2026-05-08 10:54:01,313 [INFO]   expanded: 357000  queued: 40671
+2026-05-08 10:54:01,503 [INFO]   expanded: 357500  queued: 40564
+2026-05-08 10:54:01,678 [INFO]   expanded: 358000  queued: 40435
+2026-05-08 10:54:01,825 [INFO]   expanded: 358500  queued: 40341
+2026-05-08 10:54:01,965 [INFO]   expanded: 359000  queued: 40207
+2026-05-08 10:54:02,112 [INFO]   expanded: 359500  queued: 40016
+2026-05-08 10:54:02,246 [INFO]   expanded: 360000  queued: 39895
+2026-05-08 10:54:02,368 [INFO]   expanded: 360500  queued: 39707
+2026-05-08 10:54:02,508 [INFO]   expanded: 361000  queued: 39589
+2026-05-08 10:54:02,675 [INFO]   expanded: 361500  queued: 39532
+2026-05-08 10:54:02,814 [INFO]   expanded: 362000  queued: 39389
+2026-05-08 10:54:02,963 [INFO]   expanded: 362500  queued: 39265
+2026-05-08 10:54:03,116 [INFO]   expanded: 363000  queued: 39140
+2026-05-08 10:54:03,278 [INFO]   expanded: 363500  queued: 39179
+2026-05-08 10:54:03,427 [INFO]   expanded: 364000  queued: 39284
+2026-05-08 10:54:03,585 [INFO]   expanded: 364500  queued: 39194
+2026-05-08 10:54:03,754 [INFO]   expanded: 365000  queued: 39058
+2026-05-08 10:54:03,914 [INFO]   expanded: 365500  queued: 39018
+2026-05-08 10:54:04,074 [INFO]   expanded: 366000  queued: 39101
+2026-05-08 10:54:04,228 [INFO]   expanded: 366500  queued: 39073
+2026-05-08 10:54:04,369 [INFO]   expanded: 367000  queued: 39074
+2026-05-08 10:54:04,509 [INFO]   expanded: 367500  queued: 39068
+2026-05-08 10:54:04,655 [INFO]   expanded: 368000  queued: 39006
+2026-05-08 10:54:04,837 [INFO]   expanded: 368500  queued: 38935
+2026-05-08 10:54:04,997 [INFO]   expanded: 369000  queued: 38881
+2026-05-08 10:54:05,147 [INFO]   expanded: 369500  queued: 38828
+2026-05-08 10:54:05,288 [INFO]   expanded: 370000  queued: 38742
+2026-05-08 10:54:05,417 [INFO]   expanded: 370500  queued: 38574
+2026-05-08 10:54:05,546 [INFO]   expanded: 371000  queued: 38605
+2026-05-08 10:54:05,709 [INFO]   expanded: 371500  queued: 38438
+2026-05-08 10:54:05,887 [INFO]   expanded: 372000  queued: 38297
+2026-05-08 10:54:06,052 [INFO]   expanded: 372500  queued: 38221
+2026-05-08 10:54:06,215 [INFO]   expanded: 373000  queued: 38056
+2026-05-08 10:54:06,414 [INFO]   expanded: 373500  queued: 37877
+2026-05-08 10:54:06,578 [INFO]   expanded: 374000  queued: 37755
+2026-05-08 10:54:06,749 [INFO]   expanded: 374500  queued: 37597
+2026-05-08 10:54:06,907 [INFO]   expanded: 375000  queued: 37534
+2026-05-08 10:54:07,057 [INFO]   expanded: 375500  queued: 37507
+2026-05-08 10:54:07,195 [INFO]   expanded: 376000  queued: 37392
+2026-05-08 10:54:07,342 [INFO]   expanded: 376500  queued: 37235
+2026-05-08 10:54:07,505 [INFO]   expanded: 377000  queued: 37160
+2026-05-08 10:54:07,688 [INFO]   expanded: 377500  queued: 37072
+2026-05-08 10:54:07,856 [INFO]   expanded: 378000  queued: 37136
+2026-05-08 10:54:08,036 [INFO]   expanded: 378500  queued: 37071
+2026-05-08 10:54:08,183 [INFO]   expanded: 379000  queued: 36957
+2026-05-08 10:54:08,322 [INFO]   expanded: 379500  queued: 36856
+2026-05-08 10:54:08,463 [INFO]   expanded: 380000  queued: 36680
+2026-05-08 10:54:08,606 [INFO]   expanded: 380500  queued: 36544
+2026-05-08 10:54:08,736 [INFO]   expanded: 381000  queued: 36440
+2026-05-08 10:54:08,888 [INFO]   expanded: 381500  queued: 36326
+2026-05-08 10:54:09,030 [INFO]   expanded: 382000  queued: 36196
+2026-05-08 10:54:11,263 [INFO]   expanded: 382500  queued: 36221
+2026-05-08 10:54:11,443 [INFO]   expanded: 383000  queued: 36176
+2026-05-08 10:54:11,606 [INFO]   expanded: 383500  queued: 35931
+2026-05-08 10:54:11,763 [INFO]   expanded: 384000  queued: 35767
+2026-05-08 10:54:11,950 [INFO]   expanded: 384500  queued: 35687
+2026-05-08 10:54:12,119 [INFO]   expanded: 385000  queued: 35495
+2026-05-08 10:54:12,268 [INFO]   expanded: 385500  queued: 35344
+2026-05-08 10:54:12,398 [INFO]   expanded: 386000  queued: 35151
+2026-05-08 10:54:12,528 [INFO]   expanded: 386500  queued: 35164
+2026-05-08 10:54:12,654 [INFO]   expanded: 387000  queued: 35098
+2026-05-08 10:54:12,796 [INFO]   expanded: 387500  queued: 35012
+2026-05-08 10:54:12,971 [INFO]   expanded: 388000  queued: 34965
+2026-05-08 10:54:13,162 [INFO]   expanded: 388500  queued: 34884
+2026-05-08 10:54:13,322 [INFO]   expanded: 389000  queued: 34880
+2026-05-08 10:54:13,501 [INFO]   expanded: 389500  queued: 34754
+2026-05-08 10:54:13,632 [INFO]   expanded: 390000  queued: 34628
+2026-05-08 10:54:13,761 [INFO]   expanded: 390500  queued: 34479
+2026-05-08 10:54:13,901 [INFO]   expanded: 391000  queued: 34332
+2026-05-08 10:54:14,038 [INFO]   expanded: 391500  queued: 34220
+2026-05-08 10:54:14,186 [INFO]   expanded: 392000  queued: 34139
+2026-05-08 10:54:14,339 [INFO]   expanded: 392500  queued: 33941
+2026-05-08 10:54:14,474 [INFO]   expanded: 393000  queued: 33803
+2026-05-08 10:54:14,612 [INFO]   expanded: 393500  queued: 33667
+2026-05-08 10:54:14,736 [INFO]   expanded: 394000  queued: 33648
+2026-05-08 10:54:14,896 [INFO]   expanded: 394500  queued: 33599
+2026-05-08 10:54:15,080 [INFO]   expanded: 395000  queued: 33586
+2026-05-08 10:54:15,222 [INFO]   expanded: 395500  queued: 33455
+2026-05-08 10:54:15,381 [INFO]   expanded: 396000  queued: 33228
+2026-05-08 10:54:15,563 [INFO]   expanded: 396500  queued: 33163
+2026-05-08 10:54:15,759 [INFO]   expanded: 397000  queued: 33099
+2026-05-08 10:54:15,948 [INFO]   expanded: 397500  queued: 33054
+2026-05-08 10:54:16,099 [INFO]   expanded: 398000  queued: 33019
+2026-05-08 10:54:16,291 [INFO]   expanded: 398500  queued: 32827
+2026-05-08 10:54:16,424 [INFO]   expanded: 399000  queued: 32702
+2026-05-08 10:54:16,585 [INFO]   expanded: 399500  queued: 32460
+2026-05-08 10:54:16,761 [INFO]   expanded: 400000  queued: 32285
+2026-05-08 10:54:16,907 [INFO]   expanded: 400500  queued: 32040
+2026-05-08 10:54:17,071 [INFO]   expanded: 401000  queued: 31910
+2026-05-08 10:54:17,237 [INFO]   expanded: 401500  queued: 31708
+2026-05-08 10:54:17,388 [INFO]   expanded: 402000  queued: 31520
+2026-05-08 10:54:17,575 [INFO]   expanded: 402500  queued: 31437
+2026-05-08 10:54:17,747 [INFO]   expanded: 403000  queued: 31454
+2026-05-08 10:54:17,910 [INFO]   expanded: 403500  queued: 31338
+2026-05-08 10:54:18,074 [INFO]   expanded: 404000  queued: 31184
+2026-05-08 10:54:18,230 [INFO]   expanded: 404500  queued: 31080
+2026-05-08 10:54:18,376 [INFO]   expanded: 405000  queued: 31114
+2026-05-08 10:54:18,505 [INFO]   expanded: 405500  queued: 31020
+2026-05-08 10:54:18,656 [INFO]   expanded: 406000  queued: 30958
+2026-05-08 10:54:18,809 [INFO]   expanded: 406500  queued: 30882
+2026-05-08 10:54:18,974 [INFO]   expanded: 407000  queued: 30757
+2026-05-08 10:54:19,120 [INFO]   expanded: 407500  queued: 30589
+2026-05-08 10:54:19,270 [INFO]   expanded: 408000  queued: 30482
+2026-05-08 10:54:19,431 [INFO]   expanded: 408500  queued: 30376
+2026-05-08 10:54:19,575 [INFO]   expanded: 409000  queued: 30228
+2026-05-08 10:54:19,719 [INFO]   expanded: 409500  queued: 30135
+2026-05-08 10:54:19,881 [INFO]   expanded: 410000  queued: 29913
+2026-05-08 10:54:20,047 [INFO]   expanded: 410500  queued: 29857
+2026-05-08 10:54:20,182 [INFO]   expanded: 411000  queued: 29700
+2026-05-08 10:54:20,322 [INFO]   expanded: 411500  queued: 29465
+2026-05-08 10:54:20,445 [INFO]   expanded: 412000  queued: 29263
+2026-05-08 10:54:20,582 [INFO]   expanded: 412500  queued: 29130
+2026-05-08 10:54:20,728 [INFO]   expanded: 413000  queued: 29002
+2026-05-08 10:54:20,872 [INFO]   expanded: 413500  queued: 28821
+2026-05-08 10:54:21,006 [INFO]   expanded: 414000  queued: 28681
+2026-05-08 10:54:21,143 [INFO]   expanded: 414500  queued: 28541
+2026-05-08 10:54:21,275 [INFO]   expanded: 415000  queued: 28516
+2026-05-08 10:54:21,447 [INFO]   expanded: 415500  queued: 28414
+2026-05-08 10:54:21,630 [INFO]   expanded: 416000  queued: 28250
+2026-05-08 10:54:21,807 [INFO]   expanded: 416500  queued: 28065
+2026-05-08 10:54:21,984 [INFO]   expanded: 417000  queued: 27863
+2026-05-08 10:54:22,167 [INFO]   expanded: 417500  queued: 27674
+2026-05-08 10:54:22,350 [INFO]   expanded: 418000  queued: 27519
+2026-05-08 10:54:22,517 [INFO]   expanded: 418500  queued: 27371
+2026-05-08 10:54:22,711 [INFO]   expanded: 419000  queued: 27321
+2026-05-08 10:54:22,871 [INFO]   expanded: 419500  queued: 27125
+2026-05-08 10:54:23,046 [INFO]   expanded: 420000  queued: 26911
+2026-05-08 10:54:23,235 [INFO]   expanded: 420500  queued: 26717
+2026-05-08 10:54:23,395 [INFO]   expanded: 421000  queued: 26479
+2026-05-08 10:54:23,565 [INFO]   expanded: 421500  queued: 26396
+2026-05-08 10:54:23,724 [INFO]   expanded: 422000  queued: 26336
+2026-05-08 10:54:23,893 [INFO]   expanded: 422500  queued: 26178
+2026-05-08 10:54:24,054 [INFO]   expanded: 423000  queued: 26058
+2026-05-08 10:54:24,245 [INFO]   expanded: 423500  queued: 25929
+2026-05-08 10:54:24,398 [INFO]   expanded: 424000  queued: 25856
+2026-05-08 10:54:24,589 [INFO]   expanded: 424500  queued: 25648
+2026-05-08 10:54:24,768 [INFO]   expanded: 425000  queued: 25466
+2026-05-08 10:54:24,958 [INFO]   expanded: 425500  queued: 25276
+2026-05-08 10:54:25,140 [INFO]   expanded: 426000  queued: 25154
+2026-05-08 10:54:25,317 [INFO]   expanded: 426500  queued: 24943
+2026-05-08 10:54:25,500 [INFO]   expanded: 427000  queued: 24758
+2026-05-08 10:54:25,661 [INFO]   expanded: 427500  queued: 24640
+2026-05-08 10:54:25,833 [INFO]   expanded: 428000  queued: 24557
+2026-05-08 10:54:26,031 [INFO]   expanded: 428500  queued: 24475
+2026-05-08 10:54:26,210 [INFO]   expanded: 429000  queued: 24303
+2026-05-08 10:54:26,392 [INFO]   expanded: 429500  queued: 24145
+2026-05-08 10:54:26,553 [INFO]   expanded: 430000  queued: 24030
+2026-05-08 10:54:26,745 [INFO]   expanded: 430500  queued: 23916
+2026-05-08 10:54:26,909 [INFO]   expanded: 431000  queued: 23878
+2026-05-08 10:54:27,036 [INFO]   expanded: 431500  queued: 23655
+2026-05-08 10:54:29,538 [INFO]   expanded: 432000  queued: 23404
+2026-05-08 10:54:29,718 [INFO]   expanded: 432500  queued: 23168
+2026-05-08 10:54:29,863 [INFO]   expanded: 433000  queued: 22966
+2026-05-08 10:54:29,997 [INFO]   expanded: 433500  queued: 22721
+2026-05-08 10:54:30,151 [INFO]   expanded: 434000  queued: 22600
+2026-05-08 10:54:30,326 [INFO]   expanded: 434500  queued: 22500
+2026-05-08 10:54:30,487 [INFO]   expanded: 435000  queued: 22307
+2026-05-08 10:54:30,661 [INFO]   expanded: 435500  queued: 22141
+2026-05-08 10:54:30,828 [INFO]   expanded: 436000  queued: 22054
+2026-05-08 10:54:31,007 [INFO]   expanded: 436500  queued: 21910
+2026-05-08 10:54:31,195 [INFO]   expanded: 437000  queued: 21812
+2026-05-08 10:54:31,375 [INFO]   expanded: 437500  queued: 21654
+2026-05-08 10:54:31,552 [INFO]   expanded: 438000  queued: 21468
+2026-05-08 10:54:31,738 [INFO]   expanded: 438500  queued: 21356
+2026-05-08 10:54:31,926 [INFO]   expanded: 439000  queued: 21219
+2026-05-08 10:54:32,111 [INFO]   expanded: 439500  queued: 21024
+2026-05-08 10:54:32,294 [INFO]   expanded: 440000  queued: 20814
+2026-05-08 10:54:32,471 [INFO]   expanded: 440500  queued: 20701
+2026-05-08 10:54:32,650 [INFO]   expanded: 441000  queued: 20430
+2026-05-08 10:54:32,861 [INFO]   expanded: 441500  queued: 20210
+2026-05-08 10:54:33,047 [INFO]   expanded: 442000  queued: 20023
+2026-05-08 10:54:33,181 [INFO]   expanded: 442500  queued: 19802
+2026-05-08 10:54:33,315 [INFO]   expanded: 443000  queued: 19635
+2026-05-08 10:54:33,495 [INFO]   expanded: 443500  queued: 19539
+2026-05-08 10:54:33,649 [INFO]   expanded: 444000  queued: 19332
+2026-05-08 10:54:33,785 [INFO]   expanded: 444500  queued: 19179
+2026-05-08 10:54:33,920 [INFO]   expanded: 445000  queued: 18926
+2026-05-08 10:54:34,091 [INFO]   expanded: 445500  queued: 18726
+2026-05-08 10:54:34,251 [INFO]   expanded: 446000  queued: 18595
+2026-05-08 10:54:34,390 [INFO]   expanded: 446500  queued: 18452
+2026-05-08 10:54:34,569 [INFO]   expanded: 447000  queued: 18214
+2026-05-08 10:54:34,758 [INFO]   expanded: 447500  queued: 17966
+2026-05-08 10:54:34,898 [INFO]   expanded: 448000  queued: 17868
+2026-05-08 10:54:35,063 [INFO]   expanded: 448500  queued: 17718
+2026-05-08 10:54:35,235 [INFO]   expanded: 449000  queued: 17534
+2026-05-08 10:54:35,408 [INFO]   expanded: 449500  queued: 17379
+2026-05-08 10:54:35,587 [INFO]   expanded: 450000  queued: 17245
+2026-05-08 10:54:35,770 [INFO]   expanded: 450500  queued: 16991
+2026-05-08 10:54:35,963 [INFO]   expanded: 451000  queued: 16776
+2026-05-08 10:54:36,152 [INFO]   expanded: 451500  queued: 16542
+2026-05-08 10:54:36,316 [INFO]   expanded: 452000  queued: 16348
+2026-05-08 10:54:36,495 [INFO]   expanded: 452500  queued: 16212
+2026-05-08 10:54:36,687 [INFO]   expanded: 453000  queued: 16153
+2026-05-08 10:54:36,851 [INFO]   expanded: 453500  queued: 15989
+2026-05-08 10:54:37,016 [INFO]   expanded: 454000  queued: 15842
+2026-05-08 10:54:37,207 [INFO]   expanded: 454500  queued: 15740
+2026-05-08 10:54:37,400 [INFO]   expanded: 455000  queued: 15595
+2026-05-08 10:54:37,583 [INFO]   expanded: 455500  queued: 15336
+2026-05-08 10:54:37,753 [INFO]   expanded: 456000  queued: 15046
+2026-05-08 10:54:37,898 [INFO]   expanded: 456500  queued: 14800
+2026-05-08 10:54:38,073 [INFO]   expanded: 457000  queued: 14654
+2026-05-08 10:54:38,269 [INFO]   expanded: 457500  queued: 14441
+2026-05-08 10:54:38,448 [INFO]   expanded: 458000  queued: 14261
+2026-05-08 10:54:38,631 [INFO]   expanded: 458500  queued: 14080
+2026-05-08 10:54:38,777 [INFO]   expanded: 459000  queued: 13936
+2026-05-08 10:54:38,911 [INFO]   expanded: 459500  queued: 13714
+2026-05-08 10:54:39,048 [INFO]   expanded: 460000  queued: 13566
+2026-05-08 10:54:39,218 [INFO]   expanded: 460500  queued: 13358
+2026-05-08 10:54:39,390 [INFO]   expanded: 461000  queued: 13168
+2026-05-08 10:54:39,571 [INFO]   expanded: 461500  queued: 12900
+2026-05-08 10:54:39,732 [INFO]   expanded: 462000  queued: 12645
+2026-05-08 10:54:39,910 [INFO]   expanded: 462500  queued: 12405
+2026-05-08 10:54:40,090 [INFO]   expanded: 463000  queued: 12262
+2026-05-08 10:54:40,258 [INFO]   expanded: 463500  queued: 12022
+2026-05-08 10:54:40,424 [INFO]   expanded: 464000  queued: 11762
+2026-05-08 10:54:40,556 [INFO]   expanded: 464500  queued: 11549
+2026-05-08 10:54:40,718 [INFO]   expanded: 465000  queued: 11368
+2026-05-08 10:54:40,942 [INFO]   expanded: 465500  queued: 11105
+2026-05-08 10:54:41,090 [INFO]   expanded: 466000  queued: 10970
+2026-05-08 10:54:41,245 [INFO]   expanded: 466500  queued: 10749
+2026-05-08 10:54:41,407 [INFO]   expanded: 467000  queued: 10562
+2026-05-08 10:54:41,581 [INFO]   expanded: 467500  queued: 10323
+2026-05-08 10:54:41,739 [INFO]   expanded: 468000  queued: 10058
+2026-05-08 10:54:41,889 [INFO]   expanded: 468500  queued: 9839
+2026-05-08 10:54:42,042 [INFO]   expanded: 469000  queued: 9716
+2026-05-08 10:54:42,203 [INFO]   expanded: 469500  queued: 9523
+2026-05-08 10:54:42,386 [INFO]   expanded: 470000  queued: 9362
+2026-05-08 10:54:42,564 [INFO]   expanded: 470500  queued: 9202
+2026-05-08 10:54:42,747 [INFO]   expanded: 471000  queued: 8904
+2026-05-08 10:54:42,894 [INFO]   expanded: 471500  queued: 8653
+2026-05-08 10:54:43,065 [INFO]   expanded: 472000  queued: 8426
+2026-05-08 10:54:43,238 [INFO]   expanded: 472500  queued: 8192
+2026-05-08 10:54:43,418 [INFO]   expanded: 473000  queued: 7961
+2026-05-08 10:54:43,583 [INFO]   expanded: 473500  queued: 7718
+2026-05-08 10:54:43,750 [INFO]   expanded: 474000  queued: 7460
+2026-05-08 10:54:43,917 [INFO]   expanded: 474500  queued: 7228
+2026-05-08 10:54:44,082 [INFO]   expanded: 475000  queued: 6949
+2026-05-08 10:54:44,241 [INFO]   expanded: 475500  queued: 6701
+2026-05-08 10:54:44,421 [INFO]   expanded: 476000  queued: 6422
+2026-05-08 10:54:44,586 [INFO]   expanded: 476500  queued: 6166
+2026-05-08 10:54:44,740 [INFO]   expanded: 477000  queued: 5963
+2026-05-08 10:54:44,878 [INFO]   expanded: 477500  queued: 5700
+2026-05-08 10:54:45,017 [INFO]   expanded: 478000  queued: 5432
+2026-05-08 10:54:45,160 [INFO]   expanded: 478500  queued: 5195
+2026-05-08 10:54:45,324 [INFO]   expanded: 479000  queued: 5010
+2026-05-08 10:54:45,474 [INFO]   expanded: 479500  queued: 4817
+2026-05-08 10:54:45,619 [INFO]   expanded: 480000  queued: 4538
+2026-05-08 10:54:45,758 [INFO]   expanded: 480500  queued: 4270
+2026-05-08 10:54:45,903 [INFO]   expanded: 481000  queued: 4001
+2026-05-08 10:54:46,037 [INFO]   expanded: 481500  queued: 3719
+2026-05-08 10:54:46,157 [INFO]   expanded: 482000  queued: 3439
+2026-05-08 10:54:46,312 [INFO]   expanded: 482500  queued: 3149
+2026-05-08 10:54:46,462 [INFO]   expanded: 483000  queued: 2880
+2026-05-08 10:54:46,621 [INFO]   expanded: 483500  queued: 2578
+2026-05-08 10:54:46,779 [INFO]   expanded: 484000  queued: 2352
+2026-05-08 10:54:46,948 [INFO]   expanded: 484500  queued: 2096
+2026-05-08 10:54:47,120 [INFO]   expanded: 485000  queued: 1780
+2026-05-08 10:54:47,266 [INFO]   expanded: 485500  queued: 1465
+2026-05-08 10:54:47,412 [INFO]   expanded: 486000  queued: 1155
+2026-05-08 10:54:47,579 [INFO]   expanded: 486500  queued: 862
+2026-05-08 10:54:47,715 [INFO]   expanded: 487000  queued: 530
+2026-05-08 10:54:50,456 [INFO]   expanded: 487500  queued: 192
+2026-05-08 10:54:50,602 [INFO] Done — 487768 states
+2026-05-08 10:54:50,629 [INFO] MPI: 487768 states, k=10, gamma=0.950
+2026-05-08 10:55:34,962 [INFO]   iteration 1 — 938 changes
+2026-05-08 10:56:18,500 [INFO]   iteration 2 — 2431 changes
+2026-05-08 10:57:01,943 [INFO]   iteration 3 — 4082 changes
+2026-05-08 10:57:45,320 [INFO]   iteration 4 — 6892 changes
+2026-05-08 10:58:28,882 [INFO]   iteration 5 — 10664 changes
+2026-05-08 10:59:12,323 [INFO]   iteration 6 — 14585 changes
+2026-05-08 10:59:55,677 [INFO]   iteration 7 — 17944 changes
+2026-05-08 11:00:39,555 [INFO]   iteration 8 — 21168 changes
+2026-05-08 11:01:23,238 [INFO]   iteration 9 — 23604 changes
+2026-05-08 11:02:06,963 [INFO]   iteration 10 — 26031 changes
+2026-05-08 11:02:50,704 [INFO]   iteration 11 — 27149 changes
+2026-05-08 11:03:28,759 [INFO]   iteration 12 — 27242 changes
+2026-05-08 11:04:12,768 [INFO]   iteration 13 — 25660 changes
+2026-05-08 11:04:56,728 [INFO]   iteration 14 — 23204 changes
+2026-05-08 11:05:40,844 [INFO]   iteration 15 — 19868 changes
+2026-05-08 11:06:25,040 [INFO]   iteration 16 — 16504 changes
+2026-05-08 11:07:09,079 [INFO]   iteration 17 — 13332 changes
+2026-05-08 11:07:53,291 [INFO]   iteration 18 — 10912 changes
+2026-05-08 11:08:37,302 [INFO]   iteration 19 — 8589 changes
+2026-05-08 11:09:21,678 [INFO]   iteration 20 — 6875 changes
+2026-05-08 11:10:05,990 [INFO]   iteration 21 — 6117 changes
+2026-05-08 11:10:51,141 [INFO]   iteration 22 — 5386 changes
+2026-05-08 11:11:36,133 [INFO]   iteration 23 — 4876 changes
+2026-05-08 11:12:21,217 [INFO]   iteration 24 — 4814 changes
+2026-05-08 11:13:05,036 [INFO]   iteration 25 — 4437 changes
+2026-05-08 11:13:48,277 [INFO]   iteration 26 — 4469 changes
+2026-05-08 11:14:31,229 [INFO]   iteration 27 — 4382 changes
+2026-05-08 11:15:17,352 [INFO]   iteration 28 — 4392 changes
+2026-05-08 11:16:02,369 [INFO]   iteration 29 — 4300 changes
+2026-05-08 11:16:47,335 [INFO]   iteration 30 — 4470 changes
+2026-05-08 11:17:31,267 [INFO]   iteration 31 — 4787 changes
+2026-05-08 11:18:16,148 [INFO]   iteration 32 — 4652 changes
+2026-05-08 11:19:01,176 [INFO]   iteration 33 — 4587 changes
+2026-05-08 11:19:45,390 [INFO]   iteration 34 — 4740 changes
+2026-05-08 11:20:29,789 [INFO]   iteration 35 — 4629 changes
+2026-05-08 11:21:13,025 [INFO]   iteration 36 — 4748 changes
+2026-05-08 11:21:57,190 [INFO]   iteration 37 — 4862 changes
+2026-05-08 11:22:41,979 [INFO]   iteration 38 — 4796 changes
+2026-05-08 11:23:27,313 [INFO]   iteration 39 — 4798 changes
+2026-05-08 11:24:12,939 [INFO]   iteration 40 — 4798 changes
+2026-05-08 11:24:58,616 [INFO]   iteration 41 — 4547 changes
+2026-05-08 11:25:44,176 [INFO]   iteration 42 — 4672 changes
+2026-05-08 11:26:29,539 [INFO]   iteration 43 — 4784 changes
+2026-05-08 11:27:14,992 [INFO]   iteration 44 — 4941 changes
+2026-05-08 11:28:00,376 [INFO]   iteration 45 — 5304 changes
+2026-05-08 11:28:45,797 [INFO]   iteration 46 — 5524 changes
+2026-05-08 11:29:31,118 [INFO]   iteration 47 — 5526 changes
+2026-05-08 11:30:16,806 [INFO]   iteration 48 — 5938 changes
+2026-05-08 11:31:01,688 [INFO]   iteration 49 — 6341 changes
+2026-05-08 11:31:46,627 [INFO]   iteration 50 — 6731 changes
+2026-05-08 11:32:31,279 [INFO]   iteration 51 — 7881 changes
+2026-05-08 11:33:16,189 [INFO]   iteration 52 — 9119 changes
+2026-05-08 11:34:01,026 [INFO]   iteration 53 — 10904 changes
+2026-05-08 11:34:45,824 [INFO]   iteration 54 — 12886 changes
+2026-05-08 11:35:30,459 [INFO]   iteration 55 — 15432 changes
+2026-05-08 11:36:15,139 [INFO]   iteration 56 — 15491 changes
+2026-05-08 11:36:59,996 [INFO]   iteration 57 — 9285 changes
+2026-05-08 11:37:44,585 [INFO]   iteration 58 — 4256 changes
+2026-05-08 11:38:22,876 [INFO]   iteration 59 — 2045 changes
+2026-05-08 11:38:59,930 [INFO]   iteration 60 — 976 changes
+2026-05-08 11:39:37,041 [INFO]   iteration 61 — 407 changes
+2026-05-08 11:40:14,093 [INFO]   iteration 62 — 152 changes
+2026-05-08 11:40:52,160 [INFO]   iteration 63 — 75 changes
+2026-05-08 11:41:29,266 [INFO]   iteration 64 — 36 changes
+2026-05-08 11:42:05,515 [INFO]   iteration 65 — 15 changes
+2026-05-08 11:42:42,160 [INFO]   iteration 66 — 2 changes
+2026-05-08 11:43:19,093 [INFO]   iteration 67 — 0 changes
+2026-05-08 11:43:19,093 [INFO] Converged after 67 iterations.
+2026-05-08 11:43:20,359 [INFO] MPI build+solve: 3092.9s
+2026-05-08 11:43:22,147 [INFO] ============================================================
+2026-05-08 11:43:22,147 [INFO] SUMMARY
+2026-05-08 11:43:22,147 [INFO] ============================================================
+2026-05-08 11:43:22,148 [INFO] Algorithm                   Mean steps    Std steps
+2026-05-08 11:43:22,148 [INFO] --------------------------------------------------
+2026-05-08 11:43:22,148 [INFO] Online Planning                  69.99        24.09
+2026-05-08 11:43:22,148 [INFO] MPI                              40.00         4.13
