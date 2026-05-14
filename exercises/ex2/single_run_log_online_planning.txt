@@ -1,0 +1,106 @@
+------------------------------------------------------------
+🗺️  RUN 1 | NEW PLAN GENERATED (15 steps)
+   ↳ Sequence:
+       [Step 01] move(agent_0, loc_2_1, loc_1_1)
+       [Step 02] push-small(agent_0, loc_1_1, loc_1_2, loc_1_3, box_0)
+       [Step 03] push-small(agent_0, loc_1_2, loc_1_3, loc_1_4, box_0)
+       [Step 04] move(agent_0, loc_1_3, loc_2_3)
+       [Step 05] push-small(agent_0, loc_2_3, loc_3_3, loc_4_3, box_1)
+       [Step 06] move(agent_0, loc_3_3, loc_2_3)
+       [Step 07] move(agent_0, loc_2_3, loc_2_2)
+       [Step 08] move(agent_0, loc_2_2, loc_2_1)
+       [Step 09] move(agent_0, loc_2_1, loc_3_1)
+       [Step 10] push-heavy(agent_0, agent_1, loc_3_1, loc_3_2, loc_3_3, hbx_0)
+       [Step 11] move(agent_1, loc_3_2, loc_4_2)
+       [Step 12] push-small(agent_1, loc_4_2, loc_4_3, loc_4_4, box_1)
+       [Step 13] move(agent_1, loc_4_3, loc_4_2)
+       [Step 14] move(agent_1, loc_4_2, loc_3_2)
+       [Step 15] push-heavy(agent_0, agent_1, loc_3_2, loc_3_3, loc_3_4, hbx_0)
+------------------------------------------------------------
+
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+⚠️  STOCHASTIC SLIP DETECTED IN RUN 1!
+   ↳ Agent Slipped:   agent_0
+   ↳ Intended State:  (1, 1) (Where it was supposed to be)
+   ↳ Actual State:    (2, 1) (Where it ended up)
+   ↳ Failed Action:   move(agent_0, loc_2_1, loc_1_1)
+   ↳ Status:          Discarding old plan and recalculating...
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
+
+------------------------------------------------------------
+⚡ RUN 1 | CACHED PLAN LOADED (15 steps)
+   ↳ Sequence:
+       [Step 01] move(agent_0, loc_2_1, loc_1_1)
+       [Step 02] push-small(agent_0, loc_1_1, loc_1_2, loc_1_3, box_0)
+       [Step 03] push-small(agent_0, loc_1_2, loc_1_3, loc_1_4, box_0)
+       [Step 04] move(agent_0, loc_1_3, loc_2_3)
+       [Step 05] push-small(agent_0, loc_2_3, loc_3_3, loc_4_3, box_1)
+       [Step 06] move(agent_0, loc_3_3, loc_2_3)
+       [Step 07] move(agent_0, loc_2_3, loc_2_2)
+       [Step 08] move(agent_0, loc_2_2, loc_2_1)
+       [Step 09] move(agent_0, loc_2_1, loc_3_1)
+       [Step 10] push-heavy(agent_0, agent_1, loc_3_1, loc_3_2, loc_3_3, hbx_0)
+       [Step 11] move(agent_1, loc_3_2, loc_4_2)
+       [Step 12] push-small(agent_1, loc_4_2, loc_4_3, loc_4_4, box_1)
+       [Step 13] move(agent_1, loc_4_3, loc_4_2)
+       [Step 14] move(agent_1, loc_4_2, loc_3_2)
+       [Step 15] push-heavy(agent_0, agent_1, loc_3_2, loc_3_3, loc_3_4, hbx_0)
+------------------------------------------------------------
+
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+⚠️  STOCHASTIC SLIP DETECTED IN RUN 1!
+   ↳ Agent Slipped:   agent_0
+   ↳ Intended State:  (1, 2) (Where it was supposed to be)
+   ↳ Actual State:    (1, 1) (Where it ended up)
+   ↳ Failed Action:   push-small(agent_0, loc_1_1, loc_1_2, loc_1_3, box_0)
+   ↳ Status:          Discarding old plan and recalculating...
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
+
+------------------------------------------------------------
+🗺️  RUN 1 | NEW PLAN GENERATED (14 steps)
+   ↳ Sequence:
+       [Step 01] push-small(agent_0, loc_1_1, loc_1_2, loc_1_3, box_0)
+       [Step 02] push-small(agent_0, loc_1_2, loc_1_3, loc_1_4, box_0)
+       [Step 03] move(agent_0, loc_1_3, loc_2_3)
+       [Step 04] push-small(agent_0, loc_2_3, loc_3_3, loc_4_3, box_1)
+       [Step 05] move(agent_0, loc_3_3, loc_2_3)
+       [Step 06] move(agent_0, loc_2_3, loc_2_2)
+       [Step 07] move(agent_0, loc_2_2, loc_2_1)
+       [Step 08] move(agent_0, loc_2_1, loc_3_1)
+       [Step 09] push-heavy(agent_0, agent_1, loc_3_1, loc_3_2, loc_3_3, hbx_0)
+       [Step 10] move(agent_1, loc_3_2, loc_4_2)
+       [Step 11] push-small(agent_1, loc_4_2, loc_4_3, loc_4_4, box_1)
+       [Step 12] move(agent_1, loc_4_3, loc_4_2)
+       [Step 13] move(agent_1, loc_4_2, loc_3_2)
+       [Step 14] push-heavy(agent_0, agent_1, loc_3_2, loc_3_3, loc_3_4, hbx_0)
+------------------------------------------------------------
+
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+⚠️  STOCHASTIC SLIP DETECTED IN RUN 1!
+   ↳ Agent Slipped:   agent_0
+   ↳ Intended State:  (1, 3) (Where it was supposed to be)
+   ↳ Actual State:    (1, 2) (Where it ended up)
+   ↳ Failed Action:   push-small(agent_0, loc_1_2, loc_1_3, loc_1_4, box_0)
+   ↳ Status:          Discarding old plan and recalculating...
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
+
+------------------------------------------------------------
+🗺️  RUN 1 | NEW PLAN GENERATED (13 steps)
+   ↳ Sequence:
+       [Step 01] push-small(agent_0, loc_1_2, loc_1_3, loc_1_4, box_0)
+       [Step 02] move(agent_0, loc_1_3, loc_2_3)
+       [Step 03] push-small(agent_0, loc_2_3, loc_3_3, loc_4_3, box_1)
+       [Step 04] move(agent_0, loc_3_3, loc_2_3)
+       [Step 05] move(agent_0, loc_2_3, loc_2_2)
+       [Step 06] move(agent_0, loc_2_2, loc_2_1)
+       [Step 07] move(agent_0, loc_2_1, loc_3_1)
+       [Step 08] push-heavy(agent_0, agent_1, loc_3_1, loc_3_2, loc_3_3, hbx_0)
+       [Step 09] move(agent_1, loc_3_2, loc_4_2)
+       [Step 10] push-small(agent_1, loc_4_2, loc_4_3, loc_4_4, box_1)
+       [Step 11] move(agent_1, loc_4_3, loc_4_2)
+       [Step 12] move(agent_1, loc_4_2, loc_3_2)
+       [Step 13] push-heavy(agent_0, agent_1, loc_3_2, loc_3_3, loc_3_4, hbx_0)
+------------------------------------------------------------

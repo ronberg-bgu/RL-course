@@ -104,6 +104,15 @@ def run_online_planning(env, max_replans: int = 300, run_idx: int = 1, prev_step
             if current_state in GLOBAL_PLAN_CACHE:
                 # We have seen this exact board state! Instantly load the plan.
                 cached_plan_actions = GLOBAL_PLAN_CACHE[current_state].copy()
+
+                # --- NEW: Print the cached plan for Ron ---
+                plan_names = [str(act) for act in cached_plan_actions]
+                tqdm.write(f"\n" + "-" * 60)
+                tqdm.write(f"⚡ RUN {run_idx} | CACHED PLAN LOADED ({len(plan_names)} steps)")
+                tqdm.write(f"   ↳ Sequence:")
+                for step_num, act in enumerate(plan_names, 1):
+                    tqdm.write(f"       [Step {step_num:02d}] {act}")
+                tqdm.write("-" * 60)
             else:
                 # We have never seen this board state before. Call the heavy PDDL planner.
                 domain_path, problem_path = generate_pddl_for_env(env, goals=initial_goals)
@@ -117,6 +126,15 @@ def run_online_planning(env, max_replans: int = 300, run_idx: int = 1, prev_step
 
                 # Save the new plan to the GLOBAL cache so we never have to plan it again
                 GLOBAL_PLAN_CACHE[current_state] = plan.actions.copy()
+
+                # --- NEW: Clear, structured plan print ---
+                plan_names = [str(act) for act in plan.actions]
+                tqdm.write(f"\n" + "-" * 60)
+                tqdm.write(f"🗺️  RUN {run_idx} | NEW PLAN GENERATED ({len(plan_names)} steps)")
+                tqdm.write(f"   ↳ Sequence:")
+                for step_num, act in enumerate(plan_names, 1):
+                    tqdm.write(f"       [Step {step_num:02d}] {act}")
+                tqdm.write("-" * 60)
 
                 # Load it into the local execution queue
                 cached_plan_actions = plan.actions.copy()
@@ -160,11 +178,29 @@ def run_online_planning(env, max_replans: int = 300, run_idx: int = 1, prev_step
             break
 
         # ── 4. EXECUTION MONITORING (Did the stochastic env cause a slip?) ──
+        slip_detected = False
         for a, target in agent_targets.items():
-            if env.agent_positions[a] != target:
-                # Someone slipped! The queued plan is invalid. Clear it so we replan next loop.
-                cached_plan_actions = []
+            actual_pos = env.agent_positions[a]
+
+            if actual_pos != target:
+                slip_detected = True
+
+                clean_target = (int(target[0]), int(target[1]))
+                clean_actual = (int(actual_pos[0]), int(actual_pos[1]))
+
+                tqdm.write(f"\n" + "!" * 60)
+                tqdm.write(f"⚠️  STOCHASTIC SLIP DETECTED IN RUN {run_idx}!")
+                tqdm.write(f"   ↳ Agent Slipped:   {a}")
+                tqdm.write(f"   ↳ Intended State:  {clean_target} (Where it was supposed to be)")
+                tqdm.write(f"   ↳ Actual State:    {clean_actual} (Where it ended up)")
+                tqdm.write(f"   ↳ Failed Action:   {str(pddl_action)}")
+                tqdm.write(f"   ↳ Status:          Discarding old plan and recalculating...")
+                tqdm.write("!" * 60 + "\n")
                 break
+
+        if slip_detected:
+            # Someone slipped! The queued plan is invalid. Clear it so we replan next loop.
+            cached_plan_actions = []
 
     pbar.close()
 
@@ -557,18 +593,73 @@ def evaluate_policy(policy_fn, env, n_runs: int = 100, max_steps: int = 500):
     """
     steps_per_run = []
 
-    for _ in range(n_runs):
+    # Grid directions: 0:Right, 1:Down, 2:Left, 3:Up
+    DIR_VECS = {0: (1, 0), 1: (0, 1), 2: (-1, 0), 3: (0, -1)}
+
+    for i in range(n_runs):
         obs, _ = env.reset()
-        steps  = 0
-        done   = False
+        steps = 0
+        done = False
+
+        executed_plan = []
+
+        # --- Clean Header for MPI ---
+        tqdm.write(f"\n" + "=" * 60)
+        tqdm.write(f"🧠 MPI RUN {i + 1} | EXECUTION TRACE")
+        tqdm.write("=" * 60)
 
         while not done and steps < max_steps:
             actions = policy_fn(env, obs)
+
+            # Record positions AND directions BEFORE the step to calculate intent
+            prev_positions = {a: env.agent_positions[a] for a in env.possible_agents}
+            prev_dirs = {a: env.agent_dirs[a] for a in env.possible_agents}
+
             obs, rewards, terms, truncs, _ = env.step(actions)
             steps += 1
+
+            # --- Live Slip Detection (Quietly Record for the End) ---
+            step_slips = []
+            for a in env.possible_agents:
+                if actions[a] == 2:  # Tried to move forward
+                    dx, dy = DIR_VECS[prev_dirs[a]]
+                    intended_pos = (prev_positions[a][0] + dx, prev_positions[a][1] + dy)
+                    actual_pos = env.agent_positions[a]
+
+                    # If they didn't end up where they intended, record it!
+                    if actual_pos != intended_pos:
+                        # --- CLEANUP: Cast numpy integers to standard Python integers ---
+                        clean_start = (int(prev_positions[a][0]), int(prev_positions[a][1]))
+                        clean_intended = (int(intended_pos[0]), int(intended_pos[1]))
+                        clean_actual = (int(actual_pos[0]), int(actual_pos[1]))
+
+                        # Added the clean_start to your custom formatting string!
+                        step_slips.append(
+                            f"⚠️ {a} 'slipped'! (Started at: {clean_start} → Intended state: {clean_intended} → Actual state: {clean_actual})")
+
+            # Save the action AND any slips that occurred on this step
+            executed_plan.append({
+                "action": actions,
+                "slips": " | ".join(step_slips) if step_slips else None
+            })
+
             done = any(terms.values()) or any(truncs.values())
 
         steps_per_run.append(steps)
+
+        # --- Clean Footer with Annotated Sequence ---
+        agents_list = list(env.possible_agents)
+        tqdm.write(f"🎯 RUN {i + 1} COMPLETE | Goal reached in {steps} steps!")
+        tqdm.write(f"   ↳ Agents Deployed: {agents_list}")
+        tqdm.write(f"   ↳ Full Joint-Action Sequence:")
+
+        # Print the sequence step-by-step, appending slip annotations if they exist
+        for step_num, step_data in enumerate(executed_plan, 1):
+            act_str = str(step_data["action"])
+            if step_data["slips"]:
+                tqdm.write(f"       [Step {step_num:02d}] {act_str}   {step_data['slips']}")
+            else:
+                tqdm.write(f"       [Step {step_num:02d}] {act_str}")
 
     return float(np.mean(steps_per_run)), float(np.std(steps_per_run))
 
