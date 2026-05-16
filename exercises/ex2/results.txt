@@ -1,0 +1,36 @@
+============================================================
+Assignment 2 Results
+============================================================
+started: 2026-05-15 12:43:55
+runs per algorithm: 100
+max_steps: 500
+seed: 12345
+max_stuck_replans (online abort): 25
+
+Part 1 - Online Planning
+  online run   1/100: steps=35, solved=True
+  online run  10/100: steps=33, solved=True
+  online run  20/100: steps=34, solved=True
+  online run  30/100: steps=35, solved=True
+  online run  40/100: steps=38, solved=True
+  online run  50/100: steps=25, solved=True
+  online run  60/100: steps=41, solved=True
+  online run  70/100: steps=29, solved=True
+  online run  80/100: steps=34, solved=True
+  online run  90/100: steps=34, solved=True
+  online run 100/100: steps=27, solved=True
+  online planner cache: 0 hits, 0 misses, forced_replans=0, planner_empty=0, empty_targets=0, invalid_targets=0, stuck_abort=0
+Online Planning  mean = 36.19, std = 6.00, solved = 100/100, elapsed = 2.9s
+
+Part 2 - Modified Policy Iteration
+  MPI policy built in 81.0s
+  MPI eval: missing_state_fallback_steps=0 (policy size=60182 states)
+MPI              mean = 46.73, std = 79.89, solved = 97/100, elapsed = 82.4s
+
+============================================================
+SUMMARY
+============================================================
+Algorithm                   Mean steps    Std steps     Solved
+-----------------------------------------------------------------
+Online Planning                  36.19         6.00  100/100  
+MPI                              46.73        79.89   97/100  
