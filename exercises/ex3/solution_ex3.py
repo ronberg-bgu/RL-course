@@ -2,12 +2,29 @@
 
 from __future__ import annotations
 
-from dataclasses import dataclass
+import logging
+from dataclasses import dataclass, field
 from typing import Callable, Dict, List, Tuple
 
 import gymnasium as gym
 import matplotlib.pyplot as plt
 import numpy as np
+
+# Console: INFO and above (progress summaries)
+# File:    DEBUG and above (per-step state/action/reward traces)
+logger = logging.getLogger("rl_ex3")
+logger.setLevel(logging.DEBUG)
+
+_console = logging.StreamHandler()
+_console.setLevel(logging.INFO)
+_console.setFormatter(logging.Formatter("%(message)s"))
+
+_file = logging.FileHandler("training.log", mode="w")
+_file.setLevel(logging.DEBUG)
+_file.setFormatter(logging.Formatter("%(asctime)s %(levelname)s %(message)s", datefmt="%H:%M:%S"))
+
+logger.addHandler(_console)
+logger.addHandler(_file)
 
 
 @dataclass
@@ -19,7 +36,7 @@ class ExperimentConfig:
     total_training_steps: int = 500_000
     eval_interval_steps: int = 10_000
     n_eval_episodes: int = 500
-    seeds: List[int] = None
+    seeds: List[int] = field(default_factory=lambda: [0, 1, 2, 3, 4])
 
     alpha: float = 0.1
     epsilon_start: float = 1.0
@@ -27,7 +44,7 @@ class ExperimentConfig:
     epsilon_decay_steps: int = 300_000
 
     policy_lr: float = 0.005
-    use_baseline: bool = False
+    use_baseline: bool = True
     value_lr: float = 0.05
     theta_init: float = 0.0
     theta_clip: float = 20.0
@@ -100,6 +117,13 @@ def softmax(x: np.ndarray) -> np.ndarray:
     return exp_x / np.sum(exp_x)
 
 
+def greedy_action(q_row: np.ndarray) -> int:
+    """Pick greedily among tied-best actions uniformly at random."""
+    best = np.max(q_row)
+    ties = np.flatnonzero(q_row == best)
+    return int(np.random.choice(ties))
+
+
 def policy_probs(theta: np.ndarray, state: int) -> np.ndarray:
     """Return action probabilities for a state under a tabular softmax policy.
 
@@ -134,7 +158,7 @@ def evaluate_greedy_q(
         g = 0.0
         discount = 1.0
         for _ in range(config.max_steps_per_episode):
-            action = int(np.argmax(q_table[state]))
+            action = greedy_action(q_table[state])
             next_state, reward, terminated, truncated, _ = env.step(action)
             g += discount * reward
             discount *= config.gamma
@@ -207,7 +231,7 @@ def q_learning(
         if np.random.rand() < epsilon:
             action = env.action_space.sample()
         else:
-            action = int(np.argmax(q_table[state]))
+            action = greedy_action(q_table[state])
 
         next_state, reward, terminated, truncated, _ = env.step(action)
         done = terminated or truncated
@@ -216,12 +240,17 @@ def q_learning(
         td_target = reward + config.gamma * best_next
         q_table[state, action] += config.alpha * (td_target - q_table[state, action])
 
+        logger.debug("Q-learning step=%d state=%d action=%d reward=%s next_state=%d done=%s", training_steps, state, action, reward, next_state, done)
+
         training_steps += 1
 
         if training_steps % config.eval_interval_steps == 0:
             value = evaluate_greedy_q(eval_env, q_table, config)
             eval_steps.append(training_steps)
             eval_values.append(value)
+            if training_steps % 50_000 == 0:
+                epsilon = epsilon_by_step(training_steps, config)
+                logger.info("  [Q-learning] step=%7d  V(s0)=%.4f  epsilon=%.3f", training_steps, value, epsilon)
 
         if done:
             state, _ = env.reset()
@@ -260,7 +289,7 @@ def sarsa(
     action = (
         env.action_space.sample()
         if np.random.rand() < epsilon
-        else int(np.argmax(q_table[state]))
+        else greedy_action(q_table[state])
     )
 
     while training_steps < config.total_training_steps:
@@ -275,11 +304,13 @@ def sarsa(
             next_action = (
                 env.action_space.sample()
                 if np.random.rand() < epsilon
-                else int(np.argmax(q_table[next_state]))
+                else greedy_action(q_table[next_state])
             )
             td_target = reward + config.gamma * q_table[next_state, next_action]
 
         q_table[state, action] += config.alpha * (td_target - q_table[state, action])
+
+        logger.debug("SARSA step=%d state=%d action=%d reward=%s next_state=%d done=%s", training_steps, state, action, reward, next_state, done)
 
         training_steps += 1
 
@@ -287,6 +318,9 @@ def sarsa(
             value = evaluate_greedy_q(eval_env, q_table, config)
             eval_steps.append(training_steps)
             eval_values.append(value)
+            if training_steps % 50_000 == 0:
+                epsilon = epsilon_by_step(training_steps, config)
+                logger.info("  [SARSA]      step=%7d  V(s0)=%.4f  epsilon=%.3f", training_steps, value, epsilon)
 
         if done:
             state, _ = env.reset()
@@ -294,7 +328,7 @@ def sarsa(
             action = (
                 env.action_space.sample()
                 if np.random.rand() < epsilon
-                else int(np.argmax(q_table[state]))
+                else greedy_action(q_table[state])
             )
         else:
             state = next_state
@@ -321,11 +355,13 @@ def reinforce(
     n_states = env.observation_space.n
     n_actions = env.action_space.n
     theta = np.full((n_states, n_actions), config.theta_init, dtype=float)
+    v_table = np.zeros(n_states, dtype=float)
 
     eval_steps: List[int] = []
     eval_values: List[float] = []
 
     training_steps = 0
+    episode_count = 0
 
     while training_steps < config.total_training_steps:
         states: List[int] = []
@@ -344,13 +380,17 @@ def reinforce(
             actions.append(action)
             rewards.append(reward)
 
+            logger.debug("REINFORCE step=%d episode=%d state=%d action=%d reward=%s next_state=%d done=%s", training_steps, episode_count, state, action, reward, next_state, terminated or truncated)
+
             training_steps += 1
 
             if training_steps % config.eval_interval_steps == 0:
-                policy_fn = lambda s: int(np.argmax(policy_probs(theta, s)))
+                policy_fn : Callable[[int], int] = lambda s: int(np.argmax(policy_probs(theta, s)))
                 value = evaluate_greedy_policy(eval_env, policy_fn, config)
                 eval_steps.append(training_steps)
                 eval_values.append(value)
+                if training_steps % 50_000 == 0:
+                    logger.info("  [REINFORCE]  step=%7d  V(s0)=%.4f  episode=%d", training_steps, value, episode_count)
 
             if training_steps >= config.total_training_steps:
                 break
@@ -375,15 +415,20 @@ def reinforce(
             grad_log = -probs
             grad_log[action] += 1.0
 
-            baseline = 0.0
-            if config.use_baseline:
-                baseline = 0.0
-
+            baseline = v_table[state] if config.use_baseline else 0.0
             advantage = g_t - baseline
+
+            if config.use_baseline:
+                v_table[state] += config.value_lr * advantage
+
             theta[state] += config.policy_lr * advantage * grad_log
             theta[state] = np.clip(theta[state], -config.theta_clip, config.theta_clip)
 
+        episode_count += 1
+
     return EvalSeries(steps=eval_steps, values=eval_values)
+
+
 
 
 def aggregate_runs(series_list: List[EvalSeries]) -> Tuple[List[int], np.ndarray, np.ndarray]:
@@ -438,29 +483,29 @@ def run_experiment(config: ExperimentConfig) -> None:
     sarsa_runs: List[EvalSeries] = []
     reinforce_runs: List[EvalSeries] = []
 
-    for seed in config.seeds:
+    for i, seed in enumerate(config.seeds):
+        logger.info("\n=== Seed %d (%d/%d) ===", seed, i + 1, len(config.seeds))
         set_global_seed(seed)
 
         env = make_env(seed)
         eval_env = make_env(seed + 10_000)
-
         env.action_space.seed(seed)
         eval_env.action_space.seed(seed + 10_000)
-
+        logger.info("  Running Q-learning...")
         q_runs.append(q_learning(env, eval_env, config))
 
         env = make_env(seed)
         eval_env = make_env(seed + 10_000)
         env.action_space.seed(seed)
         eval_env.action_space.seed(seed + 10_000)
-
+        logger.info("  Running SARSA...")
         sarsa_runs.append(sarsa(env, eval_env, config))
 
         env = make_env(seed)
         eval_env = make_env(seed + 10_000)
         env.action_space.seed(seed)
         eval_env.action_space.seed(seed + 10_000)
-
+        logger.info("  Running REINFORCE...")
         reinforce_runs.append(reinforce(env, eval_env, config))
 
     results = {
