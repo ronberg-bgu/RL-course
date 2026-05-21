@@ -2,9 +2,13 @@
 __pycache__/
 *.py[cod]
 *$py.class
-
+.agents/*
 # C extensions
 *.so
+main.py
+pyproject.toml
+skills-lock.json
+.python-version
 
 # Distribution / packaging
 .Python
