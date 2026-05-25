@@ -1,5 +1,9 @@
 # Exercise 3 — Comparison of Tabular RL Algorithms on FrozenLake-v1
 
+## Submitted by:
+Pinhas Aburmad 212146849  
+Segev Olpak 325176188
+
 ## Overview
 
 This exercise implements and compares three tabular Reinforcement Learning algorithms on the **FrozenLake-v1** environment (8×8 grid, `is_slippery=True`):

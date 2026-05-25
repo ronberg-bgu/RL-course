@@ -2,6 +2,10 @@
 Exercise 3: Comparison of Tabular RL Algorithms on FrozenLake-v1 (8x8, Slippery)
 =================================================================================
 
+Submitted by:
+Pinhas Aburmad 212146849
+Segev Olpak 325176188
+
 Implements and compares three tabular RL algorithms:
   1. Tabular Q-learning (off-policy TD control)
   2. Tabular SARSA       (on-policy TD control)
