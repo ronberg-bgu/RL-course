@@ -41,6 +41,16 @@ Evaluation steps do **not** count towards the training step budget.
 
 ---
 
+## Final $V(s_0)$ Summary
+
+| Algorithm    | $V(s_0) \pm$ Std   |
+|--------------|--------------------|
+| Q-learning   | 0.1746 $\pm$ 0.1435  |
+| SARSA        | 0.1154 $\pm$ 0.1414  |
+| REINFORCE    | 0.0440 $\pm$ 0.0302  |
+
+---
+
 ## Discussion of Results
 
 ### Which algorithm learned faster and which achieved better final performance?
