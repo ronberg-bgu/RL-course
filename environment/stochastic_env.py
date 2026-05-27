@@ -6,22 +6,6 @@ from environment.multi_agent_env import MultiAgentBoxPushEnv
 class StochasticMultiAgentBoxPushEnv(MultiAgentBoxPushEnv):
     """
     Stochastic version of MultiAgentBoxPushEnv — used in Assignment 2.
-
-    Transition model
-    ----------------
-    move  (agent moves into an empty/goal cell):
-        0.8  → agent moves in the intended direction
-        0.1  → agent moves 90° to the left  of the intended direction
-        0.1  → agent moves 90° to the right of the intended direction
-        If the deviated cell is blocked (wall / box / other agent) the agent
-        stays put without error.
-
-    push-small / push-heavy  (precondition fully met):
-        0.8  → push succeeds  (same outcome as the deterministic env)
-        0.2  → push fails, no state change
-
-    If the precondition of any action is NOT met the action has no effect
-    (deterministic no-op), exactly as in the deterministic environment.
     """
 
     def __init__(
@@ -43,13 +27,6 @@ class StochasticMultiAgentBoxPushEnv(MultiAgentBoxPushEnv):
     # ------------------------------------------------------------------
 
     def _sample_move_dir(self, intended_dir):
-        """
-        Sample the actual travel direction for a *move* action.
-
-        Returns
-        -------
-        int  — one of the four MiniGrid directions (0=right,1=down,2=left,3=up)
-        """
         side_prob = (1.0 - self.move_success_prob) / 2.0
         r = np.random.random()
         if r < self.move_success_prob:
@@ -69,7 +46,7 @@ class StochasticMultiAgentBoxPushEnv(MultiAgentBoxPushEnv):
     # Core step override
     # ------------------------------------------------------------------
 
-    def step(self, actions):  # noqa: C901  (complexity is inherent here)
+    def step(self, actions):  # noqa: C901
         self.steps += 1
 
         observations = {}
@@ -164,7 +141,6 @@ class StochasticMultiAgentBoxPushEnv(MultiAgentBoxPushEnv):
 
             elif fwd_cell is None or fwd_cell.can_overlap():
                 # ── MOVE ─────────────────────────────────────────────
-                # Precondition met — apply directional stochasticity
                 actual_dir     = self._sample_move_dir(intended_dir)
                 actual_vec     = DIR_TO_VEC[actual_dir]
                 actual_fwd_pos = (pos[0] + actual_vec[0], pos[1] + actual_vec[1])
