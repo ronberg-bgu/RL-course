@@ -55,7 +55,10 @@ class TabularREINFORCE:
         states = []
         actions = []
         rewards = []
-
+        if use_baseline:
+            print("Training with baseline (state-value function)...")
+        else:
+            print("Training without baseline...")
         for step in range(total_training_steps):
             # Evaluate every 10_000 training steps
             if step % 10_000 == 0:
