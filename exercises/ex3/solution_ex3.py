@@ -48,6 +48,7 @@ class ExperimentConfig:
     value_lr: float = 0.05
     theta_init: float = 0.0
     theta_clip: float = 20.0
+    entropy_coef: float = 0.01  # NEW: Weight for the entropy bonus
 
 
 @dataclass
@@ -421,7 +422,18 @@ def reinforce(
             if config.use_baseline:
                 v_table[state] += config.value_lr * advantage
 
-            theta[state] += config.policy_lr * advantage * grad_log
+            # 2. Entropy Calculation
+            # Add a tiny epsilon (1e-8) inside the log to prevent log(0) errors
+            log_probs = np.log(probs + 1e-8)
+            entropy = -np.sum(probs * log_probs)
+            
+            # The gradient of the entropy with respect to theta
+            grad_entropy = -probs * (log_probs + entropy)
+
+            # Add the entropy gradient scaled by our new coefficient
+            theta_update = (advantage * grad_log) + (config.entropy_coef * grad_entropy)
+
+            theta[state] += config.policy_lr * theta_update
             theta[state] = np.clip(theta[state], -config.theta_clip, config.theta_clip)
 
         episode_count += 1
