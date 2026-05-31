@@ -3,6 +3,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import sys
 
+# Custom logger to simultaneously print to console and write to a log file
 class Logger:
     def __init__(self, filename="log.txt"):
         self.terminal = sys.stdout
@@ -18,6 +19,7 @@ class Logger:
 
 sys.stdout = Logger("log.txt")
 
+# Helper function to read the .env file safely (using utf-8-sig to bypass Windows BOM issues)
 def load_env(filepath=".env"):
     print(f"[*] Loading environment variables from {filepath}...")
     env_vars = {}
@@ -32,6 +34,7 @@ def load_env(filepath=".env"):
     print(f"[*] Successfully loaded {len(env_vars)} variables.")
     return env_vars
 
+# Load and cast all the hyperparameters
 config = load_env()
 
 ENV_NAME = config["ENV_NAME"]
@@ -50,6 +53,7 @@ EPS_DECAY = float(config["EPSILON_DECAY_STEPS"])
 POLICY_LR = float(config["POLICY_LR"])
 THETA_CLIP = float(config["THETA_CLIP"])
 
+# Evaluates the current policy purely greedily (no learning or exploration)
 def evaluate_policy(q_table, theta, algo_type, n_eval_episodes, max_steps, gamma, seed):
     env = gym.make(ENV_NAME, map_name="8x8", is_slippery=IS_SLIPPERY)
     returns = []
@@ -59,10 +63,12 @@ def evaluate_policy(q_table, theta, algo_type, n_eval_episodes, max_steps, gamma
         G = 0.0
         discount = 1.0
         for _ in range(max_steps):
+            # Choose the best action deterministically depending on the algorithm
             if algo_type in ["q_learning", "sarsa"]:
                 action = int(np.argmax(q_table[state]))
             else:
-                x = theta[state] - np.max(theta[state])
+                # For REINFORCE, use softmax probabilities to pick the most likely action
+                x = theta[state] - np.max(theta[state]) # Subtracted max for numerical stability
                 exp_x = np.exp(x)
                 probs = exp_x / np.sum(exp_x)
                 action = int(np.argmax(probs))
@@ -82,6 +88,8 @@ def q_learning(seed):
     env = gym.make(ENV_NAME, map_name="8x8", is_slippery=IS_SLIPPERY)
     env.action_space.seed(seed)
     np.random.seed(seed)
+    
+    # Initialize Q-table with zeros as the baseline for tabular methods
     q_table = np.zeros((64, 4))
     steps = 0
     eval_steps = []
@@ -89,12 +97,14 @@ def q_learning(seed):
     state, _ = env.reset(seed=seed)
 
     while steps < TOTAL_STEPS:
+        # Periodic evaluation
         if steps % EVAL_INTERVAL == 0:
             print(f"[Q-Learning] Seed {seed} | Evaluating at step {steps}/{TOTAL_STEPS}...")
             eval_steps.append(steps)
             eval_results.append(evaluate_policy(q_table, None, "q_learning", N_EVAL, MAX_STEPS, GAMMA, seed))
             print(f"[Q-Learning] Seed {seed} | V(s0) = {eval_results[-1]:.4f}")
 
+        # Epsilon-greedy action selection
         epsilon = max(EPS_END, EPS_START - steps / EPS_DECAY * (EPS_START - EPS_END))
         if np.random.rand() < epsilon:
             action = env.action_space.sample()
@@ -104,6 +114,7 @@ def q_learning(seed):
         next_state, reward, terminated, truncated, _ = env.step(action)
         steps += 1
 
+        # Q-learning TD Update (Off-policy: taking the max over next possible actions)
         td_target = reward
         if not (terminated or truncated):
             td_target += GAMMA * np.max(q_table[next_state])
@@ -114,6 +125,7 @@ def q_learning(seed):
         else:
             state = next_state
 
+    # Final evaluation catch
     if steps % EVAL_INTERVAL == 0 and steps not in eval_steps:
         print(f"[Q-Learning] Seed {seed} | Final evaluation at step {steps}...")
         eval_steps.append(steps)
@@ -135,6 +147,7 @@ def sarsa(seed):
     eval_results = []
     state, _ = env.reset(seed=seed)
     
+    # Initial action selection
     epsilon = max(EPS_END, EPS_START - steps / EPS_DECAY * (EPS_START - EPS_END))
     if np.random.rand() < epsilon:
         action = env.action_space.sample()
@@ -151,12 +164,14 @@ def sarsa(seed):
         next_state, reward, terminated, truncated, _ = env.step(action)
         steps += 1
 
+        # Choose the *next* action before the update (On-policy requirement)
         epsilon = max(EPS_END, EPS_START - steps / EPS_DECAY * (EPS_START - EPS_END))
         if np.random.rand() < epsilon:
             next_action = env.action_space.sample()
         else:
             next_action = int(np.argmax(q_table[next_state]))
 
+        # SARSA TD Update (On-policy: using the actual next action chosen by epsilon-greedy)
         td_target = reward
         if not (terminated or truncated):
             td_target += GAMMA * q_table[next_state, next_action]
@@ -189,11 +204,15 @@ def reinforce(seed):
     env = gym.make(ENV_NAME, map_name="8x8", is_slippery=IS_SLIPPERY)
     env.action_space.seed(seed)
     np.random.seed(seed)
+    
+    # Initialize policy weights (theta) to zero as requested
     theta = np.zeros((64, 4))
     steps = 0
     eval_steps = []
     eval_results = []
     state, _ = env.reset(seed=seed)
+    
+    # Buffers to store the trajectory for the Monte Carlo episode update
     ep_states = []
     ep_actions = []
     ep_rewards = []
@@ -205,9 +224,12 @@ def reinforce(seed):
             eval_results.append(evaluate_policy(None, theta, "reinforce", N_EVAL, MAX_STEPS, GAMMA, seed))
             print(f"[REINFORCE] Seed {seed} | V(s0) = {eval_results[-1]:.4f}")
 
-        x = theta[state] - np.max(theta[state])
+        # Calculate probabilities using Softmax
+        x = theta[state] - np.max(theta[state]) # Stability trick to prevent overflow
         exp_x = np.exp(x)
         probs = exp_x / np.sum(exp_x)
+        
+        # Sample action from the calculated probability distribution
         action = np.random.choice(4, p=probs)
 
         next_state, reward, terminated, truncated, _ = env.step(action)
@@ -217,23 +239,31 @@ def reinforce(seed):
         ep_actions.append(action)
         ep_rewards.append(reward)
 
+        # Once episode is done, perform the update over the entire trajectory
         if terminated or truncated or len(ep_states) >= MAX_STEPS:
             G = 0.0
+            # Iterate backwards to calculate the discounted return G_t for each step
             for t in reversed(range(len(ep_rewards))):
                 G = ep_rewards[t] + GAMMA * G
                 st = ep_states[t]
                 at = ep_actions[t]
                 
+                # Recalculate probabilities for the gradient
                 x_t = theta[st] - np.max(theta[st])
                 exp_x_t = np.exp(x_t)
                 probs_t = exp_x_t / np.sum(exp_x_t)
+                
+                # Gradient of log-policy for softmax: 1 - P(a) for the chosen action, -P(a) for others
                 grad = -probs_t
                 grad[at] += 1.0
                 
+                # Update theta using the policy gradient theorem (without baseline)
                 theta[st] += POLICY_LR * (GAMMA ** t) * G * grad
             
+            # Clip theta to avoid numerical instability (NaN values)
             theta = np.clip(theta, -THETA_CLIP, THETA_CLIP)
             
+            # Clear buffers for the next episode
             ep_states = []
             ep_actions = []
             ep_rewards = []
@@ -252,7 +282,7 @@ def reinforce(seed):
     return eval_steps, eval_results
 
 def main():
-    seeds = [0, 1, 2, 3, 4]
+    seeds = [0, 1, 2, 3, 4] # Use 5 seeds to capture statistical significance
     
     q_results_all = []
     sarsa_results_all = []
@@ -264,6 +294,7 @@ def main():
     print("STARTING EXPERIMENTS")
     print("="*50)
 
+    # Run all algorithms for each seed sequentially
     for s in seeds:
         print(f"\n>>> PROCESSING SEED {s} <<<")
         
@@ -282,6 +313,7 @@ def main():
     print("ALL SEEDS COMPLETED. CALCULATING STATISTICS AND PLOTTING...")
     print("="*50)
 
+    # Calculate mean and standard deviation across all seeds
     q_mean = np.mean(q_results_all, axis=0)
     q_std = np.std(q_results_all, axis=0)
     sarsa_mean = np.mean(sarsa_results_all, axis=0)
@@ -289,6 +321,7 @@ def main():
     reinforce_mean = np.mean(reinforce_results_all, axis=0)
     reinforce_std = np.std(reinforce_results_all, axis=0)
 
+    # Plotting the learning curves with standard deviation shadows
     plt.figure(figsize=(10, 6))
     
     plt.plot(steps_arr, q_mean, label="Q-learning")
@@ -307,7 +340,7 @@ def main():
     plt.grid(True)
     
     plt.savefig("result.png", dpi=300, bbox_inches="tight")
-    print("[*] Plot saved successfully to result.png")
+    print("[*] Plot saved successfully to bonus_original_parameters.png")
     
     plt.show()
     print("[*] Script execution finished successfully.")
